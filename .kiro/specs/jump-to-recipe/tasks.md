@@ -7,7 +7,7 @@
   - Create basic project structure with app/, lib/, components/ directories
   - _Requirements: All requirements depend on proper project setup_
 
-- [ ] 2. Configure database and ORM setup
+- [x] 2. Configure database and ORM setup
   - Install and configure Drizzle ORM with PostgreSQL driver
   - Create database schema files for all tables (users, recipes, cookbooks, etc.)
   - Set up database connection utilities and environment configuration
