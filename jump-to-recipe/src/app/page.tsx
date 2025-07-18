@@ -52,25 +52,25 @@ export default function Home() {
       {/* Hero Section */}
       <section className="relative w-full py-12 md:py-24 lg:py-32 xl:py-48 bg-gradient-to-b from-background to-muted/30">
         <div className="container px-4 md:px-6">
-          <div className="grid gap-6 lg:grid-cols-[1fr_400px] lg:gap-12 xl:grid-cols-[1fr_600px]">
-            <div className="flex flex-col justify-center space-y-4">
+          <div className="flex flex-col items-center text-center">
+            <div className="flex flex-col justify-center space-y-4 max-w-3xl">
               <div className="space-y-2">
                 <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl lg:text-6xl/none">
                   Your Recipes, Organized
                 </h1>
-                <p className="max-w-[600px] text-muted-foreground md:text-xl">
+                <p className="text-muted-foreground md:text-xl">
                   Collect, organize, and share your favorite recipes with Jump to Recipe. 
                   Import from URLs, create digital cookbooks, and generate smart grocery lists.
                 </p>
               </div>
-              <CTAButtons />
+              <CTAButtons className="justify-center" />
             </div>
-            <div className="mx-auto aspect-video overflow-hidden rounded-xl object-cover lg:order-last">
+            <div className="mt-8 aspect-video w-full max-w-3xl overflow-hidden rounded-xl">
               <Image
                 src="https://images.unsplash.com/photo-1556911220-bff31c812dba?q=80&w=1000&auto=format&fit=crop"
                 alt="Cooking ingredients and recipe book"
-                width={600}
-                height={400}
+                width={800}
+                height={450}
                 className="object-cover w-full h-full"
                 priority
               />
@@ -92,8 +92,8 @@ export default function Home() {
             </div>
           </div>
           <div className="mx-auto grid max-w-5xl items-center gap-6 py-12 lg:grid-cols-3">
-            <div className="grid gap-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+            <div className="grid gap-4 text-center">
+              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary text-primary-foreground mx-auto">
                 <ChefHat className="h-6 w-6" />
               </div>
               <div className="space-y-2">
@@ -103,8 +103,8 @@ export default function Home() {
                 </p>
               </div>
             </div>
-            <div className="grid gap-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+            <div className="grid gap-4 text-center">
+              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary text-primary-foreground mx-auto">
                 <Users className="h-6 w-6" />
               </div>
               <div className="space-y-2">
@@ -114,8 +114,8 @@ export default function Home() {
                 </p>
               </div>
             </div>
-            <div className="grid gap-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+            <div className="grid gap-4 text-center">
+              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary text-primary-foreground mx-auto">
                 <Clock className="h-6 w-6" />
               </div>
               <div className="space-y-2">
@@ -143,13 +143,13 @@ export default function Home() {
           <div className="mx-auto grid max-w-5xl gap-6 py-12 sm:grid-cols-2 lg:grid-cols-3">
             {recipePreviewData.map((recipe) => (
               <Card key={recipe.id} className="overflow-hidden">
-                <div className="aspect-video w-full overflow-hidden">
+                <div className="aspect-video w-full overflow-hidden safari-gap-fix">
                   <Image
                     src={recipe.imageUrl}
                     alt={recipe.title}
                     width={500}
                     height={300}
-                    className="object-cover w-full h-full transition-transform hover:scale-105"
+                    className="object-cover w-full h-full transition-all transform-gpu hover:scale-105"
                   />
                 </div>
                 <CardHeader>

@@ -4,6 +4,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { AuthProvider } from "@/components/auth-provider";
 import { Navbar } from "@/components/navbar";
 import "./globals.css";
+import "./browser-compatibility.css";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",

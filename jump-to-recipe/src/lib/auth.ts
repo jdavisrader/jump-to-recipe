@@ -27,7 +27,7 @@ export const authOptions = {
       },
       async authorize(credentials) {
         console.log('Authorize function called with credentials:', credentials?.email);
-        
+
         if (!credentials?.email || !credentials?.password) {
           console.log('Missing email or password');
           return null;
@@ -71,7 +71,7 @@ export const authOptions = {
   ],
   callbacks: {
     // Add role to JWT token and session
-    async jwt({ token, user }) {
+    async jwt({ token, user }: { token: any; user?: any }) {
       // Initial sign in
       if (user) {
         token.role = user.role;
@@ -93,7 +93,7 @@ export const authOptions = {
     },
 
     // Add role to client-side session
-    async session({ session, token }) {
+    async session({ session, token }: { session: any; token: any }) {
       if (token && session.user) {
         session.user.role = token.role as string;
         session.user.id = token.id as string;
