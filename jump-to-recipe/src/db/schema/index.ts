@@ -1,5 +1,5 @@
 // Export all schema definitions
-export * from './users';
+export * from './users'; // Includes users, accounts, sessions, and verification tokens
 export * from './recipes';
 export * from './cookbooks';
 export * from './comments';

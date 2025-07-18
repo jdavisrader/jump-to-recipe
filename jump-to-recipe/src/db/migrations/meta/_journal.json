@@ -8,6 +8,20 @@
       "when": 1752726489025,
       "tag": "0000_curved_demogoblin",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1752806150436,
+      "tag": "0001_flashy_toro",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1752808357653,
+      "tag": "0002_serious_wiccan",
+      "breakpoints": true
     }
   ]
 }

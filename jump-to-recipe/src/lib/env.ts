@@ -9,7 +9,13 @@ const envSchema = z.object({
   // App
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   
-  // Add other environment variables as needed
+  // Auth
+  NEXTAUTH_URL: z.string().url().optional(),
+  NEXTAUTH_SECRET: z.string().min(1),
+  
+  // OAuth Providers
+  GOOGLE_ID: z.string().min(1),
+  GOOGLE_SECRET: z.string().min(1),
 });
 
 // Parse and validate environment variables
