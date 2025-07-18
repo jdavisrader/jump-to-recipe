@@ -1,18 +1,28 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import { UserProfileButton } from '@/components/user-profile-button';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
+import { Menu, X } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 export function Navbar() {
   const pathname = usePathname();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   
   // Skip rendering navbar on auth pages
   if (pathname.startsWith('/auth/')) {
     return null;
   }
+  
+  const navLinks = [
+    { href: '/recipes', label: 'Recipes' },
+    { href: '/cookbooks', label: 'Cookbooks' },
+    { href: '/grocery-lists', label: 'Grocery Lists' },
+  ];
   
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -23,41 +33,63 @@ export function Navbar() {
           </Link>
         </div>
         
-        <nav className="flex items-center space-x-4 lg:space-x-6 mx-6">
-          <Link
-            href="/recipes"
-            className={cn(
-              "text-sm font-medium transition-colors hover:text-primary",
-              pathname.startsWith('/recipes') ? "text-primary" : "text-muted-foreground"
-            )}
-          >
-            Recipes
-          </Link>
-          <Link
-            href="/cookbooks"
-            className={cn(
-              "text-sm font-medium transition-colors hover:text-primary",
-              pathname.startsWith('/cookbooks') ? "text-primary" : "text-muted-foreground"
-            )}
-          >
-            Cookbooks
-          </Link>
-          <Link
-            href="/grocery-lists"
-            className={cn(
-              "text-sm font-medium transition-colors hover:text-primary",
-              pathname.startsWith('/grocery-lists') ? "text-primary" : "text-muted-foreground"
-            )}
-          >
-            Grocery Lists
-          </Link>
+        {/* Desktop Navigation */}
+        <nav className="hidden md:flex items-center space-x-4 lg:space-x-6 mx-6">
+          {navLinks.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              className={cn(
+                "text-sm font-medium transition-colors hover:text-primary",
+                pathname.startsWith(link.href) ? "text-primary" : "text-muted-foreground"
+              )}
+            >
+              {link.label}
+            </Link>
+          ))}
         </nav>
         
         <div className="ml-auto flex items-center space-x-4">
           <ThemeToggle />
           <UserProfileButton />
+          
+          {/* Mobile Menu Button */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="md:hidden"
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            aria-label="Toggle menu"
+          >
+            {isMenuOpen ? (
+              <X className="h-5 w-5" />
+            ) : (
+              <Menu className="h-5 w-5" />
+            )}
+          </Button>
         </div>
       </div>
+      
+      {/* Mobile Navigation */}
+      {isMenuOpen && (
+        <div className="md:hidden border-t">
+          <nav className="flex flex-col space-y-4 p-4">
+            {navLinks.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={cn(
+                  "text-sm font-medium transition-colors hover:text-primary p-2",
+                  pathname.startsWith(link.href) ? "text-primary bg-muted rounded-md" : "text-muted-foreground"
+                )}
+                onClick={() => setIsMenuOpen(false)}
+              >
+                {link.label}
+              </Link>
+            ))}
+          </nav>
+        </div>
+      )}
     </header>
   );
 }

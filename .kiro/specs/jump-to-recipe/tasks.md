@@ -22,7 +22,7 @@
   - Create login/logout pages with social authentication buttons
   - _Requirements: 1.1, 1.2, 1.3, 1.4_
 
-- [ ] 4. Build landing page and basic UI components
+- [x] 4. Build landing page and basic UI components
   - Create responsive landing page with hero section and recipe previews
   - Implement dark/light theme toggle functionality
   - Build reusable UI components using shadcn/ui (buttons, forms, cards)

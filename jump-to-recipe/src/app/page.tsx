@@ -1,102 +1,240 @@
 import Image from "next/image";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { CTAButtons } from "@/components/cta-buttons";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Clock, ChefHat, Users, ExternalLink } from "lucide-react";
+
+// Mock recipe data for preview cards
+const recipePreviewData = [
+  {
+    id: "1",
+    title: "Classic Spaghetti Carbonara",
+    description: "A creamy Italian pasta dish with pancetta and cheese",
+    imageUrl: "https://images.unsplash.com/photo-1612874742237-6526221588e3?q=80&w=500&auto=format&fit=crop",
+    prepTime: 10,
+    cookTime: 15,
+    difficulty: "easy",
+    servings: 4,
+  },
+  {
+    id: "2",
+    title: "Avocado Toast with Poached Eggs",
+    description: "A nutritious breakfast with creamy avocado and perfectly poached eggs",
+    imageUrl: "https://images.unsplash.com/photo-1525351484163-7529414344d8?q=80&w=500&auto=format&fit=crop",
+    prepTime: 5,
+    cookTime: 10,
+    difficulty: "easy",
+    servings: 2,
+  },
+  {
+    id: "3",
+    title: "Thai Green Curry",
+    description: "Aromatic and spicy curry with coconut milk and fresh vegetables",
+    imageUrl: "https://images.unsplash.com/photo-1455619452474-d2be8b1e70cd?q=80&w=500&auto=format&fit=crop",
+    prepTime: 20,
+    cookTime: 30,
+    difficulty: "medium",
+    servings: 4,
+  },
+];
 
 export default function Home() {
   return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+    <div className="flex flex-col min-h-[calc(100vh-3.5rem)]">
+      {/* Hero Section */}
+      <section className="relative w-full py-12 md:py-24 lg:py-32 xl:py-48 bg-gradient-to-b from-background to-muted/30">
+        <div className="container px-4 md:px-6">
+          <div className="grid gap-6 lg:grid-cols-[1fr_400px] lg:gap-12 xl:grid-cols-[1fr_600px]">
+            <div className="flex flex-col justify-center space-y-4">
+              <div className="space-y-2">
+                <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl lg:text-6xl/none">
+                  Your Recipes, Organized
+                </h1>
+                <p className="max-w-[600px] text-muted-foreground md:text-xl">
+                  Collect, organize, and share your favorite recipes with Jump to Recipe. 
+                  Import from URLs, create digital cookbooks, and generate smart grocery lists.
+                </p>
+              </div>
+              <CTAButtons />
+            </div>
+            <div className="mx-auto aspect-video overflow-hidden rounded-xl object-cover lg:order-last">
+              <Image
+                src="https://images.unsplash.com/photo-1556911220-bff31c812dba?q=80&w=1000&auto=format&fit=crop"
+                alt="Cooking ingredients and recipe book"
+                width={600}
+                height={400}
+                className="object-cover w-full h-full"
+                priority
+              />
+            </div>
+          </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
+      </section>
+
+      {/* Features Section */}
+      <section className="w-full py-12 md:py-24 lg:py-32 bg-background">
+        <div className="container px-4 md:px-6">
+          <div className="flex flex-col items-center justify-center space-y-4 text-center">
+            <div className="space-y-2">
+              <div className="inline-block rounded-lg bg-muted px-3 py-1 text-sm">Features</div>
+              <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">Everything You Need</h2>
+              <p className="max-w-[900px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
+                Jump to Recipe provides all the tools you need to manage your recipes and meal planning in one place.
+              </p>
+            </div>
+          </div>
+          <div className="mx-auto grid max-w-5xl items-center gap-6 py-12 lg:grid-cols-3">
+            <div className="grid gap-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+                <ChefHat className="h-6 w-6" />
+              </div>
+              <div className="space-y-2">
+                <h3 className="text-xl font-bold">Recipe Management</h3>
+                <p className="text-muted-foreground">
+                  Easily add recipes manually, import from URLs, or extract from images with OCR.
+                </p>
+              </div>
+            </div>
+            <div className="grid gap-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+                <Users className="h-6 w-6" />
+              </div>
+              <div className="space-y-2">
+                <h3 className="text-xl font-bold">Digital Cookbooks</h3>
+                <p className="text-muted-foreground">
+                  Create and share custom cookbooks with friends and family.
+                </p>
+              </div>
+            </div>
+            <div className="grid gap-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+                <Clock className="h-6 w-6" />
+              </div>
+              <div className="space-y-2">
+                <h3 className="text-xl font-bold">Smart Grocery Lists</h3>
+                <p className="text-muted-foreground">
+                  Generate optimized shopping lists from your selected recipes.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Recipe Preview Section */}
+      <section className="w-full py-12 md:py-24 lg:py-32 bg-muted/30">
+        <div className="container px-4 md:px-6">
+          <div className="flex flex-col items-center justify-center space-y-4 text-center">
+            <div className="space-y-2">
+              <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">Featured Recipes</h2>
+              <p className="max-w-[900px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
+                Discover delicious recipes from our community.
+              </p>
+            </div>
+          </div>
+          <div className="mx-auto grid max-w-5xl gap-6 py-12 sm:grid-cols-2 lg:grid-cols-3">
+            {recipePreviewData.map((recipe) => (
+              <Card key={recipe.id} className="overflow-hidden">
+                <div className="aspect-video w-full overflow-hidden">
+                  <Image
+                    src={recipe.imageUrl}
+                    alt={recipe.title}
+                    width={500}
+                    height={300}
+                    className="object-cover w-full h-full transition-transform hover:scale-105"
+                  />
+                </div>
+                <CardHeader>
+                  <CardTitle>{recipe.title}</CardTitle>
+                  <CardDescription>{recipe.description}</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center justify-between text-sm text-muted-foreground">
+                    <div className="flex items-center">
+                      <Clock className="mr-1 h-4 w-4" />
+                      <span>{recipe.prepTime + recipe.cookTime} min</span>
+                    </div>
+                    <div className="flex items-center">
+                      <ChefHat className="mr-1 h-4 w-4" />
+                      <span>{recipe.difficulty}</span>
+                    </div>
+                    <div className="flex items-center">
+                      <Users className="mr-1 h-4 w-4" />
+                      <span>{recipe.servings} servings</span>
+                    </div>
+                  </div>
+                </CardContent>
+                <CardFooter>
+                  <Button asChild className="w-full">
+                    <Link href={`/recipes/${recipe.id}`}>
+                      View Recipe
+                      <ExternalLink className="h-4 w-4 ml-2" />
+                    </Link>
+                  </Button>
+                </CardFooter>
+              </Card>
+            ))}
+          </div>
+          <div className="flex justify-center">
+            <Button asChild variant="outline" size="lg">
+              <Link href="/recipes">
+                Browse All Recipes
+                <ExternalLink className="h-4 w-4 ml-2" />
+              </Link>
+            </Button>
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="w-full py-12 md:py-24 lg:py-32 bg-primary text-primary-foreground">
+        <div className="container px-4 md:px-6">
+          <div className="flex flex-col items-center justify-center space-y-4 text-center">
+            <div className="space-y-2">
+              <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">Ready to Get Started?</h2>
+              <p className="max-w-[900px] md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
+                Join thousands of home cooks who are organizing their recipes with Jump to Recipe.
+              </p>
+            </div>
+            <CTAButtons 
+              primary={{ text: 'Create Account', href: '/auth/register', variant: 'secondary', size: 'lg' }}
+              secondary={{ text: 'Sign In', href: '/auth/login', variant: 'outline', size: 'lg' }}
+              className="justify-center"
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="w-full py-6 bg-background border-t">
+        <div className="container px-4 md:px-6">
+          <div className="flex flex-col items-center justify-center gap-4 md:flex-row md:justify-between">
+            <div className="text-center md:text-left">
+              <p className="text-sm text-muted-foreground">
+                © {new Date().getFullYear()} Jump to Recipe. All rights reserved.
+              </p>
+            </div>
+            <div className="flex gap-4">
+              <Link href="/terms" className="text-sm text-muted-foreground hover:underline">
+                Terms
+              </Link>
+              <Link href="/privacy" className="text-sm text-muted-foreground hover:underline">
+                Privacy
+              </Link>
+              <Link href="/contact" className="text-sm text-muted-foreground hover:underline">
+                Contact
+              </Link>
+            </div>
+          </div>
+        </div>
       </footer>
     </div>
   );
