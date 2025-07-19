@@ -47,7 +47,7 @@
   - Add comprehensive error handling and validation to all endpoints
   - _Requirements: 3.1, 3.5, 6.1, 6.2, 6.3_
 
-- [ ] 7. Implement recipe import functionality
+- [x] 7. Implement recipe import functionality
   - Create POST /api/recipes/import endpoint for URL-based imports
   - Build JSON-LD scraping utility to extract recipe structured data
   - Implement HTML parsing fallback for non-structured recipe pages
