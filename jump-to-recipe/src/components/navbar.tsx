@@ -6,7 +6,7 @@ import { UserProfileButton } from '@/components/user-profile-button';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, Plus, Upload, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export function Navbar() {
@@ -49,7 +49,23 @@ export function Navbar() {
           ))}
         </nav>
         
-        <div className="ml-auto flex items-center space-x-4">
+        <div className="ml-auto flex items-center space-x-2">
+          {/* Recipe Action Buttons - Desktop */}
+          <div className="hidden md:flex items-center space-x-2">
+            <Button asChild size="sm" variant="outline">
+              <Link href="/recipes/new">
+                <Plus className="h-4 w-4 mr-1" />
+                Create
+              </Link>
+            </Button>
+            <Button asChild size="sm" variant="outline">
+              <Link href="/recipes/import">
+                <Upload className="h-4 w-4 mr-1" />
+                Import
+              </Link>
+            </Button>
+          </div>
+          
           <ThemeToggle />
           <UserProfileButton />
           
@@ -87,6 +103,22 @@ export function Navbar() {
                 {link.label}
               </Link>
             ))}
+            
+            {/* Recipe Action Buttons - Mobile */}
+            <div className="border-t pt-4 space-y-2">
+              <Button asChild size="sm" className="w-full justify-start">
+                <Link href="/recipes/new" onClick={() => setIsMenuOpen(false)}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Create Recipe
+                </Link>
+              </Button>
+              <Button asChild size="sm" variant="outline" className="w-full justify-start">
+                <Link href="/recipes/import" onClick={() => setIsMenuOpen(false)}>
+                  <Upload className="h-4 w-4 mr-2" />
+                  Import Recipe
+                </Link>
+              </Button>
+            </div>
           </nav>
         </div>
       )}

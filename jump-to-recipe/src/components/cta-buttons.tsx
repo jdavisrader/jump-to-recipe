@@ -27,15 +27,15 @@ export function CTAButtons({
 }: CTAButtonsProps) {
   const { status } = useSession();
   
-  // Don't show auth buttons if user is already authenticated
+  // Show recipe-focused buttons if user is already authenticated
   if (status === 'authenticated') {
     return (
       <div className={`flex flex-col gap-2 min-[400px]:flex-row ${className}`}>
         <Button asChild size={primary.size || 'lg'} variant={primary.variant || 'default'}>
-          <Link href="/recipes">Browse Recipes</Link>
+          <Link href="/recipes/new">Create Recipe</Link>
         </Button>
         <Button asChild size={secondary.size || 'lg'} variant={secondary.variant || 'outline'}>
-          <Link href="/cookbooks">My Cookbooks</Link>
+          <Link href="/recipes">Browse Recipes</Link>
         </Button>
       </div>
     );

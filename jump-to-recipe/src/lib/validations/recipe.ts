@@ -12,17 +12,17 @@ export const unitSchema = z.enum([
 
 // Ingredient validation
 export const ingredientSchema = z.object({
-  id: z.string().uuid().optional(), // Optional for new ingredients
+  id: z.string(),
   name: z.string().min(1, 'Ingredient name is required'),
-  amount: z.number().positive('Amount must be positive').optional(),
-  unit: unitSchema.optional().default(''),
+  amount: z.number().positive('Amount must be positive').default(0),
+  unit: unitSchema.default(''),
   notes: z.string().optional(),
   category: z.string().optional(),
 });
 
 // Instruction validation
 export const instructionSchema = z.object({
-  id: z.string().uuid().optional(), // Optional for new instructions
+  id: z.string(),
   step: z.number().int().positive('Step number must be positive'),
   content: z.string().min(1, 'Instruction content is required'),
   duration: z.number().int().positive().optional(),
@@ -40,9 +40,9 @@ export const recipeSchema = z.object({
   difficulty: z.enum(['easy', 'medium', 'hard']).optional(),
   tags: z.array(z.string()).default([]),
   notes: z.string().optional(),
-  imageUrl: z.string().url().optional(),
-  sourceUrl: z.string().url().optional(),
-  authorId: z.string().uuid(),
+  imageUrl: z.string().url().optional().or(z.literal('')),
+  sourceUrl: z.string().url().optional().or(z.literal('')),
+  authorId: z.string(),
   visibility: z.enum(['public', 'private']).default('private'),
 });
 
