@@ -1,4 +1,5 @@
 // Core application types
+export * from './recipe';
 
 export interface User {
   id: string;
@@ -9,7 +10,9 @@ export interface User {
   updatedAt: Date;
 }
 
-export interface Recipe {
+// Legacy Recipe interface - will be replaced by the one in recipe.ts
+// Keeping for backward compatibility until all code is updated
+export interface LegacyRecipe {
   id: string;
   title: string;
   description?: string;
@@ -33,7 +36,7 @@ export interface Cookbook {
   description?: string;
   isPublic: boolean;
   userId: string;
-  recipes: Recipe[];
+  recipes: LegacyRecipe[];
   createdAt: Date;
   updatedAt: Date;
 }

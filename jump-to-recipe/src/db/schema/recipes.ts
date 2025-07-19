@@ -4,6 +4,10 @@ import { timestamps } from './_utils';
 import { sql } from 'drizzle-orm';
 import { users } from './users';
 
+// Define enums for recipe properties
+export const difficultyEnum = pgEnum('difficulty', ['easy', 'medium', 'hard']);
+export const visibilityEnum = pgEnum('visibility', ['public', 'private']);
+
 export const recipes = pgTable('recipes', {
   id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
   title: varchar('title', { length: 500 }).notNull(),
@@ -13,13 +17,13 @@ export const recipes = pgTable('recipes', {
   prepTime: integer('prep_time'),
   cookTime: integer('cook_time'),
   servings: integer('servings'),
-  difficulty: varchar('difficulty', { length: 50 }),
+  difficulty: difficultyEnum('difficulty'),
   tags: text('tags').array(),
   notes: text('notes'),
   imageUrl: text('image_url'),
   sourceUrl: text('source_url'),
   authorId: uuid('author_id').references(() => users.id),
-  visibility: varchar('visibility', { length: 50 }).default('private').notNull(),
+  visibility: visibilityEnum('visibility').default('private').notNull(),
   ...timestamps,
 });
 

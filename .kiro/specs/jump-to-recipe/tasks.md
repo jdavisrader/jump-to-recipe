@@ -30,7 +30,7 @@
   - Ensure mobile-responsive design across all components
   - _Requirements: 2.1, 2.2, 2.3, 2.4_
 
-- [ ] 5. Create core recipe data models and validation
+- [x] 5. Create core recipe data models and validation
   - Implement TypeScript interfaces for Recipe, Ingredient, and Instruction types
   - Create Drizzle schema definitions for recipes table
   - Build validation functions for recipe data using Zod or similar
