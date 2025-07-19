@@ -202,7 +202,10 @@ export function extractJsonLdFromHtml(html: string): JsonLdRecipe | null {
                 return jsonData as JsonLdRecipe;
             } else if (jsonData['@graph']) {
                 // Find Recipe in graph
-                const recipe = jsonData['@graph'].find((item: any) => item['@type'] === 'Recipe');
+                const recipe = jsonData['@graph'].find((item: unknown) => 
+                    typeof item === 'object' && item !== null && 
+                    '@type' in item && item['@type'] === 'Recipe'
+                );
                 if (recipe) {
                     return recipe as JsonLdRecipe;
                 }
