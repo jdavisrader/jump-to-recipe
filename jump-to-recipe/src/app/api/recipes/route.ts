@@ -1,0 +1,195 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { db } from '@/db';
+import { recipes } from '@/db/schema/recipes';
+import { recipeFilterSchema, createRecipeSchema } from '@/lib/validations/recipe';
+import { getServerSession } from 'next-auth';
+import { and, desc, eq, lte, sql } from 'drizzle-orm';
+
+/**
+ * GET /api/recipes
+ * 
+ * Retrieves a paginated list of recipes with optional filtering
+ * Public recipes are visible to all users
+ * Private recipes are only visible to their authors
+ */
+export async function GET(req: NextRequest) {
+    try {
+        // Get query parameters
+        const url = new URL(req.url);
+        let queryParams: Record<string, string | string[]> = Object.fromEntries(url.searchParams.entries());
+
+        // Parse tags as array if present
+        if (queryParams.tags) {
+            try {
+                const parsedTags = JSON.parse(queryParams.tags as string);
+                // Create a new object with the parsed tags to avoid type issues
+                queryParams = {
+                    ...queryParams,
+                    tags: Array.isArray(parsedTags) ? parsedTags : [parsedTags]
+                };
+            } catch (e) {
+                // Create a new object with the split tags to avoid type issues
+                queryParams = {
+                    ...queryParams,
+                    tags: (queryParams.tags as string).split(',')
+                };
+            }
+        }
+
+        // Parse and validate query parameters
+        const validationResult = recipeFilterSchema.safeParse(queryParams);
+
+        if (!validationResult.success) {
+            return NextResponse.json(
+                { error: 'Invalid query parameters', details: validationResult.error.flatten() },
+                { status: 400 }
+            );
+        }
+
+        const {
+            query,
+            tags,
+            difficulty,
+            maxCookTime,
+            authorId,
+            page = 1,
+            limit = 10
+        } = validationResult.data;
+
+        // Get current user from session
+        const session = await getServerSession();
+        const currentUserId = session?.user?.id;
+
+        // Build where conditions
+        const whereConditions = [];
+
+        // Filter by visibility - users can see public recipes or their own private recipes
+        if (currentUserId) {
+            // For authenticated users, they can see public recipes or their own private recipes
+            // Use a more explicit approach to avoid type issues
+            whereConditions.push(
+                sql`(${recipes.visibility} = 'public' OR ${recipes.authorId} = ${currentUserId})`
+            );
+        } else {
+            // Non-authenticated users can only see public recipes
+            whereConditions.push(eq(recipes.visibility, 'public'));
+        }
+
+        // Apply text search if query is provided
+        if (query) {
+            whereConditions.push(
+                sql`(${recipes.title} ILIKE ${`%${query}%`} OR ${recipes.description} ILIKE ${`%${query}%`} OR ${recipes.tags} @> ARRAY[${query}]::text[])`
+            );
+        }
+
+        // Filter by tags if provided
+        if (tags && tags.length > 0) {
+            // Convert tags array to a string array for PostgreSQL
+            const tagsArray = tags.map(tag => String(tag));
+            whereConditions.push(sql`${recipes.tags} && ${tagsArray}::text[]`);
+        }
+
+        // Filter by difficulty if provided
+        if (difficulty) {
+            whereConditions.push(eq(recipes.difficulty, difficulty));
+        }
+
+        // Filter by maximum cook time if provided
+        if (maxCookTime) {
+            whereConditions.push(lte(recipes.cookTime, maxCookTime));
+        }
+
+        // Filter by author if provided
+        if (authorId) {
+            whereConditions.push(eq(recipes.authorId, authorId));
+        }
+
+        // Calculate pagination
+        const offset = (page - 1) * limit;
+
+        // Execute query with all filters
+        const recipeResults = await db.query.recipes.findMany({
+            where: and(...whereConditions),
+            orderBy: [desc(recipes.createdAt)],
+            limit: limit,
+            offset: offset,
+        });
+
+        // Count total matching recipes for pagination info
+        const countResult = await db
+            .select({ count: sql<number>`count(*)` })
+            .from(recipes)
+            .where(and(...whereConditions));
+
+        const totalRecipes = countResult[0]?.count || 0;
+        const totalPages = Math.ceil(totalRecipes / limit);
+
+        return NextResponse.json({
+            recipes: recipeResults,
+            pagination: {
+                total: totalRecipes,
+                page,
+                limit,
+                totalPages,
+                hasNextPage: page < totalPages,
+                hasPrevPage: page > 1,
+            },
+        });
+    } catch (error) {
+        console.error('Error fetching recipes:', error);
+        return NextResponse.json(
+            { error: 'Failed to fetch recipes' },
+            { status: 500 }
+        );
+    }
+}
+
+/**
+ * POST /api/recipes
+ * 
+ * Creates a new recipe
+ * Requires authentication
+ */
+export async function POST(req: NextRequest) {
+    try {
+        // Get current user from session
+        const session = await getServerSession();
+
+        if (!session?.user?.id) {
+            return NextResponse.json(
+                { error: 'Authentication required' },
+                { status: 401 }
+            );
+        }
+
+        // Parse request body
+        const body = await req.json();
+
+        // Validate recipe data
+        const validationResult = createRecipeSchema.safeParse({
+            ...body,
+            authorId: session.user.id,
+        });
+
+        if (!validationResult.success) {
+            return NextResponse.json(
+                { error: 'Invalid recipe data', details: validationResult.error.flatten() },
+                { status: 400 }
+            );
+        }
+
+        // Create new recipe
+        const newRecipe = await db.insert(recipes).values({
+            ...validationResult.data,
+            authorId: session.user.id,
+        }).returning();
+
+        return NextResponse.json(newRecipe[0], { status: 201 });
+    } catch (error) {
+        console.error('Error creating recipe:', error);
+        return NextResponse.json(
+            { error: 'Failed to create recipe' },
+            { status: 500 }
+        );
+    }
+}

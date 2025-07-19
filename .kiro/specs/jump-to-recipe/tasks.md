@@ -38,7 +38,7 @@
   - Create recipe parsing utilities for structured data
   - _Requirements: 3.1, 3.4, 3.5_
 
-- [ ] 6. Build recipe CRUD API endpoints
+- [x] 6. Build recipe CRUD API endpoints
   - Create GET /api/recipes endpoint with pagination and filtering
   - Implement POST /api/recipes for manual recipe creation
   - Build GET /api/recipes/[id] for individual recipe retrieval
