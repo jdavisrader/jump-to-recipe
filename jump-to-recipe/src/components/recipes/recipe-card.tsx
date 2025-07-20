@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { Clock, Users, ChefHat, ExternalLink } from "lucide-react";
 
@@ -13,6 +12,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { RecipeImage } from "./recipe-image";
 import type { Recipe } from "@/types/recipe";
 
 interface RecipeCardProps {
@@ -28,17 +28,15 @@ export function RecipeCard({ recipe, showAuthor = false, compact = false }: Reci
     return (
       <Card className="overflow-hidden hover:shadow-md transition-shadow">
         <div className="flex">
-          {recipe.imageUrl && (
-            <div className="w-24 h-24 flex-shrink-0 overflow-hidden">
-              <Image
-                src={recipe.imageUrl}
-                alt={recipe.title}
-                width={96}
-                height={96}
-                className="object-cover w-full h-full"
-              />
-            </div>
-          )}
+          <div className="w-24 h-24 flex-shrink-0 overflow-hidden">
+            <RecipeImage
+              src={recipe.imageUrl}
+              alt={recipe.title}
+              width={96}
+              height={96}
+              className="object-cover w-full h-full"
+            />
+          </div>
           <div className="flex-1 p-4">
             <div className="space-y-1">
               <h3 className="font-semibold text-sm leading-tight line-clamp-2">
@@ -78,17 +76,15 @@ export function RecipeCard({ recipe, showAuthor = false, compact = false }: Reci
 
   return (
     <Card className="overflow-hidden hover:shadow-lg transition-shadow">
-      {recipe.imageUrl && (
-        <div className="aspect-video w-full overflow-hidden">
-          <Image
-            src={recipe.imageUrl}
-            alt={recipe.title}
-            width={400}
-            height={225}
-            className="object-cover w-full h-full transition-transform hover:scale-105"
-          />
-        </div>
-      )}
+      <div className="aspect-video w-full overflow-hidden">
+        <RecipeImage
+          src={recipe.imageUrl}
+          alt={recipe.title}
+          width={400}
+          height={225}
+          className="object-cover w-full h-full transition-transform hover:scale-105"
+        />
+      </div>
       
       <CardHeader className="pb-3">
         <CardTitle className="line-clamp-2">{recipe.title}</CardTitle>

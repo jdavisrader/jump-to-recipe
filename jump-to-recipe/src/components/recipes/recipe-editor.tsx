@@ -15,7 +15,6 @@ import {
   ExternalLink 
 } from "lucide-react";
 import { v4 as uuidv4 } from "uuid";
-import Image from "next/image";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,6 +31,7 @@ import {
 } from "@/components/ui/form";
 
 import { updateRecipeSchema } from "@/lib/validations/recipe";
+import { RecipeImage } from "./recipe-image";
 import type { Recipe, NewRecipeInput } from "@/types/recipe";
 
 interface RecipeEditorProps {
@@ -238,28 +238,26 @@ export function RecipeEditor({
               </div>
             </div>
           ) : (
-            form.watch("imageUrl") && (
-              <div className="relative group">
-                <div className="aspect-video w-full overflow-hidden rounded-lg">
-                  <Image
-                    src={form.watch("imageUrl") || ""}
-                    alt={form.watch("title") || ""}
-                    width={800}
-                    height={450}
-                    className="object-cover w-full h-full"
-                  />
-                </div>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="secondary"
-                  className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
-                  onClick={() => handleSectionEdit("image")}
-                >
-                  <Edit className="h-4 w-4" />
-                </Button>
+            <div className="relative group">
+              <div className="aspect-video w-full overflow-hidden rounded-lg">
+                <RecipeImage
+                  src={form.watch("imageUrl") || ""}
+                  alt={form.watch("title") || ""}
+                  width={800}
+                  height={450}
+                  className="object-cover w-full h-full"
+                />
               </div>
-            )
+              <Button
+                type="button"
+                size="sm"
+                variant="secondary"
+                className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                onClick={() => handleSectionEdit("image")}
+              >
+                <Edit className="h-4 w-4" />
+              </Button>
+            </div>
           )}
 
           {/* Recipe Meta */}
@@ -598,6 +596,7 @@ export function RecipeEditor({
                         name: "",
                         amount: 0,
                         unit: "",
+                        displayAmount: "",
                         notes: "",
                       })
                     }
@@ -620,22 +619,20 @@ export function RecipeEditor({
               ) : (
                 <ul className="space-y-3">
                   {(form.watch("ingredients") || []).map((ingredient) => (
-                    <li key={ingredient.id} className="flex justify-between items-start">
-                      <div className="flex-1">
-                        <div className="font-medium">{ingredient.name}</div>
-                        {ingredient.notes && (
-                          <div className="text-sm text-muted-foreground">
-                            {ingredient.notes}
-                          </div>
-                        )}
-                      </div>
-                      <div className="text-sm text-muted-foreground ml-2 text-right">
+                    <li key={ingredient.id} className="space-y-1">
+                      <div className="font-medium">
                         {(ingredient.amount || 0) > 0 && (
-                          <>
-                            {ingredient.amount} {ingredient.unit}
-                          </>
+                          <span className="text-muted-foreground mr-2">
+                            {ingredient.displayAmount || ingredient.amount} {ingredient.unit}
+                          </span>
                         )}
+                        {ingredient.name}
                       </div>
+                      {ingredient.notes && (
+                        <div className="text-sm text-muted-foreground ml-2">
+                          {ingredient.notes}
+                        </div>
+                      )}
                     </li>
                   ))}
                 </ul>

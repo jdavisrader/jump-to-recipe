@@ -1,10 +1,10 @@
 "use client";
 
-import Image from "next/image";
 import { Clock, Users, ChefHat, ExternalLink, Edit } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { RecipeImage } from "./recipe-image";
 import type { Recipe } from "@/types/recipe";
 
 interface RecipeDisplayProps {
@@ -36,17 +36,16 @@ export function RecipeDisplay({ recipe, onEdit, canEdit = false }: RecipeDisplay
         </div>
 
         {/* Recipe Image */}
-        {recipe.imageUrl && (
-          <div className="aspect-video w-full overflow-hidden rounded-lg">
-            <Image
-              src={recipe.imageUrl}
-              alt={recipe.title}
-              width={800}
-              height={450}
-              className="object-cover w-full h-full"
-            />
-          </div>
-        )}
+        <div className="aspect-video w-full overflow-hidden rounded-lg">
+          <RecipeImage
+            src={recipe.imageUrl}
+            alt={recipe.title}
+            width={800}
+            height={450}
+            className="object-cover w-full h-full"
+            priority
+          />
+        </div>
 
         {/* Recipe Meta */}
         <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
@@ -122,22 +121,20 @@ export function RecipeDisplay({ recipe, onEdit, canEdit = false }: RecipeDisplay
           <CardContent>
             <ul className="space-y-3">
               {recipe.ingredients.map((ingredient) => (
-                <li key={ingredient.id} className="flex justify-between items-start">
-                  <div className="flex-1">
-                    <div className="font-medium">{ingredient.name}</div>
-                    {ingredient.notes && (
-                      <div className="text-sm text-muted-foreground">
-                        {ingredient.notes}
-                      </div>
-                    )}
-                  </div>
-                  <div className="text-sm text-muted-foreground ml-2 text-right">
+                <li key={ingredient.id} className="space-y-1">
+                  <div className="font-medium">
                     {ingredient.amount > 0 && (
-                      <>
-                        {ingredient.amount} {ingredient.unit}
-                      </>
+                      <span className="text-muted-foreground mr-2">
+                        {ingredient.displayAmount || ingredient.amount} {ingredient.unit}
+                      </span>
                     )}
+                    {ingredient.name}
                   </div>
+                  {ingredient.notes && (
+                    <div className="text-sm text-muted-foreground ml-2">
+                      {ingredient.notes}
+                    </div>
+                  )}
                 </li>
               ))}
             </ul>

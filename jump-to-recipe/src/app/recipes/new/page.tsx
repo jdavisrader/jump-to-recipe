@@ -2,20 +2,27 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { RecipeForm } from "@/components/recipes";
 import type { NewRecipeInput } from "@/types/recipe";
 
 export default function NewRecipePage() {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const { data: session, status } = useSession();
 
   const handleCreateRecipe = async (data: NewRecipeInput) => {
+    if (!session?.user?.id) {
+      alert("You must be logged in to create a recipe.");
+      router.push("/auth/login");
+      return;
+    }
+
     setIsLoading(true);
     try {
-      // TODO: Replace with actual user ID from session
       const recipeData = {
         ...data,
-        authorId: "demo-user-id", // This should come from the authenticated user
+        authorId: session.user.id,
       };
 
       const response = await fetch("/api/recipes", {
@@ -27,7 +34,8 @@ export default function NewRecipePage() {
       });
 
       if (!response.ok) {
-        throw new Error("Failed to create recipe");
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to create recipe");
       }
 
       const recipe = await response.json();
@@ -36,11 +44,28 @@ export default function NewRecipePage() {
       router.push(`/recipes/${recipe.id}`);
     } catch (error) {
       console.error("Error creating recipe:", error);
-      alert("Failed to create recipe. Please try again.");
+      alert(`Failed to create recipe: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setIsLoading(false);
     }
   };
+
+  // Show loading while checking authentication
+  if (status === "loading") {
+    return (
+      <div className="container mx-auto py-8 max-w-4xl">
+        <div className="text-center">
+          <p>Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Redirect to login if not authenticated
+  if (status === "unauthenticated") {
+    router.push("/auth/login");
+    return null;
+  }
 
   return (
     <div className="container mx-auto py-8 max-w-4xl">

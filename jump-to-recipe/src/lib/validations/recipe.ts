@@ -14,8 +14,9 @@ export const unitSchema = z.enum([
 export const ingredientSchema = z.object({
   id: z.string(),
   name: z.string().min(1, 'Ingredient name is required'),
-  amount: z.number().positive('Amount must be positive').default(0),
+  amount: z.number().nonnegative('Amount must be non-negative').default(0),
   unit: unitSchema.default(''),
+  displayAmount: z.string().optional(), // Original fraction format for display
   notes: z.string().optional(),
   category: z.string().optional(),
 });

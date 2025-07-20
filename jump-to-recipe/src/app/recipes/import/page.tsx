@@ -2,20 +2,27 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { RecipeImportForm } from "@/components/recipes";
 import type { Recipe, NewRecipeInput } from "@/types/recipe";
 
 export default function ImportRecipePage() {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const { data: session, status } = useSession();
 
   const handleImportRecipe = async (data: NewRecipeInput) => {
+    if (!session?.user?.id) {
+      alert("You must be logged in to import a recipe.");
+      router.push("/auth/login");
+      return;
+    }
+
     setIsLoading(true);
     try {
-      // TODO: Replace with actual user ID from session
       const recipeData = {
         ...data,
-        authorId: "demo-user-id", // This should come from the authenticated user
+        authorId: session.user.id,
       };
 
       const response = await fetch("/api/recipes", {
@@ -27,7 +34,8 @@ export default function ImportRecipePage() {
       });
 
       if (!response.ok) {
-        throw new Error("Failed to import recipe");
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to import recipe");
       }
 
       const recipe = await response.json();
@@ -36,7 +44,7 @@ export default function ImportRecipePage() {
       router.push(`/recipes/${recipe.id}`);
     } catch (error) {
       console.error("Error importing recipe:", error);
-      alert("Failed to import recipe. Please try again.");
+      alert(`Failed to import recipe: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setIsLoading(false);
     }
@@ -64,6 +72,23 @@ export default function ImportRecipePage() {
       return null;
     }
   };
+
+  // Show loading while checking authentication
+  if (status === "loading") {
+    return (
+      <div className="container mx-auto py-8">
+        <div className="text-center">
+          <p>Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Redirect to login if not authenticated
+  if (status === "unauthenticated") {
+    router.push("/auth/login");
+    return null;
+  }
 
   return (
     <div className="container mx-auto py-8">

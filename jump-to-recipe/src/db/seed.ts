@@ -9,7 +9,7 @@ async function seed() {
   try {
     // Create a demo user first
     const hashedPassword = await bcrypt.hash('demo123', 10);
-    
+
     const [demoUser] = await db.insert(users).values({
       id: uuidv4(),
       name: 'Demo User',

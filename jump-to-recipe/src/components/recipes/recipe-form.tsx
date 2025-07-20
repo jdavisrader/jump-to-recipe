@@ -359,6 +359,7 @@ export function RecipeForm({
                   name: "",
                   amount: 0,
                   unit: "",
+                  displayAmount: "",
                   notes: "",
                 })
               }

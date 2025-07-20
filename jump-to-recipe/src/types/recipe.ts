@@ -16,6 +16,7 @@ export interface Ingredient {
   name: string;
   amount: number;
   unit: Unit;
+  displayAmount?: string; // Original fraction format for display (e.g., "1½", "¾")
   notes?: string;
   category?: string;
 }
