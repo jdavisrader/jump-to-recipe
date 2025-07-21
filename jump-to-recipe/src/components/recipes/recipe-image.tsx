@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Image from "next/image";
 import { ImageIcon } from "lucide-react";
 
 interface RecipeImageProps {
-  src?: string;
+  src?: string | null;
   alt: string;
   width: number;
   height: number;
@@ -15,7 +15,7 @@ interface RecipeImageProps {
 }
 
 // Helper function to validate image URL
-function isValidImageUrl(url: string | undefined): boolean {
+function isValidImageUrl(url: string | null | undefined): boolean {
   if (!url || url === 'undefined' || url.trim() === '') {
     return false;
   }
@@ -23,7 +23,7 @@ function isValidImageUrl(url: string | undefined): boolean {
   try {
     new URL(url);
     return true;
-  } catch (e) {
+  } catch {
     return false;
   }
 }

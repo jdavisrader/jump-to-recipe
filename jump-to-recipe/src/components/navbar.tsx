@@ -6,7 +6,7 @@ import { UserProfileButton } from '@/components/user-profile-button';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { Menu, X, Plus, Upload, ChevronDown } from 'lucide-react';
+import { Menu, X, Plus, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export function Navbar() {

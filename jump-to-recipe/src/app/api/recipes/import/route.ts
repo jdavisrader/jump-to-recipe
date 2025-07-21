@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { v4 as uuidv4 } from 'uuid';
 import * as cheerio from 'cheerio';
-import type { Recipe } from '@/types/recipe';
+import type { Recipe, Unit } from '@/types/recipe';
 import { recipeSchema } from '@/lib/validations/recipe';
 import { ZodError } from 'zod';
 
@@ -79,7 +79,7 @@ export async function POST(request: NextRequest) {
         id: uuidv4(),
         name: 'Ingredient information not available',
         amount: 1,
-        unit: '',
+        unit: '' as Unit,
         notes: 'Please edit this recipe to add proper ingredients',
       }];
 
@@ -99,16 +99,16 @@ export async function POST(request: NextRequest) {
     const recipe: Recipe = {
       id: uuidv4(),
       title: recipeData.title || 'Imported Recipe',
-      description: recipeData.description || '',
+      description: recipeData.description || null,
       ingredients,
       instructions,
-      prepTime: recipeData.prepTime,
-      cookTime: recipeData.cookTime,
-      servings: recipeData.servings,
-      difficulty: recipeData.difficulty,
+      prepTime: recipeData.prepTime || null,
+      cookTime: recipeData.cookTime || null,
+      servings: recipeData.servings || null,
+      difficulty: recipeData.difficulty || null,
       tags: recipeData.tags || [],
-      notes: recipeData.notes || '',
-      imageUrl: validatedImageUrl,
+      notes: recipeData.notes || null,
+      imageUrl: validatedImageUrl || null,
       sourceUrl: url,
       authorId: 'imported-recipe',
       visibility: 'private',
@@ -120,7 +120,7 @@ export async function POST(request: NextRequest) {
     try {
       // Log ingredients for debugging
       console.log('Validating recipe ingredients:');
-      ingredients.forEach((ing: { name: string; amount: number; unit: string; notes?: string }, index: number) => {
+      ingredients.forEach((ing: { name: string; amount: number; unit: Unit; notes?: string }, index: number) => {
         console.log(`Ingredient ${index + 1}:`, {
           name: ing.name,
           amount: ing.amount,
@@ -130,7 +130,7 @@ export async function POST(request: NextRequest) {
       });
 
       // Validate with Zod schema
-      const validatedRecipe = recipeSchema.parse(recipe);
+      recipeSchema.parse(recipe);
 
       // Return the validated recipe
       return NextResponse.json(recipe);
@@ -139,7 +139,7 @@ export async function POST(request: NextRequest) {
 
       // If it's a Zod error, extract detailed information
       if (validationError instanceof ZodError) {
-        const errorDetails = validationError.format();
+        const errorDetails = validationError.issues;
 
         // Log the full error details for debugging
         console.log('Validation error details:', JSON.stringify(errorDetails, null, 2));
@@ -213,15 +213,15 @@ function extractJsonLdRecipe($: cheerio.CheerioAPI) {
   return null;
 }
 
-function parseJsonLdRecipe(recipe: any) {
+function parseJsonLdRecipe(recipe: Record<string, unknown>) {
   const ingredients = Array.isArray(recipe.recipeIngredient)
-    ? recipe.recipeIngredient.map((ingredient: string, index: number) => {
+    ? recipe.recipeIngredient.map((ingredient: string) => {
       const parsed = parseIngredientString(ingredient);
       return {
         id: uuidv4(),
         name: parsed.name,
         amount: parsed.amount,
-        unit: parsed.unit,
+        unit: parsed.unit as Unit,
         displayAmount: parsed.displayAmount,
         notes: parsed.notes,
       };
@@ -229,27 +229,34 @@ function parseJsonLdRecipe(recipe: any) {
     : [];
 
   const instructions = Array.isArray(recipe.recipeInstructions)
-    ? recipe.recipeInstructions.map((instruction: any, index: number) => ({
+    ? recipe.recipeInstructions.map((instruction: string | Record<string, unknown>, index: number) => ({
       id: uuidv4(),
       step: index + 1,
-      content: typeof instruction === 'string' ? instruction : instruction.text || instruction.name || '',
+      content: typeof instruction === 'string' ? instruction :
+        typeof instruction.text === 'string' ? instruction.text :
+          typeof instruction.name === 'string' ? instruction.name : '',
       duration: undefined,
     }))
     : [];
 
   return {
-    title: recipe.name || '',
-    description: recipe.description || '',
+    title: typeof recipe.name === 'string' ? recipe.name : '',
+    description: typeof recipe.description === 'string' ? recipe.description : null,
     ingredients,
     instructions,
-    prepTime: parseDuration(recipe.prepTime),
-    cookTime: parseDuration(recipe.cookTime),
-    servings: recipe.recipeYield ? parseInt(recipe.recipeYield.toString()) : undefined,
-    difficulty: undefined,
+    prepTime: parseDuration(typeof recipe.prepTime === 'string' ? recipe.prepTime : undefined),
+    cookTime: parseDuration(typeof recipe.cookTime === 'string' ? recipe.cookTime : undefined),
+    servings: typeof recipe.recipeYield === 'string' ? parseInt(recipe.recipeYield) || null : null,
+    difficulty: null,
     tags: Array.isArray(recipe.recipeCategory) ? recipe.recipeCategory :
-      recipe.recipeCategory ? [recipe.recipeCategory] : [],
-    imageUrl: recipe.image ? (Array.isArray(recipe.image) ? recipe.image[0] : recipe.image) : '',
-    notes: recipe.description || '',
+      typeof recipe.recipeCategory === 'string' ? [recipe.recipeCategory] : [],
+    imageUrl: typeof recipe.image === 'string' ? recipe.image :
+      Array.isArray(recipe.image) && recipe.image.length > 0 ?
+        (typeof recipe.image[0] === 'string' ? recipe.image[0] :
+          typeof recipe.image[0]?.url === 'string' ? recipe.image[0].url : '') :
+        typeof recipe.image === 'object' && recipe.image !== null && 'url' in recipe.image &&
+          typeof recipe.image.url === 'string' ? recipe.image.url : '',
+    notes: typeof recipe.description === 'string' ? recipe.description : null,
   };
 }
 
@@ -265,13 +272,13 @@ function extractMicrodataRecipe($: cheerio.CheerioAPI) {
     const description = recipeElement.find('[itemprop="description"]').first().text().trim();
 
     const ingredients = recipeElement.find('[itemprop="recipeIngredient"]')
-      .map((i, el) => {
+      .map((_, el) => {
         const parsed = parseIngredientString($(el).text().trim());
         return {
           id: uuidv4(),
           name: parsed.name,
           amount: parsed.amount,
-          unit: parsed.unit,
+          unit: parsed.unit as Unit,
           displayAmount: parsed.displayAmount,
           notes: parsed.notes,
         };
@@ -287,18 +294,23 @@ function extractMicrodataRecipe($: cheerio.CheerioAPI) {
       }))
       .get();
 
+    const prepTimeAttr = recipeElement.find('[itemprop="prepTime"]').attr('datetime');
+    const cookTimeAttr = recipeElement.find('[itemprop="cookTime"]').attr('datetime');
+    const servingsText = recipeElement.find('[itemprop="recipeYield"]').text();
+    const imageUrl = recipeElement.find('[itemprop="image"]').attr('src') || '';
+
     return {
       title,
-      description,
+      description: description || null,
       ingredients,
       instructions,
-      prepTime: parseDuration(recipeElement.find('[itemprop="prepTime"]').attr('datetime')),
-      cookTime: parseDuration(recipeElement.find('[itemprop="cookTime"]').attr('datetime')),
-      servings: parseInt(recipeElement.find('[itemprop="recipeYield"]').text()) || undefined,
-      difficulty: undefined,
+      prepTime: parseDuration(prepTimeAttr),
+      cookTime: parseDuration(cookTimeAttr),
+      servings: servingsText ? parseInt(servingsText) || null : null,
+      difficulty: null,
       tags: [],
-      imageUrl: recipeElement.find('[itemprop="image"]').attr('src') || '',
-      notes: description,
+      imageUrl,
+      notes: description || null,
     };
   } catch (error) {
     console.warn('Microdata extraction failed:', error);
@@ -318,7 +330,7 @@ function extractBasicRecipe($: cheerio.CheerioAPI, url: string) {
 
   // Try to find ingredients in common patterns
   const ingredients: any[] = [];
-  $('li').each((i, el) => {
+  $('li').each((_, el) => {
     const text = $(el).text().trim();
     if (text && (
       text.match(/\d+.*?(cup|tsp|tbsp|oz|lb|g|kg|ml|l)/i) ||
@@ -329,7 +341,7 @@ function extractBasicRecipe($: cheerio.CheerioAPI, url: string) {
         id: uuidv4(),
         name: parsed.name,
         amount: parsed.amount,
-        unit: parsed.unit,
+        unit: parsed.unit as Unit,
         notes: parsed.notes,
       });
     }
@@ -355,20 +367,20 @@ function extractBasicRecipe($: cheerio.CheerioAPI, url: string) {
 
   return {
     title,
-    description,
+    description: description || null,
     ingredients: ingredients.slice(0, 20), // Limit to prevent spam
     instructions: instructions.slice(0, 20), // Limit to prevent spam
-    prepTime: undefined,
-    cookTime: undefined,
-    servings: undefined,
-    difficulty: undefined,
+    prepTime: null,
+    cookTime: null,
+    servings: null,
+    difficulty: null,
     tags: [],
     imageUrl,
-    notes: description,
+    notes: description || null,
   };
 }
 
-function parseIngredientString(ingredientText: string) {
+function parseIngredientString(ingredientText: string): { name: string; amount: number; unit: Unit; displayAmount?: string; notes: string } {
   // Clean up the ingredient text
   const cleaned = ingredientText.trim();
 
@@ -452,7 +464,7 @@ function parseIngredientString(ingredientText: string) {
       return {
         name: cleanName,
         amount: amount,
-        unit: unit,
+        unit: unit as Unit,
         displayAmount: displayAmount,
         notes: notes,
       };
@@ -463,7 +475,7 @@ function parseIngredientString(ingredientText: string) {
   return {
     name: cleaned,
     amount: 1,
-    unit: '',
+    unit: '' as Unit,
     notes: '',
   };
 }
@@ -556,7 +568,7 @@ function normalizeUnit(unit: string): string {
     'grams': 'g', 'gram': 'g', 'gs': 'g',
 
     // Other - map these to allowed units
-    'pinches': 'pinch', 'pinch': 'pinch', 
+    'pinches': 'pinch', 'pinch': 'pinch',
     'dashes': 'pinch', 'dash': 'pinch',
     'cloves': '', 'clove': '',
     'slices': '', 'slice': '',
@@ -734,18 +746,18 @@ async function validateImageUrl(imageUrl: string): Promise<string> {
 
       return imageUrl;
     } catch (fetchError) {
-      console.warn(`Failed to verify image: ${imageUrl}. Using placeholder instead.`, fetchError);
+      console.warn(`Failed to verify image: ${imageUrl}. Using placeholder instead.`);
       return '';
     }
 
   } catch (error) {
-    console.warn(`Invalid image URL: ${imageUrl}. Using placeholder instead.`, error);
+    console.warn(`Invalid image URL: ${imageUrl}. Using placeholder instead.`);
     return '';
   }
 }
 
-function parseDuration(duration: string | undefined): number | undefined {
-  if (!duration) return undefined;
+function parseDuration(duration: string | undefined): number | null {
+  if (!duration) return null;
 
   // Parse ISO 8601 duration (PT15M = 15 minutes)
   const isoMatch = duration.match(/PT(?:(\d+)H)?(?:(\d+)M)?/);
@@ -761,5 +773,5 @@ function parseDuration(duration: string | undefined): number | undefined {
     return parseInt(numberMatch[1]);
   }
 
-  return undefined;
+  return null;
 }

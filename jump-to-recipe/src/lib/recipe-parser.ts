@@ -257,27 +257,30 @@ export function parseJsonLdRecipe(jsonLd: JsonLdRecipe, authorId: string): NewRe
     // Create recipe object
     return {
         title: jsonLd.name,
-        description: jsonLd.description,
+        description: jsonLd.description || null,
         ingredients,
         instructions,
-        prepTime: parseIsoDuration(jsonLd.prepTime || ''),
-        cookTime: parseIsoDuration(jsonLd.cookTime || ''),
+        prepTime: parseIsoDuration(jsonLd.prepTime || '') || null,
+        cookTime: parseIsoDuration(jsonLd.cookTime || '') || null,
         servings: (() => {
             if (typeof jsonLd.recipeYield === 'string') {
-                return parseInt(jsonLd.recipeYield) || undefined;
+                return parseInt(jsonLd.recipeYield) || null;
             } else if (typeof jsonLd.recipeYield === 'number') {
                 return jsonLd.recipeYield;
             } else if (Array.isArray(jsonLd.recipeYield) && jsonLd.recipeYield.length > 0) {
                 // Handle array like ["36", "36 cookies"] - take the first numeric value
                 const firstYield = jsonLd.recipeYield[0];
-                return typeof firstYield === 'string' ? parseInt(firstYield) || undefined : firstYield;
+                return typeof firstYield === 'string' ? parseInt(firstYield) || null : firstYield;
             }
-            return undefined;
+            return null;
         })(),
         tags: jsonLd.keywords?.split(',').map(tag => tag.trim()) || [],
-        imageUrl,
+        imageUrl: imageUrl || null,
         authorId,
         visibility: 'private',
+        notes: null,
+        difficulty: null,
+        sourceUrl: null,
     };
 }
 

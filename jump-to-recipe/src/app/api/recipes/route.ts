@@ -27,7 +27,7 @@ export async function GET(req: NextRequest) {
                     ...queryParams,
                     tags: Array.isArray(parsedTags) ? parsedTags : [parsedTags]
                 };
-            } catch (e) {
+            } catch {
                 // Create a new object with the split tags to avoid type issues
                 queryParams = {
                     ...queryParams,

@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
     
     if (!validationResult.success) {
       return NextResponse.json(
-        { error: validationResult.error.errors.map(e => `${e.path}: ${e.message}`).join(', ') },
+        { error: validationResult.error.issues.map(e => `${e.path}: ${e.message}`).join(', ') },
         { status: 400 }
       );
     }

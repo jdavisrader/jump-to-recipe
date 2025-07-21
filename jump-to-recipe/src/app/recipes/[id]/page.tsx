@@ -3,6 +3,7 @@ import { recipes } from '@/db/schema';
 import { RecipeDisplay } from '@/components/recipes';
 import { eq } from 'drizzle-orm';
 import { notFound } from 'next/navigation';
+import type { Ingredient, Instruction } from '@/types/recipe';
 
 interface RecipePageProps {
   params: {
@@ -27,8 +28,8 @@ export default async function RecipePage({ params }: RecipePageProps) {
       <RecipeDisplay
         recipe={{
           ...recipe,
-          ingredients: recipe.ingredients as any[],
-          instructions: recipe.instructions as any[],
+          ingredients: recipe.ingredients as Ingredient[],
+          instructions: recipe.instructions as Instruction[],
           tags: recipe.tags || [],
           createdAt: recipe.createdAt!,
           updatedAt: recipe.updatedAt!,

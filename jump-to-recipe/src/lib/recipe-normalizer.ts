@@ -68,7 +68,7 @@ export function normalizeRecipeData(
         prepTime,
         cookTime,
         servings,
-        difficulty: recipe.difficulty,
+        difficulty: recipe.difficulty || null,
         tags,
         notes,
         imageUrl,
@@ -115,9 +115,9 @@ function normalizeTitle(title: string): string {
 /**
  * Normalize recipe description
  */
-function normalizeDescription(description?: string): string | undefined {
+function normalizeDescription(description?: string | null): string | null {
     if (!description || typeof description !== 'string') {
-        return undefined;
+        return null;
     }
 
     let normalized = description.trim();
@@ -130,7 +130,7 @@ function normalizeDescription(description?: string): string | undefined {
         normalized = normalized.substring(0, 1997) + '...';
     }
 
-    return normalized || undefined;
+    return normalized || null;
 }
 
 /**
@@ -355,7 +355,7 @@ function normalizeInstructionContent(content: unknown): string {
 /**
  * Normalize time values (in minutes)
  */
-function normalizeTime(time: unknown): number | undefined {
+function normalizeTime(time: unknown): number | null {
     if (typeof time === 'number' && !isNaN(time) && time > 0) {
         return Math.round(time);
     }
@@ -367,13 +367,13 @@ function normalizeTime(time: unknown): number | undefined {
         }
     }
 
-    return undefined;
+    return null;
 }
 
 /**
  * Normalize servings
  */
-function normalizeServings(servings: unknown): number | undefined {
+function normalizeServings(servings: unknown): number | null {
     if (typeof servings === 'number' && !isNaN(servings) && servings > 0) {
         return Math.round(servings);
     }
@@ -385,7 +385,7 @@ function normalizeServings(servings: unknown): number | undefined {
         }
     }
 
-    return undefined;
+    return null;
 }
 
 /**
@@ -411,9 +411,9 @@ function normalizeTags(tags: unknown[]): string[] {
 /**
  * Normalize notes
  */
-function normalizeNotes(notes: unknown): string | undefined {
+function normalizeNotes(notes: unknown): string | null {
     if (!notes || typeof notes !== 'string') {
-        return undefined;
+        return null;
     }
 
     let normalized = notes.trim();
@@ -426,15 +426,15 @@ function normalizeNotes(notes: unknown): string | undefined {
         normalized = normalized.substring(0, 1997) + '...';
     }
 
-    return normalized || undefined;
+    return normalized || null;
 }
 
 /**
  * Normalize image URL
  */
-function normalizeImageUrl(imageUrl: unknown): string | undefined {
+function normalizeImageUrl(imageUrl: unknown): string | null {
     if (!imageUrl || typeof imageUrl !== 'string') {
-        return undefined;
+        return null;
     }
 
     const trimmed = imageUrl.trim();
@@ -444,16 +444,16 @@ function normalizeImageUrl(imageUrl: unknown): string | undefined {
         new URL(trimmed);
         return trimmed;
     } catch {
-        return undefined;
+        return null;
     }
 }
 
 /**
  * Normalize URL
  */
-function normalizeUrl(url: unknown): string | undefined {
+function normalizeUrl(url: unknown): string | null {
     if (!url || typeof url !== 'string') {
-        return undefined;
+        return null;
     }
 
     const trimmed = url.trim();
@@ -463,6 +463,6 @@ function normalizeUrl(url: unknown): string | undefined {
         new URL(trimmed);
         return trimmed;
     } catch {
-        return undefined;
+        return null;
     }
 }

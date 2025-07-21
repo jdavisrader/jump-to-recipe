@@ -1,7 +1,8 @@
 import { z } from 'zod';
+import type { Unit } from '@/types/recipe';
 
 // Unit validation - accept any string to be more lenient
-export const unitSchema = z.string().default('');
+export const unitSchema = z.string().default('') as z.ZodType<Unit>;
 
 // Ingredient validation
 export const ingredientSchema = z.object({
@@ -34,8 +35,8 @@ export const recipeSchema = z.object({
   difficulty: z.enum(['easy', 'medium', 'hard']).optional(),
   tags: z.array(z.string()).default([]),
   notes: z.string().optional(),
-  imageUrl: z.string().url().optional().or(z.literal('')),
-  sourceUrl: z.string().url().optional().or(z.literal('')),
+  imageUrl: z.string().optional().or(z.literal('')),
+  sourceUrl: z.string().optional().or(z.literal('')),
   authorId: z.string(),
   visibility: z.enum(['public', 'private']).default('private'),
 });
@@ -52,7 +53,7 @@ export const recipeFilterSchema = z.object({
   tags: z.array(z.string()).optional(),
   difficulty: z.enum(['easy', 'medium', 'hard']).optional(),
   maxCookTime: z.number().int().positive().optional(),
-  authorId: z.string().uuid().optional(),
+  authorId: z.string().optional(),
   page: z.number().int().positive().default(1),
   limit: z.number().int().positive().max(100).default(10),
 });
