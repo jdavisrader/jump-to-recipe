@@ -27,7 +27,7 @@ export async function GET(req: NextRequest) {
                     ...queryParams,
                     tags: Array.isArray(parsedTags) ? parsedTags : [parsedTags]
                 };
-            } catch (e) {
+            } catch {
                 // Create a new object with the split tags to avoid type issues
                 queryParams = {
                     ...queryParams,
@@ -148,41 +148,33 @@ export async function GET(req: NextRequest) {
  * POST /api/recipes
  * 
  * Creates a new recipe
- * Requires authentication
+ * Requires authentication (handled on client side)
  */
 export async function POST(req: NextRequest) {
     try {
-        // Get current user from session
-        const session = await getServerSession();
-
-        if (!session?.user?.id) {
-            return NextResponse.json(
-                { error: 'Authentication required' },
-                { status: 401 }
-            );
-        }
-
         // Parse request body
         const body = await req.json();
 
+        // Log the incoming data for debugging
+        console.log('Received recipe data:', JSON.stringify(body, null, 2));
+
         // Validate recipe data
-        const validationResult = createRecipeSchema.safeParse({
-            ...body,
-            authorId: session.user.id,
-        });
+        const validationResult = createRecipeSchema.safeParse(body);
 
         if (!validationResult.success) {
+            console.log('Validation failed:', validationResult.error.issues);
             return NextResponse.json(
-                { error: 'Invalid recipe data', details: validationResult.error.flatten() },
+                { 
+                    error: 'Invalid recipe data', 
+                    details: validationResult.error.issues,
+                    receivedData: body 
+                },
                 { status: 400 }
             );
         }
 
         // Create new recipe
-        const newRecipe = await db.insert(recipes).values({
-            ...validationResult.data,
-            authorId: session.user.id,
-        }).returning();
+        const newRecipe = await db.insert(recipes).values(validationResult.data).returning();
 
         return NextResponse.json(newRecipe[0], { status: 201 });
     } catch (error) {

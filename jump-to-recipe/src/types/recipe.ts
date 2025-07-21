@@ -16,6 +16,7 @@ export interface Ingredient {
   name: string;
   amount: number;
   unit: Unit;
+  displayAmount?: string; // Original fraction format for display (e.g., "1½", "¾")
   notes?: string;
   category?: string;
 }
@@ -30,18 +31,18 @@ export interface Instruction {
 export interface Recipe {
   id: string;
   title: string;
-  description?: string;
+  description: string | null;
   ingredients: Ingredient[];
   instructions: Instruction[];
-  prepTime?: number; // in minutes
-  cookTime?: number; // in minutes
-  servings?: number;
-  difficulty?: Difficulty;
+  prepTime: number | null;
+  cookTime: number | null;
+  servings: number | null;
+  difficulty: Difficulty | null;
   tags: string[];
-  notes?: string;
-  imageUrl?: string;
-  sourceUrl?: string;
-  authorId: string;
+  notes: string | null;
+  imageUrl: string | null;
+  sourceUrl: string | null;
+  authorId: string | null;
   visibility: Visibility;
   createdAt: Date;
   updatedAt: Date;

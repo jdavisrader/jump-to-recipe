@@ -6,13 +6,15 @@ import { users } from '@/db/schema/users';
 import { env } from '@/lib/env';
 import { eq } from 'drizzle-orm';
 import bcrypt from 'bcrypt';
+import type { AuthOptions, User } from 'next-auth';
+import type { JWT } from 'next-auth/jwt';
 
 /**
  * NextAuth configuration with Google provider and credentials
  * Uses JWT strategy for session management
  * Implements role-based access control
  */
-export const authOptions = {
+export const authOptions: AuthOptions = {
   adapter: DrizzleAdapter(db),
   providers: [
     GoogleProvider({
@@ -71,10 +73,10 @@ export const authOptions = {
   ],
   callbacks: {
     // Add role to JWT token and session
-    async jwt({ token, user }: { token: any; user?: any }) {
+    async jwt({ token, user }) {
       // Initial sign in
       if (user) {
-        token.role = user.role;
+        token.role = (user as User & { role: string }).role;
         token.id = user.id;
       }
 
@@ -93,10 +95,10 @@ export const authOptions = {
     },
 
     // Add role to client-side session
-    async session({ session, token }: { session: any; token: any }) {
+    async session({ session, token }) {
       if (token && session.user) {
-        session.user.role = token.role as string;
-        session.user.id = token.id as string;
+        (session.user as User & { role: string; id: string }).role = token.role as string;
+        (session.user as User & { role: string; id: string }).id = token.id as string;
       }
       return session;
     },

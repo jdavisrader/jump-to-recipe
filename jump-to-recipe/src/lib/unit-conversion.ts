@@ -31,21 +31,21 @@ const COMMON_UNITS = ['tsp', 'tbsp', 'cup', 'pinch', ''] as const;
  * Determines if a unit is metric
  */
 export function isMetricUnit(unit: Unit): boolean {
-    return METRIC_UNITS.includes(unit as any);
+    return (METRIC_UNITS as readonly string[]).includes(unit);
 }
 
 /**
  * Determines if a unit is imperial
  */
 export function isImperialUnit(unit: Unit): boolean {
-    return IMPERIAL_UNITS.includes(unit as any);
+    return (IMPERIAL_UNITS as readonly string[]).includes(unit);
 }
 
 /**
  * Determines if a unit is common to both systems
  */
 export function isCommonUnit(unit: Unit): boolean {
-    return COMMON_UNITS.includes(unit as any);
+    return (COMMON_UNITS as readonly string[]).includes(unit);
 }
 
 /**

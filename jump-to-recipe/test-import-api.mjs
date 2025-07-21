@@ -1,5 +1,5 @@
 // Test script to debug the recipe import API
-const fetch = require('node-fetch');
+import fetch from 'node-fetch';
 
 async function testImport() {
   const url = 'https://joyfoodsunshine.com/the-most-amazing-chocolate-chip-cookies/';
@@ -7,6 +7,16 @@ async function testImport() {
   try {
     console.log('🔍 Testing import for:', url);
     
+    // First, let's try to access the demo page
+    const demoResponse = await fetch('http://localhost:3000/demo');
+    if (!demoResponse.ok) {
+      console.error('❌ Failed to access demo page:', demoResponse.status, demoResponse.statusText);
+      return;
+    }
+    
+    console.log('✅ Demo page accessible');
+    
+    // Now let's try to import the recipe
     const response = await fetch('http://localhost:3000/api/recipes/import', {
       method: 'POST',
       headers: {
@@ -15,7 +25,22 @@ async function testImport() {
       body: JSON.stringify({ url })
     });
     
-    const result = await response.json();
+    // Check if we're being redirected to login
+    if (response.redirected) {
+      console.error('❌ Import failed: Redirected to login page');
+      return;
+    }
+    
+    // Try to parse the response as JSON
+    let result;
+    try {
+      result = await response.json();
+    } catch (parseError) {
+      console.error('❌ Failed to parse response as JSON:', parseError.message);
+      console.log('Response status:', response.status, response.statusText);
+      console.log('Response text:', await response.text());
+      return;
+    }
     
     if (!response.ok) {
       console.error('❌ Import failed:', result.error);

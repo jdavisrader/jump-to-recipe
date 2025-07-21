@@ -46,7 +46,7 @@ export async function registerUser(data: RegisterFormData) {
     if (error instanceof z.ZodError) {
       return { 
         success: false, 
-        error: error.errors.map(e => `${e.path}: ${e.message}`).join(', ') 
+        error: error.issues.map((e: z.ZodIssue) => `${e.path}: ${e.message}`).join(', ') 
       };
     }
     return { success: false, error: 'Failed to register user' };
