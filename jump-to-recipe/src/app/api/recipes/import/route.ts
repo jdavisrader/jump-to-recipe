@@ -2,12 +2,30 @@ import { NextRequest, NextResponse } from 'next/server';
 import { v4 as uuidv4 } from 'uuid';
 import * as cheerio from 'cheerio';
 import type { Recipe } from '@/types/recipe';
+import { recipeSchema } from '@/lib/validations/recipe';
+import { ZodError } from 'zod';
 
 export async function POST(request: NextRequest) {
   try {
-    const { url } = await request.json();
+    console.log('Recipe import API called');
+
+    // Parse the request body
+    let requestBody;
+    try {
+      requestBody = await request.json();
+      console.log('Request body:', requestBody);
+    } catch (parseError) {
+      console.error('Error parsing request body:', parseError);
+      return NextResponse.json(
+        { error: 'Invalid request body' },
+        { status: 400 }
+      );
+    }
+
+    const { url } = requestBody;
 
     if (!url) {
+      console.error('URL is missing in request');
       return NextResponse.json(
         { error: 'URL is required' },
         { status: 400 }
@@ -74,7 +92,10 @@ export async function POST(request: NextRequest) {
         duration: undefined,
       }];
 
-    // Create a mock recipe object that matches our Recipe type
+    // Validate and sanitize the image URL
+    const validatedImageUrl = await validateImageUrl(recipeData.imageUrl || '');
+
+    // Create a recipe object that matches our Recipe type
     const recipe: Recipe = {
       id: uuidv4(),
       title: recipeData.title || 'Imported Recipe',
@@ -87,7 +108,7 @@ export async function POST(request: NextRequest) {
       difficulty: recipeData.difficulty,
       tags: recipeData.tags || [],
       notes: recipeData.notes || '',
-      imageUrl: recipeData.imageUrl || '',
+      imageUrl: validatedImageUrl,
       sourceUrl: url,
       authorId: 'imported-recipe',
       visibility: 'private',
@@ -95,7 +116,49 @@ export async function POST(request: NextRequest) {
       updatedAt: new Date(),
     };
 
-    return NextResponse.json(recipe);
+    // Validate the recipe data before returning it
+    try {
+      // Log ingredients for debugging
+      console.log('Validating recipe ingredients:');
+      ingredients.forEach((ing: { name: string; amount: number; unit: string; notes?: string }, index: number) => {
+        console.log(`Ingredient ${index + 1}:`, {
+          name: ing.name,
+          amount: ing.amount,
+          unit: ing.unit,
+          notes: ing.notes
+        });
+      });
+
+      // Validate with Zod schema
+      const validatedRecipe = recipeSchema.parse(recipe);
+
+      // Return the validated recipe
+      return NextResponse.json(recipe);
+    } catch (validationError) {
+      console.error('Recipe validation error:', validationError);
+
+      // If it's a Zod error, extract detailed information
+      if (validationError instanceof ZodError) {
+        const errorDetails = validationError.format();
+
+        // Log the full error details for debugging
+        console.log('Validation error details:', JSON.stringify(errorDetails, null, 2));
+
+        return NextResponse.json(
+          {
+            error: 'Invalid recipe data',
+            details: errorDetails,
+            recipe: recipe // Include the recipe for debugging
+          },
+          { status: 400 }
+        );
+      }
+
+      return NextResponse.json(
+        { error: 'Invalid recipe data' },
+        { status: 400 }
+      );
+    }
   } catch (error) {
     console.error('Recipe import error:', error);
     return NextResponse.json(
@@ -117,10 +180,25 @@ function extractJsonLdRecipe($: cheerio.CheerioAPI) {
 
       try {
         const data = JSON.parse(jsonText);
-        const recipes = Array.isArray(data) ? data : [data];
 
-        for (const item of recipes) {
+        // Handle different JSON-LD structures
+        let itemsToCheck = [];
+
+        if (Array.isArray(data)) {
+          // Direct array of items
+          itemsToCheck = data;
+        } else if (data['@graph']) {
+          // Schema.org @graph structure
+          itemsToCheck = data['@graph'];
+        } else {
+          // Single item
+          itemsToCheck = [data];
+        }
+
+        // Look for Recipe objects
+        for (const item of itemsToCheck) {
           if (item['@type'] === 'Recipe' || (Array.isArray(item['@type']) && item['@type'].includes('Recipe'))) {
+            console.log('✅ Found Recipe in JSON-LD:', item.name);
             return parseJsonLdRecipe(item);
           }
         }
@@ -367,7 +445,7 @@ function parseIngredientString(ingredientText: string) {
 
       // Keep the original fraction format for display
       const displayAmount = formatDisplayAmount(amountStr);
-      
+
       // Extract notes from parentheses in the name
       const { cleanName, notes } = extractNotes(name);
 
@@ -443,18 +521,24 @@ function parseAmount(amountStr: string): number {
 }
 
 function normalizeUnit(unit: string): string {
+  // If unit is empty, return empty string
+  if (!unit || unit.trim() === '') {
+    return '';
+  }
+
   const unitMap: { [key: string]: string } = {
     // Tablespoons
-    'tablespoons': 'tbsp', 'tablespoon': 'tbsp', 'tbsps': 'tbsp', 'tbs': 'tbsp',
+    'tablespoons': 'tbsp', 'tablespoon': 'tbsp', 'tbsps': 'tbsp', 'tbs': 'tbsp', 'T': 'tbsp',
 
     // Teaspoons
-    'teaspoons': 'tsp', 'teaspoon': 'tsp', 'tsps': 'tsp',
+    'teaspoons': 'tsp', 'teaspoon': 'tsp', 'tsps': 'tsp', 't': 'tsp',
 
     // Cups
     'cups': 'cup', 'c': 'cup',
 
     // Fluid ounces
     'fluid ounces': 'fl oz', 'fluid ounce': 'fl oz', 'fl ozs': 'fl oz', 'fl.oz': 'fl oz',
+    'fl': 'fl oz', 'fluid': 'fl oz',
 
     // Pints, quarts, gallons
     'pints': 'pint', 'pt': 'pint',
@@ -471,10 +555,18 @@ function normalizeUnit(unit: string): string {
     'kilograms': 'kg', 'kilogram': 'kg', 'kgs': 'kg',
     'grams': 'g', 'gram': 'g', 'gs': 'g',
 
-    // Other
-    'pinches': 'pinch', 'dashes': 'dash', 'cloves': 'clove', 'slices': 'slice',
-    'pieces': 'piece', 'cans': 'can', 'packages': 'pkg', 'pkgs': 'pkg',
-    'bottles': 'bottle', 'jars': 'jar', 'boxes': 'box', 'bags': 'bag',
+    // Other - map these to allowed units
+    'pinches': 'pinch', 'pinch': 'pinch', 
+    'dashes': 'pinch', 'dash': 'pinch',
+    'cloves': '', 'clove': '',
+    'slices': '', 'slice': '',
+    'pieces': '', 'piece': '',
+    'cans': '', 'can': '',
+    'packages': '', 'package': '', 'pkgs': '', 'pkg': '',
+    'bottles': '', 'bottle': '',
+    'jars': '', 'jar': '',
+    'boxes': '', 'box': '',
+    'bags': '', 'bag': '',
   };
 
   const normalized = unit.toLowerCase().trim();
@@ -484,11 +576,11 @@ function normalizeUnit(unit: string): string {
 function formatDisplayAmount(amountStr: string): string {
   // Clean up the amount string
   const cleaned = amountStr.trim();
-  
+
   // Convert common text fractions to unicode fractions for better display
   const fractionMap: { [key: string]: string } = {
     '1/2': '½',
-    '1/4': '¼', 
+    '1/4': '¼',
     '3/4': '¾',
     '1/3': '⅓',
     '2/3': '⅔',
@@ -497,7 +589,7 @@ function formatDisplayAmount(amountStr: string): string {
     '5/8': '⅝',
     '7/8': '⅞',
   };
-  
+
   // Handle mixed numbers (e.g., "1 1/2" -> "1½")
   const mixedMatch = cleaned.match(/^(\d+)\s+(\d+\/\d+)$/);
   if (mixedMatch) {
@@ -506,18 +598,18 @@ function formatDisplayAmount(amountStr: string): string {
     const unicodeFraction = fractionMap[fraction] || fraction;
     return whole + unicodeFraction;
   }
-  
+
   // Handle simple fractions
   const simpleFraction = fractionMap[cleaned];
   if (simpleFraction) {
     return simpleFraction;
   }
-  
+
   // Handle ranges (keep as-is for display)
   if (cleaned.match(/^[\d.]+[\s\-to]+[\d.]+$/)) {
     return cleaned.replace(/\s*to\s*/, '-');
   }
-  
+
   // For decimal numbers, check if they're common fractions
   const decimal = parseFloat(cleaned);
   if (!isNaN(decimal)) {
@@ -533,18 +625,18 @@ function formatDisplayAmount(amountStr: string): string {
       0.625: '⅝',
       0.875: '⅞',
     };
-    
+
     // Check for close matches (within 0.01)
     for (const [dec, frac] of Object.entries(decimalToFraction)) {
       if (Math.abs(decimal - parseFloat(dec)) < 0.01) {
         return frac;
       }
     }
-    
+
     // For mixed numbers with decimals (e.g., 1.5 -> 1½)
     const wholePart = Math.floor(decimal);
     const fractionalPart = decimal - wholePart;
-    
+
     if (wholePart > 0 && fractionalPart > 0) {
       const fractionDisplay = decimalToFraction[Math.round(fractionalPart * 1000) / 1000];
       if (fractionDisplay) {
@@ -552,7 +644,7 @@ function formatDisplayAmount(amountStr: string): string {
       }
     }
   }
-  
+
   // Return original if no special formatting needed
   return cleaned;
 }
@@ -579,6 +671,77 @@ function extractNotes(name: string): { cleanName: string; notes: string } {
     cleanName: name,
     notes: '',
   };
+}
+
+async function validateImageUrl(imageUrl: string): Promise<string> {
+  // If no image URL provided, return empty string
+  if (!imageUrl || imageUrl.trim() === '') {
+    return '';
+  }
+
+  try {
+    // Validate URL format
+    const url = new URL(imageUrl);
+
+    // List of allowed hostnames (matching your next.config.ts)
+    const allowedHostnames = [
+      'images.unsplash.com',
+      'joyfoodsunshine.com',
+      'www.allrecipes.com',
+      'food.fnr.sndimg.com',
+      'www.foodnetwork.com',
+      'www.kingarthurbaking.com',
+      'www.seriouseats.com',
+      'www.bbcgoodfood.com',
+      'images.immediate.co.uk',
+      'www.tasteofhome.com',
+      'www.delish.com',
+      'hips.hearstapps.com',
+      'www.recipetineats.com',
+      'www.simplyrecipes.com',
+      'www.bonappetit.com',
+      'assets.bonappetit.com',
+    ];
+
+    // Check if hostname is in allowed list
+    const isAllowed = allowedHostnames.includes(url.hostname) ||
+      url.hostname.endsWith('.wp.com') ||
+      url.hostname.endsWith('.amazonaws.com') ||
+      url.hostname.endsWith('.cloudfront.net');
+
+    if (!isAllowed) {
+      console.warn(`Image hostname not allowed: ${url.hostname}. Using placeholder instead.`);
+      return '';
+    }
+
+    // Try to fetch the image to verify it exists and is accessible
+    try {
+      const response = await fetch(imageUrl, {
+        method: 'HEAD', // Only get headers, not the full image
+      });
+
+      if (!response.ok) {
+        console.warn(`Image not accessible: ${imageUrl}. Using placeholder instead.`);
+        return '';
+      }
+
+      // Check if it's actually an image
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.startsWith('image/')) {
+        console.warn(`URL is not an image: ${imageUrl}. Using placeholder instead.`);
+        return '';
+      }
+
+      return imageUrl;
+    } catch (fetchError) {
+      console.warn(`Failed to verify image: ${imageUrl}. Using placeholder instead.`, fetchError);
+      return '';
+    }
+
+  } catch (error) {
+    console.warn(`Invalid image URL: ${imageUrl}. Using placeholder instead.`, error);
+    return '';
+  }
 }
 
 function parseDuration(duration: string | undefined): number | undefined {

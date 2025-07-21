@@ -1,124 +1,111 @@
-// Simple validation script to test recipe import functionality
-console.log('Validating Recipe Import Implementation...\n');
+// Test script to validate recipe data against our schema
 
-// Test 1: Check if all required files exist
-const fs = require('fs');
-const path = require('path');
+const { z } = require('zod');
 
-const requiredFiles = [
-  'src/app/api/recipes/import/route.ts',
-  'src/lib/recipe-scraper.ts',
-  'src/lib/recipe-normalizer.ts',
-  'src/lib/recipe-parser.ts',
+// Define the schema (copied from our validation file)
+const unitSchema = z.enum([
+  // Metric
+  'g', 'kg', 'ml', 'l', 'tsp', 'tbsp', 'cup', 'pinch',
+  // Imperial
+  'oz', 'lb', 'fl oz', 'pint', 'quart', 'gallon',
+  // Empty unit (for items like "1 apple")
+  ''
+]);
+
+const ingredientSchema = z.object({
+  id: z.string(),
+  name: z.string().min(1, 'Ingredient name is required'),
+  amount: z.number().nonnegative('Amount must be non-negative').default(0),
+  unit: unitSchema.default(''),
+  notes: z.string().optional(),
+  category: z.string().optional(),
+});
+
+// Mock ingredients from the joyfoodsunshine recipe
+const ingredients = [
+  {
+    id: "ing-1",
+    name: "salted butter (softened)",
+    amount: 1,
+    unit: "cup",
+    notes: ""
+  },
+  {
+    id: "ing-2",
+    name: "granulated sugar",
+    amount: 1,
+    unit: "cup",
+    notes: ""
+  },
+  {
+    id: "ing-3",
+    name: "light brown sugar (packed)",
+    amount: 1,
+    unit: "cup",
+    notes: ""
+  },
+  {
+    id: "ing-4",
+    name: "pure vanilla extract",
+    amount: 2,
+    unit: "teaspoons", // This might be the issue - should be "tsp"
+    notes: ""
+  },
+  {
+    id: "ing-5",
+    name: "large eggs",
+    amount: 2,
+    unit: "",
+    notes: ""
+  },
+  {
+    id: "ing-6",
+    name: "all-purpose flour",
+    amount: 3,
+    unit: "cups", // This might be the issue - should be "cup"
+    notes: ""
+  },
+  {
+    id: "ing-7",
+    name: "baking soda",
+    amount: 1,
+    unit: "teaspoon", // This might be the issue - should be "tsp"
+    notes: ""
+  },
+  {
+    id: "ing-8",
+    name: "baking powder",
+    amount: 0.5,
+    unit: "teaspoon", // This might be the issue - should be "tsp"
+    notes: ""
+  },
+  {
+    id: "ing-9",
+    name: "sea salt",
+    amount: 1,
+    unit: "teaspoon", // This might be the issue - should be "tsp"
+    notes: ""
+  },
+  {
+    id: "ing-10",
+    name: "chocolate chips ((12 oz))",
+    amount: 2,
+    unit: "cups", // This might be the issue - should be "cup"
+    notes: ""
+  }
 ];
 
-console.log('1. Checking required files...');
-let allFilesExist = true;
-
-for (const file of requiredFiles) {
-  const filePath = path.join(__dirname, file);
-  if (fs.existsSync(filePath)) {
-    console.log(`✅ ${file}`);
-  } else {
-    console.log(`❌ ${file} - MISSING`);
-    allFilesExist = false;
+// Validate each ingredient
+console.log('🧪 Testing ingredient validation...\n');
+ingredients.forEach((ingredient, index) => {
+  try {
+    console.log(`\nIngredient ${index + 1}: "${ingredient.name}"`);
+    console.log(`Amount: ${ingredient.amount}, Unit: "${ingredient.unit}"`);
+    
+    const result = ingredientSchema.parse(ingredient);
+    console.log('✅ Valid ingredient');
+  } catch (error) {
+    console.log('❌ Invalid ingredient:');
+    console.log(error.errors);
   }
-}
-
-if (!allFilesExist) {
-  console.log('\n❌ Some required files are missing!');
-  process.exit(1);
-}
-
-// Test 2: Check if the API endpoint has the correct structure
-console.log('\n2. Checking API endpoint structure...');
-const apiContent = fs.readFileSync('src/app/api/recipes/import/route.ts', 'utf8');
-
-const requiredElements = [
-  'POST',
-  'scrapeRecipeFromUrl',
-  'normalizeRecipeData',
-  'preview',
-  'Authentication required',
-  'createRecipeSchema',
-];
-
-let allElementsPresent = true;
-
-for (const element of requiredElements) {
-  if (apiContent.includes(element)) {
-    console.log(`✅ Contains ${element}`);
-  } else {
-    console.log(`❌ Missing ${element}`);
-    allElementsPresent = false;
-  }
-}
-
-// Test 3: Check if scraper has required functionality
-console.log('\n3. Checking scraper functionality...');
-const scraperContent = fs.readFileSync('src/lib/recipe-scraper.ts', 'utf8');
-
-const scraperElements = [
-  'scrapeRecipeFromUrl',
-  'extractJsonLdRecipe',
-  'extractMicrodataRecipe',
-  'extractHtmlFallbackRecipe',
-  'cheerio',
-  'fetchHtmlContent',
-];
-
-let allScraperElementsPresent = true;
-
-for (const element of scraperElements) {
-  if (scraperContent.includes(element)) {
-    console.log(`✅ Contains ${element}`);
-  } else {
-    console.log(`❌ Missing ${element}`);
-    allScraperElementsPresent = false;
-  }
-}
-
-// Test 4: Check if normalizer has required functionality
-console.log('\n4. Checking normalizer functionality...');
-const normalizerContent = fs.readFileSync('src/lib/recipe-normalizer.ts', 'utf8');
-
-const normalizerElements = [
-  'normalizeRecipeData',
-  'normalizeTitle',
-  'normalizeIngredients',
-  'normalizeInstructions',
-  'normalizeTime',
-];
-
-let allNormalizerElementsPresent = true;
-
-for (const element of normalizerElements) {
-  if (normalizerContent.includes(element)) {
-    console.log(`✅ Contains ${element}`);
-  } else {
-    console.log(`❌ Missing ${element}`);
-    allNormalizerElementsPresent = false;
-  }
-}
-
-// Final validation
-console.log('\n=== VALIDATION SUMMARY ===');
-
-if (allFilesExist && allElementsPresent && allScraperElementsPresent && allNormalizerElementsPresent) {
-  console.log('✅ All validations passed!');
-  console.log('\nImplemented features:');
-  console.log('• POST /api/recipes/import endpoint for URL-based imports');
-  console.log('• JSON-LD scraping utility to extract recipe structured data');
-  console.log('• HTML parsing fallback for non-structured recipe pages');
-  console.log('• Data normalization and cleaning for imported recipes');
-  console.log('• Preview functionality for users to review before saving');
-  console.log('• Authentication requirement for security');
-  console.log('• Comprehensive error handling');
-  console.log('• Support for multiple extraction methods (JSON-LD, microdata, HTML fallback)');
-  console.log('• Proper TypeScript types and validation');
-} else {
-  console.log('❌ Some validations failed!');
-  process.exit(1);
-}
-
-console.log('\n🎉 Recipe import functionality has been successfully implemented!');
+});

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { ImageIcon } from "lucide-react";
 
@@ -11,6 +11,21 @@ interface RecipeImageProps {
   height: number;
   className?: string;
   priority?: boolean;
+  unoptimized?: boolean;
+}
+
+// Helper function to validate image URL
+function isValidImageUrl(url: string | undefined): boolean {
+  if (!url || url === 'undefined' || url.trim() === '') {
+    return false;
+  }
+  
+  try {
+    new URL(url);
+    return true;
+  } catch (e) {
+    return false;
+  }
 }
 
 export function RecipeImage({ 
@@ -19,13 +34,17 @@ export function RecipeImage({
   width, 
   height, 
   className = "", 
-  priority = false 
+  priority = false,
+  unoptimized = true // Default to unoptimized to avoid domain issues
 }: RecipeImageProps) {
   const [hasError, setHasError] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  
+  // Validate the image URL
+  const isValidUrl = isValidImageUrl(src);
 
-  // If no src provided or error occurred, show placeholder
-  if (!src || hasError) {
+  // If no valid src provided or error occurred, show placeholder
+  if (!isValidUrl || hasError) {
     return (
       <div 
         className={`flex items-center justify-center bg-muted text-muted-foreground ${className}`}
@@ -49,12 +68,13 @@ export function RecipeImage({
         </div>
       )}
       <Image
-        src={src}
+        src={src!} // We know it's valid at this point
         alt={alt}
         width={width}
         height={height}
         className={className}
         priority={priority}
+        unoptimized={unoptimized}
         onError={() => {
           setHasError(true);
           setIsLoading(false);

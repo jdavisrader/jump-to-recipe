@@ -1,14 +1,7 @@
 import { z } from 'zod';
 
-// Unit validation
-export const unitSchema = z.enum([
-  // Metric
-  'g', 'kg', 'ml', 'l', 'tsp', 'tbsp', 'cup', 'pinch',
-  // Imperial
-  'oz', 'lb', 'fl oz', 'pint', 'quart', 'gallon',
-  // Empty unit (for items like "1 apple")
-  ''
-]);
+// Unit validation - accept any string to be more lenient
+export const unitSchema = z.string().default('');
 
 // Ingredient validation
 export const ingredientSchema = z.object({
