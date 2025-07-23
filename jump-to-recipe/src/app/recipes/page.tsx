@@ -3,7 +3,7 @@ import { db } from '@/db';
 import { recipes } from '@/db/schema';
 import { RecipeCard } from '@/components/recipes';
 import { Button } from '@/components/ui/button';
-import { Plus, Upload } from 'lucide-react';
+import { Plus, Upload, Globe } from 'lucide-react';
 import { eq } from 'drizzle-orm';
 
 export default async function RecipesPage() {
@@ -36,6 +36,12 @@ export default async function RecipesPage() {
             <Link href="/recipes/import">
               <Upload className="h-5 w-5 mr-2" />
               Import Recipe
+            </Link>
+          </Button>
+          <Button asChild variant="outline" size="lg">
+            <Link href="/cookbooks/discover">
+              <Globe className="h-5 w-5 mr-2" />
+              Discover Cookbooks
             </Link>
           </Button>
         </div>

@@ -4,7 +4,8 @@ import { z } from 'zod';
 import { db } from '@/db';
 import { cookbooks, cookbookRecipes, recipes } from '@/db/schema';
 import { authOptions } from '@/lib/auth';
-import { eq, and, asc, inArray } from 'drizzle-orm';
+import { getCookbookPermission, hasMinimumPermission } from '@/lib/cookbook-permissions';
+import { eq, asc, inArray } from 'drizzle-orm';
 
 // Validation schema for updating a cookbook
 const updateCookbookSchema = z.object({
@@ -22,26 +23,7 @@ const updateCookbookRecipesSchema = z.array(
   })
 );
 
-// Helper function to check if user has access to cookbook
-async function hasAccessToCookbook(cookbookId: string, userId: string) {
-  const cookbook = await db.query.cookbooks.findFirst({
-    where: eq(cookbooks.id, cookbookId),
-  });
-  
-  if (!cookbook) {
-    return false;
-  }
-  
-  // Check if user is the owner
-  if (cookbook.ownerId === userId) {
-    return true;
-  }
-  
-  // TODO: Check if user is a collaborator with appropriate permissions
-  // This will be implemented in task 10 when we build the collaboration system
-  
-  return false;
-}
+
 
 // GET /api/cookbooks/[id] - Get a specific cookbook with its recipes
 export async function GET(
@@ -67,10 +49,9 @@ export async function GET(
       return NextResponse.json({ error: 'Cookbook not found' }, { status: 404 });
     }
     
-    // Check if user has access to the cookbook
-    if (!cookbook.isPublic && cookbook.ownerId !== userId) {
-      // TODO: Check if user is a collaborator
-      // This will be implemented in task 10
+    // Check if user has view access to the cookbook
+    const hasViewAccess = await hasMinimumPermission(cookbookId, userId, 'view');
+    if (!hasViewAccess) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
     
@@ -141,9 +122,9 @@ export async function PUT(
       return NextResponse.json({ error: 'Cookbook not found' }, { status: 404 });
     }
     
-    if (cookbook.ownerId !== userId) {
-      // TODO: Check if user is a collaborator with edit permissions
-      // This will be implemented in task 10
+    // Check if user has edit access to the cookbook
+    const hasEditAccess = await hasMinimumPermission(cookbookId, userId, 'edit');
+    if (!hasEditAccess) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
     

@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { db } from '@/db';
 import { cookbooks, cookbookRecipes } from '@/db/schema';
 import { authOptions } from '@/lib/auth';
+import { getUserAccessibleCookbooks } from '@/lib/cookbook-permissions';
 import { eq, desc } from 'drizzle-orm';
 
 // Validation schema for creating a cookbook
@@ -30,18 +31,32 @@ export async function GET(req: NextRequest) {
     const limit = parseInt(url.searchParams.get('limit') || '50');
     const offset = parseInt(url.searchParams.get('offset') || '0');
     
-    // Get cookbooks owned by the user
-    const userCookbooks = await db.query.cookbooks.findMany({
-      where: eq(cookbooks.ownerId, userId),
-      orderBy: [desc(cookbooks.updatedAt)],
-      limit,
-      offset,
-    });
+    // Get all cookbooks user has access to
+    const accessibleCookbooks = await getUserAccessibleCookbooks(userId);
     
-    // TODO: Also include cookbooks where user is a collaborator
-    // This will be implemented in task 10 when we build the collaboration system
+    // Combine all cookbooks and add metadata
+    const allCookbooks = [
+      ...accessibleCookbooks.owned.map(cookbook => ({
+        ...cookbook,
+        userRole: 'owner' as const,
+      })),
+      ...accessibleCookbooks.collaborated.map(cookbook => ({
+        ...cookbook,
+        userRole: 'collaborator' as const,
+        permission: cookbook.permission,
+      })),
+      ...accessibleCookbooks.public.map(cookbook => ({
+        ...cookbook,
+        userRole: 'viewer' as const,
+      })),
+    ];
     
-    return NextResponse.json({ cookbooks: userCookbooks });
+    // Sort by updated date and apply pagination
+    const sortedCookbooks = allCookbooks
+      .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+      .slice(offset, offset + limit);
+    
+    return NextResponse.json({ cookbooks: sortedCookbooks });
   } catch (error) {
     console.error('Error fetching cookbooks:', error);
     return NextResponse.json(
