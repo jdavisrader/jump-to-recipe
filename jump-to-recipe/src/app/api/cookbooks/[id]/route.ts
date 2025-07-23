@@ -1,0 +1,255 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import { z } from 'zod';
+import { db } from '@/db';
+import { cookbooks, cookbookRecipes, recipes } from '@/db/schema';
+import { authOptions } from '@/lib/auth';
+import { eq, and, asc, inArray } from 'drizzle-orm';
+
+// Validation schema for updating a cookbook
+const updateCookbookSchema = z.object({
+  title: z.string().min(1, 'Title is required').max(500).optional(),
+  description: z.string().nullable().optional(),
+  coverImageUrl: z.string().url().nullable().optional(),
+  isPublic: z.boolean().optional(),
+});
+
+// Validation schema for updating cookbook recipes
+const updateCookbookRecipesSchema = z.array(
+  z.object({
+    recipeId: z.string().uuid(),
+    position: z.number().int().nonnegative(),
+  })
+);
+
+// Helper function to check if user has access to cookbook
+async function hasAccessToCookbook(cookbookId: string, userId: string) {
+  const cookbook = await db.query.cookbooks.findFirst({
+    where: eq(cookbooks.id, cookbookId),
+  });
+  
+  if (!cookbook) {
+    return false;
+  }
+  
+  // Check if user is the owner
+  if (cookbook.ownerId === userId) {
+    return true;
+  }
+  
+  // TODO: Check if user is a collaborator with appropriate permissions
+  // This will be implemented in task 10 when we build the collaboration system
+  
+  return false;
+}
+
+// GET /api/cookbooks/[id] - Get a specific cookbook with its recipes
+export async function GET(
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const session = await getServerSession(authOptions);
+    
+    if (!session?.user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    
+    const userId = session.user.id;
+    const cookbookId = params.id;
+    
+    // Get the cookbook
+    const cookbook = await db.query.cookbooks.findFirst({
+      where: eq(cookbooks.id, cookbookId),
+    });
+    
+    if (!cookbook) {
+      return NextResponse.json({ error: 'Cookbook not found' }, { status: 404 });
+    }
+    
+    // Check if user has access to the cookbook
+    if (!cookbook.isPublic && cookbook.ownerId !== userId) {
+      // TODO: Check if user is a collaborator
+      // This will be implemented in task 10
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+    
+    // Get cookbook recipes with their positions
+    const cookbookRecipeEntries = await db.query.cookbookRecipes.findMany({
+      where: eq(cookbookRecipes.cookbookId, cookbookId),
+      orderBy: [asc(cookbookRecipes.position)],
+    });
+    
+    // Get all recipe IDs
+    const recipeIds = cookbookRecipeEntries.map(entry => entry.recipeId);
+    
+    // Get all recipes in one query
+    const recipesList = recipeIds.length > 0
+      ? await db.query.recipes.findMany({
+          where: inArray(recipes.id, recipeIds),
+        })
+      : [];
+    
+    // Create a map for quick recipe lookup
+    const recipesMap = new Map(recipesList.map(recipe => [recipe.id, recipe]));
+    
+    // Combine recipes with their positions
+    const recipesWithPositions = cookbookRecipeEntries
+      .map(entry => {
+        const recipe = recipesMap.get(entry.recipeId);
+        return recipe ? { recipe, position: entry.position } : null;
+      })
+      .filter(Boolean);
+    
+    // Return cookbook with recipes
+    return NextResponse.json({
+      cookbook: {
+        ...cookbook,
+        recipes: recipesWithPositions,
+      },
+    });
+  } catch (error) {
+    console.error('Error fetching cookbook:', error);
+    return NextResponse.json(
+      { error: 'Failed to fetch cookbook' },
+      { status: 500 }
+    );
+  }
+}
+
+// PUT /api/cookbooks/[id] - Update a cookbook
+export async function PUT(
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const session = await getServerSession(authOptions);
+    
+    if (!session?.user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    
+    const userId = session.user.id;
+    const cookbookId = params.id;
+    
+    // Check if cookbook exists and user has access
+    const cookbook = await db.query.cookbooks.findFirst({
+      where: eq(cookbooks.id, cookbookId),
+    });
+    
+    if (!cookbook) {
+      return NextResponse.json({ error: 'Cookbook not found' }, { status: 404 });
+    }
+    
+    if (cookbook.ownerId !== userId) {
+      // TODO: Check if user is a collaborator with edit permissions
+      // This will be implemented in task 10
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+    
+    const body = await req.json();
+    
+    // Validate cookbook data
+    const validatedData = updateCookbookSchema.safeParse(body);
+    
+    if (!validatedData.success) {
+      return NextResponse.json(
+        { error: 'Invalid request', details: validatedData.error.format() },
+        { status: 400 }
+      );
+    }
+    
+    // Update cookbook
+    const [updatedCookbook] = await db
+      .update(cookbooks)
+      .set({
+        ...validatedData.data,
+        updatedAt: new Date(),
+      })
+      .where(eq(cookbooks.id, cookbookId))
+      .returning();
+    
+    // Handle recipe updates if provided
+    if (body.recipes) {
+      const validatedRecipes = updateCookbookRecipesSchema.safeParse(body.recipes);
+      
+      if (!validatedRecipes.success) {
+        return NextResponse.json(
+          { error: 'Invalid recipes data', details: validatedRecipes.error.format() },
+          { status: 400 }
+        );
+      }
+      
+      // Delete existing recipe entries
+      await db
+        .delete(cookbookRecipes)
+        .where(eq(cookbookRecipes.cookbookId, cookbookId));
+      
+      // Insert new recipe entries
+      if (validatedRecipes.data.length > 0) {
+        await db.insert(cookbookRecipes).values(
+          validatedRecipes.data.map(({ recipeId, position }) => ({
+            cookbookId,
+            recipeId,
+            position,
+          }))
+        );
+      }
+    }
+    
+    return NextResponse.json({ cookbook: updatedCookbook });
+  } catch (error) {
+    console.error('Error updating cookbook:', error);
+    return NextResponse.json(
+      { error: 'Failed to update cookbook' },
+      { status: 500 }
+    );
+  }
+}
+
+// DELETE /api/cookbooks/[id] - Delete a cookbook
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const session = await getServerSession(authOptions);
+    
+    if (!session?.user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    
+    const userId = session.user.id;
+    const cookbookId = params.id;
+    
+    // Check if cookbook exists and user has access
+    const cookbook = await db.query.cookbooks.findFirst({
+      where: eq(cookbooks.id, cookbookId),
+    });
+    
+    if (!cookbook) {
+      return NextResponse.json({ error: 'Cookbook not found' }, { status: 404 });
+    }
+    
+    if (cookbook.ownerId !== userId) {
+      // Only the owner can delete a cookbook
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+    
+    // Delete the cookbook (cascade will handle cookbook_recipes)
+    await db
+      .delete(cookbooks)
+      .where(eq(cookbooks.id, cookbookId));
+    
+    return NextResponse.json(
+      { message: 'Cookbook deleted successfully' },
+      { status: 200 }
+    );
+  } catch (error) {
+    console.error('Error deleting cookbook:', error);
+    return NextResponse.json(
+      { error: 'Failed to delete cookbook' },
+      { status: 500 }
+    );
+  }
+}
