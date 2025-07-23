@@ -73,7 +73,7 @@
   - Add DELETE /api/cookbooks/[id] with cascade handling
   - _Requirements: 4.1, 4.2_
 
-- [ ] 10. Build cookbook sharing and collaboration system
+- [x] 10. Build cookbook sharing and collaboration system
   - Create cookbook_collaborators table schema and models
   - Implement POST /api/cookbooks/[id]/share endpoint for invitations
   - Build permission checking middleware for cookbook access
