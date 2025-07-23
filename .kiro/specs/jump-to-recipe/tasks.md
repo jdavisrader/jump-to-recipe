@@ -63,7 +63,7 @@
   - Create recipe card components for list views
   - _Requirements: 3.1, 3.2, 3.5_
 
-- [ ] 9. Implement cookbook data models and API
+- [x] 9. Implement cookbook data models and API
   - Create Drizzle schema for cookbooks and cookbook_recipes tables
   - Build TypeScript interfaces for Cookbook and related types
   - Implement GET /api/cookbooks endpoint for user's cookbooks

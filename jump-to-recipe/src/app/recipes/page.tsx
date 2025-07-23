@@ -23,7 +23,7 @@ export default async function RecipesPage() {
             Discover delicious recipes from our community
           </p>
         </div>
-        
+
         {/* Action Buttons */}
         <div className="flex flex-wrap justify-center gap-4">
           <Button asChild size="lg">

@@ -30,16 +30,8 @@ export interface LegacyRecipe {
   updatedAt: Date;
 }
 
-export interface Cookbook {
-  id: string;
-  title: string;
-  description?: string;
-  isPublic: boolean;
-  userId: string;
-  recipes: LegacyRecipe[];
-  createdAt: Date;
-  updatedAt: Date;
-}
+// Cookbook interfaces moved to cookbook.ts
+export type { Cookbook, CookbookWithRecipes } from './cookbook';
 
 export interface GroceryList {
   id: string;
