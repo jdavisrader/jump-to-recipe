@@ -11,7 +11,12 @@ import { eq, desc } from 'drizzle-orm';
 const createCookbookSchema = z.object({
   title: z.string().min(1, 'Title is required').max(500),
   description: z.string().nullable().optional(),
-  coverImageUrl: z.string().url().nullable().optional(),
+  coverImageUrl: z.union([
+    z.string().min(1).url(),
+    z.string().length(0),
+    z.literal(''),
+    z.null()
+  ]).optional().transform(val => val === '' ? null : val),
   isPublic: z.boolean().default(false),
 });
 
