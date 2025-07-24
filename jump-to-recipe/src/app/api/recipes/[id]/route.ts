@@ -15,10 +15,10 @@ import { and, eq, sql } from 'drizzle-orm';
  */
 export async function GET(
     _req: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
-        const { id } = params;
+        const { id } = await params;
 
         // Get current user from session
         const session = await getServerSession();
@@ -70,10 +70,10 @@ export async function GET(
  */
 export async function PUT(
     req: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
-        const { id } = params;
+        const { id } = await params;
 
         // Get current user from session
         const session = await getServerSession();
@@ -149,10 +149,10 @@ export async function PUT(
  */
 export async function DELETE(
     _req: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
-        const { id } = params;
+        const { id } = await params;
 
         // Get current user from session
         const session = await getServerSession();

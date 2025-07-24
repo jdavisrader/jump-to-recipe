@@ -5,13 +5,19 @@ import { db } from '@/db';
 import { cookbooks, cookbookRecipes, recipes } from '@/db/schema';
 import { authOptions } from '@/lib/auth';
 import { getCookbookPermission, hasMinimumPermission } from '@/lib/cookbook-permissions';
+import { sanitizeImageUrl } from '@/lib/image-validation';
 import { eq, asc, inArray } from 'drizzle-orm';
 
 // Validation schema for updating a cookbook
 const updateCookbookSchema = z.object({
   title: z.string().min(1, 'Title is required').max(500).optional(),
   description: z.string().nullable().optional(),
-  coverImageUrl: z.string().url().nullable().optional(),
+  coverImageUrl: z.union([
+    z.string().min(1).url(),
+    z.string().length(0),
+    z.literal(''),
+    z.null()
+  ]).optional().transform(val => val === '' ? null : val),
   isPublic: z.boolean().optional(),
 });
 
@@ -28,7 +34,7 @@ const updateCookbookRecipesSchema = z.array(
 // GET /api/cookbooks/[id] - Get a specific cookbook with its recipes
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -38,7 +44,7 @@ export async function GET(
     }
     
     const userId = session.user.id;
-    const cookbookId = params.id;
+    const { id: cookbookId } = await params;
     
     // Get the cookbook
     const cookbook = await db.query.cookbooks.findFirst({
@@ -101,7 +107,7 @@ export async function GET(
 // PUT /api/cookbooks/[id] - Update a cookbook
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -111,7 +117,7 @@ export async function PUT(
     }
     
     const userId = session.user.id;
-    const cookbookId = params.id;
+    const { id: cookbookId } = await params;
     
     // Check if cookbook exists and user has access
     const cookbook = await db.query.cookbooks.findFirst({
@@ -140,11 +146,17 @@ export async function PUT(
       );
     }
     
+    // Sanitize the cover image URL if provided
+    const updateData = { ...validatedData.data };
+    if (updateData.coverImageUrl !== undefined) {
+      updateData.coverImageUrl = sanitizeImageUrl(updateData.coverImageUrl);
+    }
+    
     // Update cookbook
     const [updatedCookbook] = await db
       .update(cookbooks)
       .set({
-        ...validatedData.data,
+        ...updateData,
         updatedAt: new Date(),
       })
       .where(eq(cookbooks.id, cookbookId))
@@ -191,7 +203,7 @@ export async function PUT(
 // DELETE /api/cookbooks/[id] - Delete a cookbook
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -201,7 +213,7 @@ export async function DELETE(
     }
     
     const userId = session.user.id;
-    const cookbookId = params.id;
+    const { id: cookbookId } = await params;
     
     // Check if cookbook exists and user has access
     const cookbook = await db.query.cookbooks.findFirst({

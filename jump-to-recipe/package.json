@@ -19,10 +19,12 @@
   "dependencies": {
     "@auth/core": "^0.34.2",
     "@auth/drizzle-adapter": "^1.10.0",
+    "@hello-pangea/dnd": "^16.6.0",
     "@hookform/resolvers": "^5.1.1",
     "@neondatabase/serverless": "^1.0.1",
     "@radix-ui/react-label": "^2.1.7",
     "@radix-ui/react-slot": "^1.2.3",
+    "@radix-ui/react-switch": "^1.0.3",
     "@types/cheerio": "^1.0.0",
     "bcrypt": "^6.0.0",
     "cheerio": "^1.1.0",

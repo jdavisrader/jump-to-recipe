@@ -82,7 +82,7 @@
   - Add cookbook discovery for public cookbooks
   - _Requirements: 4.2, 4.3, 4.4_
 
-- [ ] 11. Create cookbook management UI
+- [x] 11. Create cookbook management UI
   - Build cookbook creation and editing forms
   - Implement drag-and-drop recipe organization within cookbooks
   - Create cookbook display components with recipe listings

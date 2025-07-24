@@ -43,8 +43,29 @@ async function DiscoverCookbooks() {
 
   if (publicCookbooks.length === 0) {
     return (
-      <div className="text-center py-12">
-        <p className="text-muted-foreground">No public cookbooks found</p>
+      <div className="text-center py-12 space-y-6">
+        <div className="flex flex-col items-center gap-4">
+          <div className="p-6 rounded-full bg-muted">
+            <Globe className="h-12 w-12 text-muted-foreground" />
+          </div>
+          <h2 className="text-2xl font-semibold">No public cookbooks yet</h2>
+          <p className="text-muted-foreground max-w-md">
+            There are no public cookbooks available to discover at the moment. 
+            Be the first to share your cookbook with the community!
+          </p>
+        </div>
+        <div className="flex justify-center gap-4">
+          <Button asChild>
+            <Link href="/cookbooks/new">
+              Create a Cookbook
+            </Link>
+          </Button>
+          <Button asChild variant="outline">
+            <Link href="/cookbooks">
+              My Cookbooks
+            </Link>
+          </Button>
+        </div>
       </div>
     );
   }

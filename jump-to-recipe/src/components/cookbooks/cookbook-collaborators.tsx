@@ -180,7 +180,7 @@ export function CookbookCollaborators({
               </div>
               <Select
                 value={permission}
-                onValueChange={(value) => setPermission(value as CollaboratorPermission)}
+                onChange={(e) => setPermission(e.target.value as CollaboratorPermission)}
               >
                 <option value="view">Can view</option>
                 <option value="edit">Can edit</option>
