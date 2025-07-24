@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Plus, Book, Globe, Lock, User } from 'lucide-react';
 import { redirect } from 'next/navigation';
+import { CookbookImage } from '@/components/cookbooks/cookbook-image';
 
 export default async function CookbooksPage() {
   const session = await getServerSession(authOptions);
@@ -64,7 +65,16 @@ export default async function CookbooksPage() {
               <h2 className="text-2xl font-semibold">My Cookbooks</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {owned.map((cookbook) => (
-                  <Card key={cookbook.id} className="flex flex-col">
+                  <Card key={cookbook.id} className="flex flex-col overflow-hidden">
+                    {/* Cover Image */}
+                    <div className="aspect-video relative">
+                      <CookbookImage
+                        src={cookbook.coverImageUrl}
+                        alt={cookbook.title}
+                        fill
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                      />
+                    </div>
                     <CardHeader>
                       <div className="flex items-center justify-between">
                         <CardTitle className="line-clamp-1">{cookbook.title}</CardTitle>
@@ -100,7 +110,16 @@ export default async function CookbooksPage() {
               <h2 className="text-2xl font-semibold">Shared With Me</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {collaborated.map(({ cookbook, permission }) => (
-                  <Card key={cookbook.id} className="flex flex-col">
+                  <Card key={cookbook.id} className="flex flex-col overflow-hidden">
+                    {/* Cover Image */}
+                    <div className="aspect-video relative">
+                      <CookbookImage
+                        src={cookbook.coverImageUrl}
+                        alt={cookbook.title}
+                        fill
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                      />
+                    </div>
                     <CardHeader>
                       <div className="flex items-center justify-between">
                         <CardTitle className="line-clamp-1">{cookbook.title}</CardTitle>
@@ -155,7 +174,16 @@ export default async function CookbooksPage() {
               <h2 className="text-2xl font-semibold">Public Cookbooks</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {publicCookbooks.map((cookbook) => (
-                  <Card key={cookbook.id} className="flex flex-col">
+                  <Card key={cookbook.id} className="flex flex-col overflow-hidden">
+                    {/* Cover Image */}
+                    <div className="aspect-video relative">
+                      <CookbookImage
+                        src={cookbook.coverImageUrl}
+                        alt={cookbook.title}
+                        fill
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                      />
+                    </div>
                     <CardHeader>
                       <div className="flex items-center justify-between">
                         <CardTitle className="line-clamp-1">{cookbook.title}</CardTitle>

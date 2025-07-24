@@ -5,6 +5,7 @@ import { db } from '@/db';
 import { cookbooks, cookbookRecipes } from '@/db/schema';
 import { authOptions } from '@/lib/auth';
 import { getUserAccessibleCookbooks } from '@/lib/cookbook-permissions';
+import { sanitizeImageUrl } from '@/lib/image-validation';
 import { eq, desc } from 'drizzle-orm';
 
 // Validation schema for creating a cookbook
@@ -58,7 +59,11 @@ export async function GET(req: NextRequest) {
     
     // Sort by updated date and apply pagination
     const sortedCookbooks = allCookbooks
-      .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+      .sort((a, b) => {
+        const aDate = 'cookbook' in a ? a.cookbook.updatedAt : a.updatedAt;
+        const bDate = 'cookbook' in b ? b.cookbook.updatedAt : b.updatedAt;
+        return new Date(bDate).getTime() - new Date(aDate).getTime();
+      })
       .slice(offset, offset + limit);
     
     return NextResponse.json({ cookbooks: sortedCookbooks });
@@ -95,13 +100,16 @@ export async function POST(req: NextRequest) {
     
     const { title, description, coverImageUrl, isPublic } = validatedData.data;
     
+    // Sanitize and validate the cover image URL
+    const sanitizedImageUrl = sanitizeImageUrl(coverImageUrl);
+    
     // Create the cookbook
     const [newCookbook] = await db
       .insert(cookbooks)
       .values({
         title,
         description,
-        coverImageUrl,
+        coverImageUrl: sanitizedImageUrl,
         ownerId: userId,
         isPublic,
       })

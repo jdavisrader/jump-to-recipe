@@ -15,7 +15,7 @@ const shareCookbookSchema = z.object({
 // POST /api/cookbooks/[id]/share - Share a cookbook with another user
 export async function POST(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -25,7 +25,7 @@ export async function POST(
     }
     
     const userId = session.user.id;
-    const cookbookId = params.id;
+    const { id: cookbookId } = await params;
     
     // Get the cookbook and verify ownership
     const cookbook = await db.query.cookbooks.findFirst({
@@ -134,7 +134,7 @@ export async function POST(
 // GET /api/cookbooks/[id]/share - Get collaborators for a cookbook
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -144,7 +144,7 @@ export async function GET(
     }
     
     const userId = session.user.id;
-    const cookbookId = params.id;
+    const { id: cookbookId } = await params;
     
     // Get the cookbook and verify access
     const cookbook = await db.query.cookbooks.findFirst({
@@ -196,7 +196,7 @@ export async function GET(
 // DELETE /api/cookbooks/[id]/share - Remove a collaborator
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -206,7 +206,7 @@ export async function DELETE(
     }
     
     const userId = session.user.id;
-    const cookbookId = params.id;
+    const { id: cookbookId } = await params;
     const url = new URL(req.url);
     const collaboratorUserId = url.searchParams.get('userId');
     

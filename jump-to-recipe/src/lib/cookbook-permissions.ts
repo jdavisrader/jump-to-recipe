@@ -19,7 +19,7 @@ interface CollaboratorWithCookbook {
     title: string;
     description: string | null;
     coverImageUrl: string | null;
-    ownerId: string;
+    ownerId: string | null;
     isPublic: boolean;
     createdAt: Date;
     updatedAt: Date;
@@ -27,7 +27,7 @@ interface CollaboratorWithCookbook {
       id: string;
       name: string;
       image: string | null;
-    };
+    } | null;
   };
 }
 

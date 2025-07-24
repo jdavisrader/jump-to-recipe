@@ -9,6 +9,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { RecipeCard } from '@/components/recipes';
 import { CookbookVisibility } from './cookbook-visibility';
 import { CookbookCollaborators } from './cookbook-collaborators';
+import { CookbookImage } from './cookbook-image';
 import { 
   Book, 
   Edit, 
@@ -81,19 +82,14 @@ export function CookbookDisplay({ cookbook, isOwner, canEdit }: CookbookDisplayP
       {/* Cookbook Header */}
       <div className="flex flex-col md:flex-row gap-6 items-start">
         {/* Cover Image */}
-        <div className="w-full md:w-1/3 aspect-square relative rounded-lg overflow-hidden bg-muted">
-          {cookbook.coverImageUrl ? (
-            <Image
-              src={cookbook.coverImageUrl}
-              alt={cookbook.title}
-              fill
-              className="object-cover"
-            />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center">
-              <Book className="h-16 w-16 text-muted-foreground" />
-            </div>
-          )}
+        <div className="w-full md:w-1/3 aspect-square relative rounded-lg overflow-hidden">
+          <CookbookImage
+            src={cookbook.coverImageUrl}
+            alt={cookbook.title}
+            fill
+            className="rounded-lg"
+            sizes="(max-width: 768px) 100vw, 33vw"
+          />
         </div>
         
         {/* Cookbook Info */}
