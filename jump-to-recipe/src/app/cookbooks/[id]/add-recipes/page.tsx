@@ -12,7 +12,7 @@ import { Loader2, Search, ArrowLeft, Plus } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import type { Recipe } from '@/types/recipe';
 
-export default function AddRecipesPage({ params }: { params: { id: string } }) {
+export default function AddRecipesPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(true);
@@ -22,8 +22,16 @@ export default function AddRecipesPage({ params }: { params: { id: string } }) {
   const [filteredRecipes, setFilteredRecipes] = useState<Recipe[]>([]);
   const [selectedRecipes, setSelectedRecipes] = useState<Set<string>>(new Set());
   const [isAdding, setIsAdding] = useState(false);
+  const [cookbookId, setCookbookId] = useState<string>('');
   
-  const cookbookId = params.id;
+  // Handle async params
+  useEffect(() => {
+    const getParams = async () => {
+      const resolvedParams = await params;
+      setCookbookId(resolvedParams.id);
+    };
+    getParams();
+  }, [params]);
   
   // Fetch cookbook and user recipes
   useEffect(() => {
@@ -72,7 +80,7 @@ export default function AddRecipesPage({ params }: { params: { id: string } }) {
     };
     
     fetchData();
-  }, [cookbookId, toast]);
+  }, [cookbookId]); // Removed toast from dependencies to prevent infinite re-renders
   
   // Filter recipes based on search query
   useEffect(() => {

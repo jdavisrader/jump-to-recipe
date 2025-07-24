@@ -26,8 +26,18 @@ const VALID_IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.webp', '.gif'];
  * Validate if an image URL is from an allowed domain and has a valid extension
  */
 export function isValidImageUrl(url: string): boolean {
+  // Handle empty, null, or whitespace-only URLs
+  if (!url || typeof url !== 'string' || url.trim() === '') {
+    return false;
+  }
+
   try {
-    const parsedUrl = new URL(url);
+    const parsedUrl = new URL(url.trim());
+    
+    // Only allow HTTP and HTTPS protocols
+    if (parsedUrl.protocol !== 'http:' && parsedUrl.protocol !== 'https:') {
+      return false;
+    }
     
     // Check if domain is allowed
     const isAllowedDomain = ALLOWED_IMAGE_DOMAINS.some(domain => 
@@ -35,7 +45,6 @@ export function isValidImageUrl(url: string): boolean {
     );
     
     if (!isAllowedDomain) {
-      console.warn(`Image domain not allowed: ${parsedUrl.hostname}`);
       return false;
     }
     
@@ -52,13 +61,12 @@ export function isValidImageUrl(url: string): boolean {
     ].some(domain => parsedUrl.hostname.includes(domain));
     
     if (!hasValidExtension && !isTrustedDomainWithoutExtension) {
-      console.warn(`Image URL doesn't have valid extension: ${url}`);
       return false;
     }
     
     return true;
   } catch (error) {
-    console.warn(`Invalid image URL format: ${url}`, error);
+    // URL constructor will throw for malformed URLs
     return false;
   }
 }

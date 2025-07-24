@@ -10,14 +10,14 @@ import { CookbookImage } from '@/components/cookbooks/cookbook-image';
 
 export default async function CookbooksPage() {
   const session = await getServerSession(authOptions);
-  
+
   if (!session?.user) {
     redirect('/auth/login?callbackUrl=/cookbooks');
   }
-  
+
   const userId = session.user.id;
   const { owned, collaborated, public: publicCookbooks } = await getUserAccessibleCookbooks(userId);
-  
+
   const hasNoCookbooks = owned.length === 0 && collaborated.length === 0 && publicCookbooks.length === 0;
 
   return (
@@ -197,17 +197,17 @@ export default async function CookbooksPage() {
                     </CardContent>
                     <CardFooter className="flex justify-between items-center">
                       <div className="flex items-center gap-2">
-                        {cookbook.owner?.image ? (
+                        {(cookbook as any).owner?.image ? (
                           <img
-                            src={cookbook.owner.image}
-                            alt={cookbook.owner.name || 'Owner'}
+                            src={(cookbook as any).owner.image}
+                            alt={(cookbook as any).owner.name || 'Owner'}
                             className="w-6 h-6 rounded-full"
                           />
                         ) : (
                           <User className="w-6 h-6 text-muted-foreground" />
                         )}
                         <span className="text-sm text-muted-foreground">
-                          {cookbook.owner?.name || 'Unknown'}
+                          {(cookbook as any).owner?.name || 'Unknown'}
                         </span>
                       </div>
                       <Button asChild size="sm">

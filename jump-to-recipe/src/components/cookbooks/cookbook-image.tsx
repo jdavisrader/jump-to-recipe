@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Image from 'next/image';
 import { Book } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { isValidImageUrl } from '@/lib/image-validation';
 
 interface CookbookImageProps {
   src?: string | null;
@@ -29,8 +30,16 @@ export function CookbookImage({
   const [hasError, setHasError] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
-  // If no src provided or error occurred, show placeholder
-  if (!src || hasError) {
+  // Check if the URL is valid before attempting to load
+  const isUrlValid = src && src.trim() !== '' ? isValidImageUrl(src) : false;
+
+  // If no src provided, invalid URL, or error occurred, show placeholder
+  if (!src || !isUrlValid || hasError) {
+    // Log a warning for invalid URLs (but not for empty/null URLs)
+    if (src && src.trim() !== '' && !isUrlValid) {
+      console.warn(`Invalid or unsupported image URL: ${src}`);
+    }
+    
     return (
       <div className={cn(
         "flex items-center justify-center bg-muted",
