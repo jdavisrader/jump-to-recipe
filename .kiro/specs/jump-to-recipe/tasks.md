@@ -99,7 +99,7 @@
   - Build grocery list management API endpoints (GET, PUT, DELETE)
   - _Requirements: 5.1, 5.2, 5.3, 5.4_
 
-- [ ] 13. Build grocery list UI components
+- [x] 13. Build grocery list UI components
   - Create recipe selection interface for grocery list generation
   - Build grocery list display with categorized ingredient grouping
   - Implement grocery list editing and item checking functionality
