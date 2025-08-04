@@ -2,14 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { v4 as uuidv4 } from 'uuid';
 import * as cheerio from 'cheerio';
 import type { Recipe } from '@/types/recipe';
+import { createRecipeSchema } from '@/lib/validations/recipe';
 
 // Define Unit type if it's not imported
 type Unit = '' | 'tsp' | 'tbsp' | 'cup' | 'oz' | 'lb' | 'g' | 'kg' | 'ml' | 'l' | 'pinch' | 'pint' | 'quart' | 'gallon';
-
-// Define a basic recipe schema if the import fails
-const recipeSchema = {
-  parse: (recipe: any) => recipe // Placeholder for actual validation
-};
 
 export async function POST(request: NextRequest) {
   try {
@@ -153,33 +149,28 @@ export async function POST(request: NextRequest) {
         });
       });
 
-      // Validate with schema (if available)
-      try {
-        recipeSchema.parse(recipe);
-      } catch (e) {
-        console.warn('Recipe schema validation failed, but continuing:', e);
-      }
-
-      // Return the recipe
-      return NextResponse.json(recipe);
-    } catch (validationError) {
-      console.error('Recipe validation error:', validationError);
-
-      // If it's a Zod error, extract detailed information
-      if (validationError instanceof Error) {
+      // Validate with schema
+      const validationResult = createRecipeSchema.safeParse(recipe);
+      
+      if (!validationResult.success) {
+        console.error('Recipe validation failed:', validationResult.error.issues);
         return NextResponse.json(
           {
             error: 'Invalid recipe data',
-            details: validationError.message,
+            details: validationResult.error.issues,
             recipe: recipe // Include the recipe for debugging
           },
           { status: 400 }
         );
       }
 
+      // Return the validated recipe
+      return NextResponse.json(validationResult.data);
+    } catch (validationError) {
+      console.error('Recipe validation error:', validationError);
       return NextResponse.json(
-        { error: 'Invalid recipe data' },
-        { status: 400 }
+        { error: 'Failed to validate recipe data' },
+        { status: 500 }
       );
     }
   } catch (error) {
