@@ -39,6 +39,8 @@ export const recipeSchema = z.object({
   sourceUrl: z.string().optional().or(z.literal('')),
   authorId: z.string(),
   visibility: z.enum(['public', 'private']).default('private'),
+  viewCount: z.number().int().nonnegative().default(0),
+  likeCount: z.number().int().nonnegative().default(0),
 });
 
 // Schema for creating a new recipe
@@ -53,7 +55,11 @@ export const recipeFilterSchema = z.object({
   tags: z.array(z.string()).optional(),
   difficulty: z.enum(['easy', 'medium', 'hard']).optional(),
   maxCookTime: z.number().int().positive().optional(),
+  minCookTime: z.number().int().positive().optional(),
+  maxPrepTime: z.number().int().positive().optional(),
+  minPrepTime: z.number().int().positive().optional(),
   authorId: z.string().optional(),
+  sortBy: z.enum(['newest', 'oldest', 'popular', 'title', 'cookTime', 'prepTime']).default('newest'),
   page: z.number().int().positive().default(1),
   limit: z.number().int().positive().max(100).default(10),
 });

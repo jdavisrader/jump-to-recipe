@@ -15,7 +15,14 @@ export async function middleware(request: NextRequest) {
   }
   
   // API routes that don't require authentication
-  if (pathname.startsWith('/api/auth')) {
+  const publicApiRoutes = [
+    '/api/auth',
+    '/api/recipes/search',
+    '/api/recipes/discover',
+    '/api/recipes' // Allow GET requests to browse public recipes
+  ];
+  
+  if (publicApiRoutes.some(route => pathname.startsWith(route))) {
     return NextResponse.next();
   }
   

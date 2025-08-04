@@ -3,7 +3,8 @@ import { db } from '@/db';
 import { recipes } from '@/db/schema/recipes';
 import { recipeFilterSchema, createRecipeSchema } from '@/lib/validations/recipe';
 import { getServerSession } from 'next-auth';
-import { and, desc, eq, lte, sql } from 'drizzle-orm';
+import { authOptions } from '@/lib/auth';
+import { and, desc, asc, eq, lte, gte, sql } from 'drizzle-orm';
 
 /**
  * GET /api/recipes
@@ -51,13 +52,17 @@ export async function GET(req: NextRequest) {
             tags,
             difficulty,
             maxCookTime,
+            minCookTime,
+            maxPrepTime,
+            minPrepTime,
             authorId,
+            sortBy = 'newest',
             page = 1,
             limit = 10
         } = validationResult.data;
 
         // Get current user from session
-        const session = await getServerSession();
+        const session = await getServerSession(authOptions);
         const currentUserId = session?.user?.id;
 
         // Build where conditions
@@ -94,14 +99,49 @@ export async function GET(req: NextRequest) {
             whereConditions.push(eq(recipes.difficulty, difficulty));
         }
 
-        // Filter by maximum cook time if provided
+        // Filter by cook time range if provided
         if (maxCookTime) {
             whereConditions.push(lte(recipes.cookTime, maxCookTime));
+        }
+        if (minCookTime) {
+            whereConditions.push(gte(recipes.cookTime, minCookTime));
+        }
+
+        // Filter by prep time range if provided
+        if (maxPrepTime) {
+            whereConditions.push(lte(recipes.prepTime, maxPrepTime));
+        }
+        if (minPrepTime) {
+            whereConditions.push(gte(recipes.prepTime, minPrepTime));
         }
 
         // Filter by author if provided
         if (authorId) {
             whereConditions.push(eq(recipes.authorId, authorId));
+        }
+
+        // Determine sort order
+        let orderBy;
+        switch (sortBy) {
+            case 'oldest':
+                orderBy = [asc(recipes.createdAt)];
+                break;
+            case 'popular':
+                orderBy = [desc(recipes.viewCount), desc(recipes.likeCount), desc(recipes.createdAt)];
+                break;
+            case 'title':
+                orderBy = [asc(recipes.title)];
+                break;
+            case 'cookTime':
+                orderBy = [asc(recipes.cookTime), asc(recipes.prepTime)];
+                break;
+            case 'prepTime':
+                orderBy = [asc(recipes.prepTime), asc(recipes.cookTime)];
+                break;
+            case 'newest':
+            default:
+                orderBy = [desc(recipes.createdAt)];
+                break;
         }
 
         // Calculate pagination
@@ -110,7 +150,7 @@ export async function GET(req: NextRequest) {
         // Execute query with all filters
         const recipeResults = await db.query.recipes.findMany({
             where: and(...whereConditions),
-            orderBy: [desc(recipes.createdAt)],
+            orderBy: orderBy,
             limit: limit,
             offset: offset,
         });
