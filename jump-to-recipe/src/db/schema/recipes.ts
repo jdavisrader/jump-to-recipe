@@ -24,6 +24,8 @@ export const recipes = pgTable('recipes', {
   sourceUrl: text('source_url'),
   authorId: uuid('author_id').references(() => users.id),
   visibility: visibilityEnum('visibility').default('private').notNull(),
+  viewCount: integer('view_count').default(0).notNull(),
+  likeCount: integer('like_count').default(0).notNull(),
   ...timestamps,
 });
 

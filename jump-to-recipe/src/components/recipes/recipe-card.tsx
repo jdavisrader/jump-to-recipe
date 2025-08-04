@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Clock, Users, ChefHat, ExternalLink } from "lucide-react";
+import { Clock, Users, ChefHat, ExternalLink, Eye, Heart } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -16,12 +16,13 @@ import { RecipeImage } from "./recipe-image";
 import type { Recipe } from "@/types/recipe";
 
 interface RecipeCardProps {
-  recipe: Recipe;
+  recipe: Recipe & { authorName?: string };
   showAuthor?: boolean;
   compact?: boolean;
+  showStats?: boolean;
 }
 
-export function RecipeCard({ recipe, showAuthor = false, compact = false }: RecipeCardProps) {
+export function RecipeCard({ recipe, showAuthor = false, compact = false, showStats = true }: RecipeCardProps) {
   const totalTime = (recipe.prepTime || 0) + (recipe.cookTime || 0);
 
   if (compact) {
@@ -138,10 +139,28 @@ export function RecipeCard({ recipe, showAuthor = false, compact = false }: Reci
             </div>
           )}
 
+          {/* Stats */}
+          {showStats && (recipe.viewCount > 0 || recipe.likeCount > 0) && (
+            <div className="flex items-center gap-4 text-sm text-muted-foreground">
+              {recipe.viewCount > 0 && (
+                <div className="flex items-center gap-1">
+                  <Eye className="h-4 w-4" />
+                  <span>{recipe.viewCount}</span>
+                </div>
+              )}
+              {recipe.likeCount > 0 && (
+                <div className="flex items-center gap-1">
+                  <Heart className="h-4 w-4" />
+                  <span>{recipe.likeCount}</span>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Author */}
           {showAuthor && (
             <div className="text-sm text-muted-foreground">
-              By {recipe.authorId} {/* This would be replaced with actual author name */}
+              By {recipe.authorName || 'Anonymous'}
             </div>
           )}
         </div>

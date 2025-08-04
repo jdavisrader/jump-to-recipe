@@ -4,3 +4,5 @@ export { RecipeCard } from './recipe-card';
 export { RecipeImportForm } from './recipe-import-form';
 export { RecipeEditor } from './recipe-editor';
 export { RecipeImage } from './recipe-image';
+export { RecipeSearch } from './recipe-search';
+export { RecipeFeed } from './recipe-feed';

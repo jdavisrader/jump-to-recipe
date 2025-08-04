@@ -107,7 +107,7 @@
   - Create grocery list management interface (save, edit, delete)
   - _Requirements: 5.1, 5.2, 5.3, 5.4_
 
-- [ ] 14. Implement search and discovery features
+- [x] 14. Implement search and discovery features
   - Add full-text search capabilities to recipe queries
   - Create search API endpoint with filtering by title, ingredients, tags
   - Implement recipe filtering by cook time, tags, and popularity
