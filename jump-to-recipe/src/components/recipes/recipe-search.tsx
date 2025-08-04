@@ -257,7 +257,7 @@ export function RecipeSearch({ onSearch, isLoading }: RecipeSearchProps) {
                   <SelectValue placeholder="Any difficulty" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Any difficulty</SelectItem>
+
                   <SelectItem value="easy">Easy</SelectItem>
                   <SelectItem value="medium">Medium</SelectItem>
                   <SelectItem value="hard">Hard</SelectItem>

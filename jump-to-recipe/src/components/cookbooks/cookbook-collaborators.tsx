@@ -4,7 +4,13 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select } from '@/components/ui/select';
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from '@/components/ui/select';
 import { Collaborator, CollaboratorPermission } from '@/types/cookbook';
 import { UserCircle, X, Mail, Check, Trash2 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
@@ -178,12 +184,14 @@ export function CookbookCollaborators({
                   required
                 />
               </div>
-              <Select
-                value={permission}
-                onChange={(e) => setPermission(e.target.value as CollaboratorPermission)}
-              >
-                <option value="view">Can view</option>
-                <option value="edit">Can edit</option>
+              <Select value={permission} onValueChange={(value) => setPermission(value as CollaboratorPermission)}>
+                <SelectTrigger className="w-32">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="view">Can view</SelectItem>
+                  <SelectItem value="edit">Can edit</SelectItem>
+                </SelectContent>
               </Select>
               <Button type="submit" disabled={isSubmitting}>
                 {isSubmitting ? (
