@@ -61,9 +61,9 @@ export default function RecipesPage() {
         }
       });
 
-      // Set default limit (temporarily set to 3 to demonstrate lazy loading)
+      // Set default limit
       if (!params.has('limit')) {
-        params.set('limit', '3');
+        params.set('limit', '12');
       }
 
       const response = await fetch(`/api/recipes/search?${params.toString()}`);
