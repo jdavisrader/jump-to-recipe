@@ -1,5 +1,6 @@
 // Core application types
 export * from './recipe';
+export * from './comment';
 
 export interface User {
   id: string;

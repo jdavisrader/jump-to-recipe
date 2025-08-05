@@ -281,6 +281,9 @@ export function parseJsonLdRecipe(jsonLd: JsonLdRecipe, authorId: string): NewRe
         notes: null,
         difficulty: null,
         sourceUrl: null,
+        commentsEnabled: true,
+        viewCount: 0,
+        likeCount: 0,
     };
 }
 

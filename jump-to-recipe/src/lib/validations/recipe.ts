@@ -39,6 +39,7 @@ export const recipeSchema = z.object({
   sourceUrl: z.string().nullable().optional(),
   authorId: z.string().nullable().optional(),
   visibility: z.enum(['public', 'private']).default('private'),
+  commentsEnabled: z.boolean().default(true),
   viewCount: z.number().int().nonnegative().default(0),
   likeCount: z.number().int().nonnegative().default(0),
 });

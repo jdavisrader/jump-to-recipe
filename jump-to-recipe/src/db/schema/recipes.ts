@@ -1,4 +1,4 @@
-import { pgTable, text, varchar, integer, jsonb, uuid } from 'drizzle-orm/pg-core';
+import { pgTable, text, varchar, integer, jsonb, uuid, boolean } from 'drizzle-orm/pg-core';
 import { pgEnum } from 'drizzle-orm/pg-core';
 import { timestamps } from './_utils';
 import { sql } from 'drizzle-orm';
@@ -24,6 +24,7 @@ export const recipes = pgTable('recipes', {
   sourceUrl: text('source_url'),
   authorId: uuid('author_id').references(() => users.id),
   visibility: visibilityEnum('visibility').default('private').notNull(),
+  commentsEnabled: boolean('comments_enabled').default(true).notNull(),
   viewCount: integer('view_count').default(0).notNull(),
   likeCount: integer('like_count').default(0).notNull(),
   ...timestamps,

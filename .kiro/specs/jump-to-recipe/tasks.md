@@ -116,7 +116,7 @@
   - Add recipe recommendation logic based on user preferences
   - _Requirements: 6.1, 6.2, 6.3, 6.4_
 
-- [ ] 15. Build commenting and notes system
+- [x] 15. Build commenting and notes system
   - Create comments table schema and TypeScript models
   - Implement GET/POST /api/recipes/[id]/comments endpoints
   - Build rich text editor component for comments and notes
