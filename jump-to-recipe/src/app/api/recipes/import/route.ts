@@ -132,6 +132,9 @@ export async function POST(request: NextRequest) {
       sourceUrl: url,
       authorId: 'imported-recipe',
       visibility: 'private',
+      commentsEnabled: true,
+      viewCount: 0,
+      likeCount: 0,
       createdAt: new Date(),
       updatedAt: new Date(),
     };

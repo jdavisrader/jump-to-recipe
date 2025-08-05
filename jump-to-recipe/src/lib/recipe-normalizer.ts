@@ -75,6 +75,9 @@ export function normalizeRecipeData(
         sourceUrl,
         authorId,
         visibility: recipe.visibility || 'private',
+        commentsEnabled: true,
+        viewCount: 0,
+        likeCount: 0,
     };
 }
 

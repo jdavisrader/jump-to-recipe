@@ -44,6 +44,7 @@ export interface Recipe {
   sourceUrl: string | null;
   authorId: string | null;
   visibility: Visibility;
+  commentsEnabled: boolean;
   viewCount: number;
   likeCount: number;
   createdAt: Date;

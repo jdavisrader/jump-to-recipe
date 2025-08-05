@@ -71,6 +71,9 @@ export async function POST(request: NextRequest) {
       sourceUrl: recipe.sourceUrl,
       authorId: recipe.authorId,
       visibility: recipe.visibility,
+      commentsEnabled: recipe.commentsEnabled,
+      viewCount: recipe.viewCount,
+      likeCount: recipe.likeCount,
       createdAt: recipe.createdAt,
       updatedAt: recipe.updatedAt,
     }));

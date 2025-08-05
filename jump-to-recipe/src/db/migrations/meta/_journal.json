@@ -36,6 +36,13 @@
       "when": 1753671093578,
       "tag": "0004_mature_trish_tilby",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1754361704737,
+      "tag": "0005_glossy_namora",
+      "breakpoints": true
     }
   ]
 }

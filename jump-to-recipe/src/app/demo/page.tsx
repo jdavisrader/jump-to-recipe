@@ -50,6 +50,9 @@ const mockRecipe: Recipe = {
   sourceUrl: "https://example.com/chocolate-chip-cookies",
   authorId: "user-123",
   visibility: "public",
+  commentsEnabled: true,
+  viewCount: 0,
+  likeCount: 0,
   createdAt: new Date(),
   updatedAt: new Date(),
 };

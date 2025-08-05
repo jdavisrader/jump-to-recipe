@@ -1,4 +1,4 @@
-import { pgTable, text, uuid } from 'drizzle-orm/pg-core';
+import { pgTable, text, uuid, boolean } from 'drizzle-orm/pg-core';
 import { timestamps } from './_utils';
 import { users } from './users';
 import { recipes } from './recipes';
@@ -8,6 +8,7 @@ export const comments = pgTable('comments', {
   recipeId: uuid('recipe_id').references(() => recipes.id, { onDelete: 'cascade' }).notNull(),
   userId: uuid('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
   content: text('content').notNull(),
+  isPrivateNote: boolean('is_private_note').default(false).notNull(),
   ...timestamps,
 });
 

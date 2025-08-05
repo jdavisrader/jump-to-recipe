@@ -5,7 +5,10 @@ import { Clock, Users, ChefHat, ExternalLink, Edit } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { RecipeImage } from "./recipe-image";
+import { RecipeComments } from "./recipe-comments";
 import type { Recipe } from "@/types/recipe";
+import { useSession } from "next-auth/react";
+import { useState } from "react";
 
 interface RecipeDisplayProps {
   recipe: Recipe;
@@ -14,7 +17,11 @@ interface RecipeDisplayProps {
 }
 
 export function RecipeDisplay({ recipe, onEdit, canEdit = false }: RecipeDisplayProps) {
+  const { data: session } = useSession();
+  const [commentsEnabled, setCommentsEnabled] = useState(recipe.commentsEnabled ?? true);
   const totalTime = (recipe.prepTime || 0) + (recipe.cookTime || 0);
+  
+  const isRecipeOwner = session?.user?.id === recipe.authorId;
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -186,6 +193,15 @@ export function RecipeDisplay({ recipe, onEdit, canEdit = false }: RecipeDisplay
           </CardContent>
         </Card>
       )}
+
+      {/* Comments and Notes Section */}
+      <RecipeComments
+        recipeId={recipe.id}
+        recipeAuthorId={recipe.authorId || ''}
+        commentsEnabled={commentsEnabled}
+        onCommentsEnabledChange={setCommentsEnabled}
+        isRecipeOwner={isRecipeOwner}
+      />
     </div>
   );
 }
