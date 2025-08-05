@@ -3,6 +3,7 @@ import { db } from '@/db';
 import { recipes } from '@/db/schema/recipes';
 import { updateRecipeSchema } from '@/lib/validations/recipe';
 import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
 import { hasRole } from '@/lib/auth';
 import { and, eq, sql } from 'drizzle-orm';
 
@@ -21,7 +22,7 @@ export async function GET(
         const { id } = await params;
 
         // Get current user from session
-        const session = await getServerSession();
+        const session = await getServerSession(authOptions);
         const currentUserId = session?.user?.id;
 
         // Build where conditions
@@ -76,7 +77,7 @@ export async function PUT(
         const { id } = await params;
 
         // Get current user from session
-        const session = await getServerSession();
+        const session = await getServerSession(authOptions);
 
         if (!session?.user?.id) {
             return NextResponse.json(
@@ -155,7 +156,7 @@ export async function DELETE(
         const { id } = await params;
 
         // Get current user from session
-        const session = await getServerSession();
+        const session = await getServerSession(authOptions);
 
         if (!session?.user?.id) {
             return NextResponse.json(

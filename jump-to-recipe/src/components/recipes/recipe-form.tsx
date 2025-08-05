@@ -9,7 +9,13 @@ import { v4 as uuidv4 } from "uuid";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Select } from "@/components/ui/select";
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Form,
@@ -235,14 +241,18 @@ export function RecipeForm({
                     <ChefHat className="h-4 w-4" />
                     Difficulty
                   </FormLabel>
-                  <FormControl>
-                    <Select {...field}>
-                      <option value="">Select difficulty...</option>
-                      <option value="easy">Easy</option>
-                      <option value="medium">Medium</option>
-                      <option value="hard">Hard</option>
-                    </Select>
-                  </FormControl>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select difficulty..." />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="easy">Easy</SelectItem>
+                      <SelectItem value="medium">Medium</SelectItem>
+                      <SelectItem value="hard">Hard</SelectItem>
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}
@@ -300,25 +310,30 @@ export function RecipeForm({
                     name={`ingredients.${index}.unit`}
                     render={({ field }) => (
                       <FormItem>
-                        <FormControl>
-                          <Select {...field}>
-                            <option value="">Unit</option>
-                            <option value="g">g</option>
-                            <option value="kg">kg</option>
-                            <option value="ml">ml</option>
-                            <option value="l">l</option>
-                            <option value="tsp">tsp</option>
-                            <option value="tbsp">tbsp</option>
-                            <option value="cup">cup</option>
-                            <option value="oz">oz</option>
-                            <option value="lb">lb</option>
-                            <option value="fl oz">fl oz</option>
-                            <option value="pint">pint</option>
-                            <option value="quart">quart</option>
-                            <option value="gallon">gallon</option>
-                            <option value="pinch">pinch</option>
-                          </Select>
-                        </FormControl>
+                        <Select onValueChange={field.onChange} defaultValue={field.value || undefined}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Unit" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+
+                            <SelectItem value="g">g</SelectItem>
+                            <SelectItem value="kg">kg</SelectItem>
+                            <SelectItem value="ml">ml</SelectItem>
+                            <SelectItem value="l">l</SelectItem>
+                            <SelectItem value="tsp">tsp</SelectItem>
+                            <SelectItem value="tbsp">tbsp</SelectItem>
+                            <SelectItem value="cup">cup</SelectItem>
+                            <SelectItem value="oz">oz</SelectItem>
+                            <SelectItem value="lb">lb</SelectItem>
+                            <SelectItem value="fl oz">fl oz</SelectItem>
+                            <SelectItem value="pint">pint</SelectItem>
+                            <SelectItem value="quart">quart</SelectItem>
+                            <SelectItem value="gallon">gallon</SelectItem>
+                            <SelectItem value="pinch">pinch</SelectItem>
+                          </SelectContent>
+                        </Select>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -564,12 +579,17 @@ export function RecipeForm({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Visibility</FormLabel>
-                  <FormControl>
-                    <Select {...field}>
-                      <option value="private">Private</option>
-                      <option value="public">Public</option>
-                    </Select>
-                  </FormControl>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select visibility..." />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="private">Private</SelectItem>
+                      <SelectItem value="public">Public</SelectItem>
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}
