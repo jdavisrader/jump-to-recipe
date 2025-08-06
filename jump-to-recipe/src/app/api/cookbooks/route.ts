@@ -13,7 +13,7 @@ const createCookbookSchema = z.object({
   title: z.string().min(1, 'Title is required').max(500),
   description: z.string().nullable().optional(),
   coverImageUrl: z.union([
-    z.string().min(1).url(),
+    z.string().min(1),
     z.string().length(0),
     z.literal(''),
     z.null()

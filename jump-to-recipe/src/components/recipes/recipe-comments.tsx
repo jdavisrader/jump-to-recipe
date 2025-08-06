@@ -25,7 +25,6 @@ interface RecipeCommentsProps {
 
 export function RecipeComments({
   recipeId,
-  recipeAuthorId,
   commentsEnabled,
   onCommentsEnabledChange,
   isRecipeOwner,
