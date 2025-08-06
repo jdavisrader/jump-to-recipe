@@ -7,7 +7,6 @@ import { env } from '@/lib/env';
 import { eq } from 'drizzle-orm';
 import bcrypt from 'bcrypt';
 import type { AuthOptions, User } from 'next-auth';
-import type { JWT } from 'next-auth/jwt';
 
 /**
  * NextAuth configuration with Google provider and credentials

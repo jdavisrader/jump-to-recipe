@@ -11,10 +11,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
-import { Globe, Lock, Loader2, Save, AlertTriangle, CheckCircle } from 'lucide-react';
+import { Globe, Lock, Loader2, Save } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
-import { CookbookImage } from './cookbook-image';
-import { isValidImageUrl } from '@/lib/image-validation';
+import { CookbookImageUpload } from './cookbook-image-upload';
 import type { Cookbook } from '@/types/cookbook';
 
 // Form validation schema
@@ -22,7 +21,7 @@ const formSchema = z.object({
   title: z.string().min(1, 'Title is required').max(500, 'Title is too long'),
   description: z.string().nullable(),
   coverImageUrl: z.union([
-    z.string().min(1).url('Must be a valid URL'),
+    z.string().min(1),
     z.string().length(0),
     z.literal(''),
     z.null()
@@ -50,8 +49,8 @@ export function CookbookForm({ cookbook, onSuccess }: CookbookFormProps) {
     setValue,
     watch,
     formState: { errors }
-  } = useForm<FormValues>({
-    resolver: zodResolver(formSchema) as any,
+  } = useForm({
+    resolver: zodResolver(formSchema),
     defaultValues: {
       title: cookbook?.title || '',
       description: cookbook?.description || '',
@@ -62,11 +61,6 @@ export function CookbookForm({ cookbook, onSuccess }: CookbookFormProps) {
 
   const isPublic = watch('isPublic');
   const coverImageUrl = watch('coverImageUrl');
-  
-  // Check if the current image URL is valid
-  const isImageUrlValid = coverImageUrl && coverImageUrl.trim() !== '' 
-    ? isValidImageUrl(coverImageUrl) 
-    : null;
 
   const onSubmit = async (data: FormValues) => {
     setIsSubmitting(true);
@@ -146,52 +140,14 @@ export function CookbookForm({ cookbook, onSuccess }: CookbookFormProps) {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="coverImageUrl">Cover Image URL</Label>
-          <Input
-            id="coverImageUrl"
-            placeholder="https://images.unsplash.com/photo-example.jpg"
-            {...register('coverImageUrl')}
+          <CookbookImageUpload
+            value={coverImageUrl || ""}
+            onChange={(url) => setValue('coverImageUrl', url)}
+            onRemove={() => setValue('coverImageUrl', "")}
             disabled={isSubmitting}
           />
-          <p className="text-xs text-muted-foreground">
-            Supported sources: Unsplash, Pexels, Food Network, BBC Good Food, and other trusted image providers
-          </p>
           {errors.coverImageUrl && (
             <p className="text-sm text-destructive">{errors.coverImageUrl.message}</p>
-          )}
-          
-          {/* Image URL Validation Feedback */}
-          {coverImageUrl && coverImageUrl.trim() !== '' && (
-            <div className="flex items-center gap-2 text-sm">
-              {isImageUrlValid ? (
-                <>
-                  <CheckCircle className="h-4 w-4 text-green-600" />
-                  <span className="text-green-600">Valid image URL</span>
-                </>
-              ) : (
-                <>
-                  <AlertTriangle className="h-4 w-4 text-amber-600" />
-                  <span className="text-amber-600">
-                    Image URL may not be supported. A generic image will be shown if this fails to load.
-                  </span>
-                </>
-              )}
-            </div>
-          )}
-          
-          {/* Image Preview */}
-          {coverImageUrl && coverImageUrl.trim() !== '' && (
-            <div className="space-y-2">
-              <Label className="text-sm font-medium">Preview</Label>
-              <div className="w-full max-w-sm aspect-video relative rounded-lg overflow-hidden border">
-                <CookbookImage
-                  src={coverImageUrl}
-                  alt="Cover image preview"
-                  fill
-                  sizes="(max-width: 400px) 100vw, 400px"
-                />
-              </div>
-            </div>
           )}
         </div>
 

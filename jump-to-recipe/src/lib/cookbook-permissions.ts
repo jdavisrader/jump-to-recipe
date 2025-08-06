@@ -1,6 +1,6 @@
 import { db } from '@/db';
-import { cookbooks, cookbookCollaborators, Cookbook } from '@/db/schema';
-import { eq, and, or, not, inArray } from 'drizzle-orm';
+import { cookbooks, cookbookCollaborators } from '@/db/schema';
+import { eq, and, not, inArray } from 'drizzle-orm';
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';

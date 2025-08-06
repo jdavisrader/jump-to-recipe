@@ -125,7 +125,7 @@
   - Implement comment moderation and management features
   - _Requirements: 7.1, 7.2, 7.3, 7.4_
 
-- [ ] 16. Implement file upload and image handling
+- [x] 16. Implement file upload and image handling
   - Configure UploadThing or Cloudinary for secure file uploads
   - Create image upload API endpoints for recipes and cookbooks
   - Build image upload UI components with preview functionality

@@ -12,7 +12,7 @@ import {
   SelectValue 
 } from '@/components/ui/select';
 import { Collaborator, CollaboratorPermission } from '@/types/cookbook';
-import { UserCircle, X, Mail, Check, Trash2 } from 'lucide-react';
+import { UserCircle, Mail, Check, Trash2 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 
 interface CookbookCollaboratorsProps {

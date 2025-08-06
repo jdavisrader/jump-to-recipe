@@ -28,6 +28,7 @@ import {
 
 import { createRecipeSchema } from "@/lib/validations/recipe";
 import type { NewRecipeInput } from "@/types/recipe";
+import { RecipeImageUpload } from "@/components/recipes/recipe-image-upload";
 
 interface RecipeFormProps {
   initialData?: Partial<NewRecipeInput>;
@@ -560,12 +561,12 @@ export function RecipeForm({
               name="imageUrl"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Image URL</FormLabel>
                   <FormControl>
-                    <Input
-                      type="url"
-                      placeholder="https://example.com/image.jpg"
-                      {...field}
+                    <RecipeImageUpload
+                      value={field.value}
+                      onChange={field.onChange}
+                      onRemove={() => field.onChange("")}
+                      disabled={isLoading}
                     />
                   </FormControl>
                   <FormMessage />

@@ -1,131 +1,115 @@
-/**
- * Utility functions for validating and handling images
- */
+// Image validation utilities
 
-// List of allowed image domains for cookbook covers
-const ALLOWED_IMAGE_DOMAINS = [
-  'images.unsplash.com',
-  'unsplash.com',
-  'cdn.pixabay.com',
-  'images.pexels.com',
-  'www.pexels.com',
-  'foodnetwork.sndimg.com',
-  'food.fnr.sndimg.com',
-  'hips.hearstapps.com',
-  'assets.bonappetit.com',
-  'www.foodandwine.com',
-  'images.immediate.co.uk',
-  'www.bbcgoodfood.com',
-  // Add more trusted domains as needed
+export const ALLOWED_IMAGE_TYPES = [
+  "image/jpeg",
+  "image/jpg", 
+  "image/png",
+  "image/gif",
+  "image/webp"
 ];
 
-// Common image file extensions
-const VALID_IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.webp', '.gif'];
+export const MAX_FILE_SIZES = {
+  avatar: 2 * 1024 * 1024, // 2MB
+  recipe: 4 * 1024 * 1024, // 4MB
+  cookbook: 4 * 1024 * 1024, // 4MB
+};
 
-/**
- * Validate if an image URL is from an allowed domain and has a valid extension
- */
+export function validateImageFile(
+  file: File, 
+  type: keyof typeof MAX_FILE_SIZES
+): { isValid: boolean; error?: string } {
+  // Check file type
+  if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+    return {
+      isValid: false,
+      error: "Invalid file type. Please upload a JPEG, PNG, GIF, or WebP image."
+    };
+  }
+
+  // Check file size
+  const maxSize = MAX_FILE_SIZES[type];
+  if (file.size > maxSize) {
+    const maxSizeMB = maxSize / (1024 * 1024);
+    return {
+      isValid: false,
+      error: `File size too large. Maximum size is ${maxSizeMB}MB.`
+    };
+  }
+
+  return { isValid: true };
+}
+
+export function getImageDimensions(file: File): Promise<{ width: number; height: number }> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      resolve({ width: img.width, height: img.height });
+    };
+    
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error("Failed to load image"));
+    };
+    
+    img.src = url;
+  });
+}
+
+export function isUploadThingUrl(url: string): boolean {
+  return url.includes("utfs.io") || url.includes("uploadthing");
+}
+
+export function extractFileKeyFromUrl(url: string): string | null {
+  try {
+    // UploadThing URLs typically look like: https://utfs.io/f/{fileKey}
+    const match = url.match(/\/f\/([^/?]+)/);
+    return match ? match[1] : null;
+  } catch {
+    return null;
+  }
+}
+
+export function sanitizeImageUrl(url: string | null | undefined): string {
+  // Basic URL sanitization - handle both URLs and local file paths
+  if (!url) return "";
+  
+  // If it's a local file path (starts with /), return as-is
+  if (url.startsWith('/')) {
+    return url;
+  }
+  
+  // If it's a URL, validate and return
+  try {
+    const parsedUrl = new URL(url);
+    return parsedUrl.toString();
+  } catch {
+    // If URL parsing fails, return the original string (might be a relative path)
+    return url;
+  }
+}
+
 export function isValidImageUrl(url: string): boolean {
-  // Handle empty, null, or whitespace-only URLs
-  if (!url || typeof url !== 'string' || url.trim() === '') {
-    return false;
-  }
-
   try {
-    const parsedUrl = new URL(url.trim());
-    
-    // Only allow HTTP and HTTPS protocols
-    if (parsedUrl.protocol !== 'http:' && parsedUrl.protocol !== 'https:') {
-      return false;
-    }
-    
-    // Check if domain is allowed
-    const isAllowedDomain = ALLOWED_IMAGE_DOMAINS.some(domain => 
-      parsedUrl.hostname === domain || parsedUrl.hostname.endsWith(`.${domain}`)
-    );
-    
-    if (!isAllowedDomain) {
-      return false;
-    }
-    
-    // Check if URL has a valid image extension
-    const hasValidExtension = VALID_IMAGE_EXTENSIONS.some(ext => 
-      parsedUrl.pathname.toLowerCase().endsWith(ext)
-    );
-    
-    // Some URLs might not have extensions but still be valid (e.g., Unsplash URLs)
-    // Allow URLs from trusted domains even without extensions
-    const isTrustedDomainWithoutExtension = [
+    const parsedUrl = new URL(url);
+    // Check if it's a valid URL and has an image-like extension or is from trusted sources
+    const trustedDomains = [
+      'utfs.io', // UploadThing
       'images.unsplash.com',
-      'unsplash.com'
-    ].some(domain => parsedUrl.hostname.includes(domain));
+      'unsplash.com',
+      'pexels.com',
+      'images.pexels.com',
+      'foodnetwork.com',
+      'bbcgoodfood.com'
+    ];
     
-    if (!hasValidExtension && !isTrustedDomainWithoutExtension) {
-      return false;
-    }
+    const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
     
-    return true;
-  } catch (error) {
-    // URL constructor will throw for malformed URLs
+    return trustedDomains.some(domain => parsedUrl.hostname.includes(domain)) ||
+           imageExtensions.some(ext => parsedUrl.pathname.toLowerCase().endsWith(ext));
+  } catch {
     return false;
   }
-}
-
-/**
- * Validate an image URL by attempting to fetch its headers
- * This is more thorough but requires a network request
- */
-export async function validateImageUrlByFetch(url: string): Promise<boolean> {
-  try {
-    // First check basic URL validation
-    if (!isValidImageUrl(url)) {
-      return false;
-    }
-    
-    // Attempt to fetch just the headers to check if image exists and is accessible
-    const response = await fetch(url, {
-      method: 'HEAD',
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (compatible; JumpToRecipe/1.0)',
-      },
-      // Set a timeout to avoid hanging
-      signal: AbortSignal.timeout(5000),
-    });
-    
-    if (!response.ok) {
-      console.warn(`Image URL returned ${response.status}: ${url}`);
-      return false;
-    }
-    
-    // Check if the content type is an image
-    const contentType = response.headers.get('content-type');
-    if (!contentType || !contentType.startsWith('image/')) {
-      console.warn(`URL is not an image (content-type: ${contentType}): ${url}`);
-      return false;
-    }
-    
-    return true;
-  } catch (error) {
-    console.warn(`Failed to validate image URL: ${url}`, error);
-    return false;
-  }
-}
-
-/**
- * Sanitize and validate an image URL for cookbook covers
- * Returns null if the URL is invalid, otherwise returns the validated URL
- */
-export function sanitizeImageUrl(url: string | null | undefined): string | null {
-  if (!url || url.trim() === '') {
-    return null;
-  }
-  
-  const trimmedUrl = url.trim();
-  
-  // Basic validation
-  if (!isValidImageUrl(trimmedUrl)) {
-    return null;
-  }
-  
-  return trimmedUrl;
 }
