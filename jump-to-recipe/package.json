@@ -14,7 +14,12 @@
     "db:generate": "drizzle-kit generate",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
-    "db:seed": "tsx src/db/seed.ts"
+    "db:seed": "tsx src/db/seed.ts",
+    "test": "node --test --import tsx/esm src/__tests__/basic.test.ts src/__tests__/simple.test.ts src/__tests__/utils/unit-conversion-standalone.test.ts src/__tests__/components/recipe-card.test.tsx src/__tests__/lib/database-operations.test.ts",
+    "test:watch": "node --test --watch --import tsx/esm src/__tests__/**/*.test.ts",
+    "test:coverage": "c8 node --test --import tsx/esm src/__tests__/**/*.test.ts",
+    "test:basic": "node --test --import tsx/esm src/__tests__/basic.test.ts",
+    "test:unit": "node --test --import tsx/esm src/__tests__/utils/unit-conversion-standalone.test.ts"
   },
   "dependencies": {
     "@auth/core": "^0.34.2",
@@ -57,20 +62,35 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4",
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/jest-dom": "^6.6.4",
+    "@testing-library/react": "^16.3.0",
+    "@testing-library/user-event": "^14.6.1",
     "@types/bcrypt": "^5.0.2",
+    "@types/jest": "^30.0.0",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/supertest": "^6.0.3",
     "@types/uuid": "^10.0.0",
+    "@vitejs/plugin-react": "^5.0.0",
+    "@vitest/ui": "^3.2.4",
+    "c8": "^10.1.3",
     "drizzle-kit": "^0.31.4",
     "eslint": "^9",
     "eslint-config-next": "15.4.1",
     "eslint-config-prettier": "^10.1.5",
     "eslint-plugin-prettier": "^5.5.1",
+    "jest": "^30.0.5",
+    "jest-environment-node": "^30.0.5",
+    "jsdom": "^26.1.0",
+    "msw": "^2.10.4",
     "prettier": "^3.6.2",
+    "supertest": "^7.1.4",
     "tailwindcss": "^4",
     "tsx": "^4.20.3",
     "tw-animate-css": "^1.3.5",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^3.2.4"
   }
 }
