@@ -8,7 +8,7 @@
   - Integrate with existing cookbook permission system using getCookbookPermission and hasMinimumPermission
   - _Requirements: 1.2, 1.3, 1.4, 3.1, 3.2, 3.3, 5.3, 6.3, 6.4_
 
-- [ ] 2. Build AddToCookbookButton component
+- [x] 2. Build AddToCookbookButton component
   - Create reusable button component that triggers the modal
   - Implement modal open/close state management
   - Add proper styling to match existing button components
