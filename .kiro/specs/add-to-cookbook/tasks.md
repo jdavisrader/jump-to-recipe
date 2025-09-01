@@ -1,6 +1,6 @@
 # Implementation Plan
 
-- [ ] 1. Create API endpoints for recipe-cookbook operations
+- [x] 1. Create API endpoints for recipe-cookbook operations
   - Create GET /api/recipes/[id]/cookbooks endpoint to fetch user's editable cookbooks with recipe status
   - Create POST /api/cookbooks/[id]/recipes endpoint to add a recipe to a cookbook
   - Create DELETE /api/cookbooks/[id]/recipes/[recipeId] endpoint to remove a recipe from a cookbook
