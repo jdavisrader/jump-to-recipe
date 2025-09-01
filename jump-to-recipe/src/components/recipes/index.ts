@@ -10,3 +10,4 @@ export { RecipeFeed } from './recipe-feed';
 export { RecipePageClient } from './recipe-page-client';
 export { RecipeComments } from './recipe-comments';
 export { AddToCookbookButton } from './add-to-cookbook-button';
+export { AddToCookbookModal } from './add-to-cookbook-modal';
