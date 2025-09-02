@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -17,7 +17,7 @@ export default function AddRecipesPage({ params }: { params: Promise<{ id: strin
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [cookbook, setCookbook] = useState<any>(null);
+  const [cookbook, setCookbook] = useState<{ id: string; title: string; recipes: Array<{ recipe: Recipe; position: number }> } | null>(null);
   const [userRecipes, setUserRecipes] = useState<Recipe[]>([]);
   const [filteredRecipes, setFilteredRecipes] = useState<Recipe[]>([]);
   const [selectedRecipes, setSelectedRecipes] = useState<Set<string>>(new Set());
@@ -34,53 +34,55 @@ export default function AddRecipesPage({ params }: { params: Promise<{ id: strin
   }, [params]);
   
   // Fetch cookbook and user recipes
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        // Fetch cookbook
-        const cookbookRes = await fetch(`/api/cookbooks/${cookbookId}`);
-        
-        if (!cookbookRes.ok) {
-          throw new Error('Failed to fetch cookbook');
-        }
-        
-        const cookbookData = await cookbookRes.json();
-        setCookbook(cookbookData.cookbook);
-        
-        // Get IDs of recipes already in cookbook
-        const existingRecipeIds = new Set(
-          cookbookData.cookbook.recipes.map((item: any) => item.recipe.id)
-        );
-        
-        // Fetch user recipes
-        const recipesRes = await fetch('/api/recipes?limit=100');
-        
-        if (!recipesRes.ok) {
-          throw new Error('Failed to fetch recipes');
-        }
-        
-        const recipesData = await recipesRes.json();
-        
-        // Filter out recipes already in cookbook
-        const availableRecipes = recipesData.recipes.filter(
-          (recipe: Recipe) => !existingRecipeIds.has(recipe.id)
-        );
-        
-        setUserRecipes(availableRecipes);
-        setFilteredRecipes(availableRecipes);
-      } catch (error) {
-        toast({
-          title: 'Error',
-          description: error instanceof Error ? error.message : 'Failed to load data',
-          variant: 'destructive',
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  const fetchData = useCallback(async () => {
+    if (!cookbookId) return;
     
+    try {
+      // Fetch cookbook
+      const cookbookRes = await fetch(`/api/cookbooks/${cookbookId}`);
+      
+      if (!cookbookRes.ok) {
+        throw new Error('Failed to fetch cookbook');
+      }
+      
+      const cookbookData = await cookbookRes.json();
+      setCookbook(cookbookData.cookbook);
+      
+      // Get IDs of recipes already in cookbook
+      const existingRecipeIds = new Set(
+        cookbookData.cookbook.recipes.map((item: { recipe: Recipe; position: number }) => item.recipe.id)
+      );
+      
+      // Fetch user recipes
+      const recipesRes = await fetch('/api/recipes?limit=100');
+      
+      if (!recipesRes.ok) {
+        throw new Error('Failed to fetch recipes');
+      }
+      
+      const recipesData = await recipesRes.json();
+      
+      // Filter out recipes already in cookbook
+      const availableRecipes = recipesData.recipes.filter(
+        (recipe: Recipe) => !existingRecipeIds.has(recipe.id)
+      );
+      
+      setUserRecipes(availableRecipes);
+      setFilteredRecipes(availableRecipes);
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Failed to load data',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  }, [cookbookId, toast]);
+
+  useEffect(() => {
     fetchData();
-  }, [cookbookId]); // Removed toast from dependencies to prevent infinite re-renders
+  }, [fetchData]);
   
   // Filter recipes based on search query
   useEffect(() => {
@@ -120,7 +122,7 @@ export default function AddRecipesPage({ params }: { params: Promise<{ id: strin
       // Get current recipes in cookbook
       const currentRecipes = cookbook.recipes || [];
       const highestPosition = currentRecipes.length > 0
-        ? Math.max(...currentRecipes.map((item: any) => item.position))
+        ? Math.max(...currentRecipes.map((item: { recipe: Recipe; position: number }) => item.position))
         : -1;
       
       // Prepare new recipes to add
@@ -130,7 +132,7 @@ export default function AddRecipesPage({ params }: { params: Promise<{ id: strin
       }));
       
       // Get current recipe IDs
-      const currentRecipeIds = currentRecipes.map((item: any) => ({
+      const currentRecipeIds = currentRecipes.map((item: { recipe: Recipe; position: number }) => ({
         recipeId: item.recipe.id,
         position: item.position,
       }));

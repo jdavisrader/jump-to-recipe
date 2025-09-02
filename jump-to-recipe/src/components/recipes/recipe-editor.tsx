@@ -171,6 +171,7 @@ export function RecipeEditor({
                         <FormControl>
                           <Textarea 
                             {...field} 
+                            value={field.value || ''}
                             className="text-lg border-none p-0 resize-none"
                             placeholder="Recipe description..."
                           />
@@ -226,7 +227,7 @@ export function RecipeEditor({
                   <FormItem>
                     <FormLabel>Image URL</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="https://example.com/image.jpg" />
+                      <Input {...field} value={field.value || ''} placeholder="https://example.com/image.jpg" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -280,6 +281,7 @@ export function RecipeEditor({
                         <Input
                           type="number"
                           {...field}
+                          value={field.value || ''}
                           onChange={(e) =>
                             field.onChange(e.target.value ? parseInt(e.target.value) : undefined)
                           }
@@ -300,6 +302,7 @@ export function RecipeEditor({
                         <Input
                           type="number"
                           {...field}
+                          value={field.value || ''}
                           onChange={(e) =>
                             field.onChange(e.target.value ? parseInt(e.target.value) : undefined)
                           }
@@ -320,6 +323,7 @@ export function RecipeEditor({
                         <Input
                           type="number"
                           {...field}
+                          value={field.value || ''}
                           onChange={(e) =>
                             field.onChange(e.target.value ? parseInt(e.target.value) : undefined)
                           }
@@ -557,7 +561,7 @@ export function RecipeEditor({
                           name={`ingredients.${index}.unit`}
                           render={({ field }) => (
                             <FormItem>
-                              <Select onValueChange={field.onChange} defaultValue={field.value || undefined}>
+                              <Select onValueChange={field.onChange} defaultValue={typeof field.value === 'string' ? field.value : undefined}>
                                 <FormControl>
                                   <SelectTrigger>
                                     <SelectValue placeholder="Unit" />
@@ -638,7 +642,7 @@ export function RecipeEditor({
                       <div className="font-medium">
                         {(ingredient.amount || 0) > 0 && (
                           <span className="text-muted-foreground mr-2">
-                            {ingredient.displayAmount || ingredient.amount} {ingredient.unit}
+                            {ingredient.displayAmount || ingredient.amount} {String(ingredient.unit)}
                           </span>
                         )}
                         {ingredient.name}
@@ -808,6 +812,7 @@ export function RecipeEditor({
                           placeholder="Any additional notes or tips..."
                           className="min-h-[100px]"
                           {...field}
+                          value={field.value || ''}
                         />
                       </FormControl>
                       <FormMessage />

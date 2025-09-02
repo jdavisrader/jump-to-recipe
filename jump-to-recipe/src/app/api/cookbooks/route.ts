@@ -6,7 +6,7 @@ import { cookbooks, cookbookRecipes } from '@/db/schema';
 import { authOptions } from '@/lib/auth';
 import { getUserAccessibleCookbooks } from '@/lib/cookbook-permissions';
 import { sanitizeImageUrl } from '@/lib/image-validation';
-import { eq, desc } from 'drizzle-orm';
+import {} from 'drizzle-orm';
 
 // Validation schema for creating a cookbook
 const createCookbookSchema = z.object({

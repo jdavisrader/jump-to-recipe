@@ -107,7 +107,12 @@ export function RecipeForm({
 
   const handleSubmit = async (data: NewRecipeInput) => {
     try {
-      await onSubmit(data);
+      // Convert form data to match NewRecipeInput type
+      const recipeData: NewRecipeInput = {
+        ...data,
+        difficulty: data.difficulty || null,
+      };
+      await onSubmit(recipeData);
     } catch (error) {
       console.error("Error submitting recipe:", error);
     }
@@ -146,6 +151,7 @@ export function RecipeForm({
                     <Textarea
                       placeholder="Brief description of the recipe..."
                       {...field}
+                      value={field.value || ''}
                     />
                   </FormControl>
                   <FormMessage />
@@ -168,6 +174,7 @@ export function RecipeForm({
                         type="number"
                         placeholder="15"
                         {...field}
+                        value={field.value || ''}
                         onChange={(e) =>
                           field.onChange(
                             e.target.value ? parseInt(e.target.value) : undefined
@@ -194,6 +201,7 @@ export function RecipeForm({
                         type="number"
                         placeholder="30"
                         {...field}
+                        value={field.value || ''}
                         onChange={(e) =>
                           field.onChange(
                             e.target.value ? parseInt(e.target.value) : undefined
@@ -220,6 +228,7 @@ export function RecipeForm({
                         type="number"
                         placeholder="4"
                         {...field}
+                        value={field.value || ''}
                         onChange={(e) =>
                           field.onChange(
                             e.target.value ? parseInt(e.target.value) : undefined
@@ -242,7 +251,7 @@ export function RecipeForm({
                     <ChefHat className="h-4 w-4" />
                     Difficulty
                   </FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select onValueChange={field.onChange} defaultValue={field.value || undefined}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select difficulty..." />
@@ -311,7 +320,7 @@ export function RecipeForm({
                     name={`ingredients.${index}.unit`}
                     render={({ field }) => (
                       <FormItem>
-                        <Select onValueChange={field.onChange} defaultValue={field.value || undefined}>
+                        <Select onValueChange={field.onChange} defaultValue={typeof field.value === 'string' ? field.value : undefined}>
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue placeholder="Unit" />
@@ -531,6 +540,7 @@ export function RecipeForm({
                     <Textarea
                       placeholder="Any additional notes or tips..."
                       {...field}
+                      value={field.value || ''}
                     />
                   </FormControl>
                   <FormMessage />
@@ -549,6 +559,7 @@ export function RecipeForm({
                       type="url"
                       placeholder="https://example.com/recipe"
                       {...field}
+                      value={field.value || ''}
                     />
                   </FormControl>
                   <FormMessage />

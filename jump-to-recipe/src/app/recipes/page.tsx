@@ -247,7 +247,7 @@ export default function RecipesPage() {
               {!pagination.hasNextPage && recipes.length > 0 && (
                 <div className="text-center mt-8">
                   <p className="text-sm text-muted-foreground">
-                    You've reached the end of the results
+                    You&apos;ve reached the end of the results
                   </p>
                 </div>
               )}

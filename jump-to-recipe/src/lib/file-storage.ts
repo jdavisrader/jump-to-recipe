@@ -162,7 +162,7 @@ export async function uploadFile(
   let buffer = Buffer.from(new Uint8Array(arrayBuffer));
 
   // Process image
-  buffer = await processImage(buffer, options);
+  buffer = Buffer.from(await processImage(buffer, options));
 
   // Generate filename
   const filename = generateFilename(file.name, options.category);

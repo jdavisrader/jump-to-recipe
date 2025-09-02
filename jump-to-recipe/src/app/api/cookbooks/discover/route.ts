@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { db } from '@/db';
-import { cookbooks, users } from '@/db/schema';
+import { cookbooks } from '@/db/schema';
 import { authOptions } from '@/lib/auth';
-import { eq, desc, and, not, inArray } from 'drizzle-orm';
+import { eq, desc, and, not, count } from 'drizzle-orm';
 
 // GET /api/cookbooks/discover - Discover public cookbooks
 export async function GET(req: NextRequest) {
@@ -40,8 +40,8 @@ export async function GET(req: NextRequest) {
     });
     
     // Count total public cookbooks for pagination
-    const [{ count }] = await db
-      .select({ count: db.fn.count() })
+    const [{ count: totalCount }] = await db
+      .select({ count: count() })
       .from(cookbooks)
       .where(and(
         eq(cookbooks.isPublic, true),
@@ -51,7 +51,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({
       cookbooks: publicCookbooks,
       pagination: {
-        total: Number(count),
+        total: Number(totalCount),
         limit,
         offset,
       }

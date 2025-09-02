@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -38,7 +38,7 @@ export function RecipeComments({
   const [isPrivateNote, setIsPrivateNote] = useState(false);
 
   // Fetch comments
-  const fetchComments = async () => {
+  const fetchComments = useCallback(async () => {
     try {
       const response = await fetch(`/api/recipes/${recipeId}/comments`);
       if (response.ok) {
@@ -52,11 +52,11 @@ export function RecipeComments({
     } finally {
       setLoading(false);
     }
-  };
+  }, [recipeId]);
 
   useEffect(() => {
     fetchComments();
-  }, [recipeId]);
+  }, [recipeId, fetchComments]);
 
   // Submit comment or note
   const handleSubmit = async (e: React.FormEvent) => {

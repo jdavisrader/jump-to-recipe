@@ -196,6 +196,33 @@ export function AddToCookbookModal({
     return executeOperation(operation);
   }, [executeOperation, retryAttempts]);
 
+  const handleOperationTimeout = useCallback((cookbookId: string) => {
+    const operation = pendingOperations.get(cookbookId);
+    if (!operation) return;
+
+    // Revert optimistic update
+    setCookbooks(prev => 
+      prev.map(cookbook => 
+        cookbook.id === cookbookId 
+          ? { ...cookbook, isChecked: operation.originalState }
+          : cookbook
+      )
+    );
+
+    // Remove from pending operations
+    setPendingOperations(prev => {
+      const newMap = new Map(prev);
+      newMap.delete(cookbookId);
+      return newMap;
+    });
+
+    toast({
+      title: "Operation Timeout",
+      description: "The operation took too long and was cancelled. Please try again.",
+      variant: "destructive",
+    });
+  }, [pendingOperations, toast]);
+
   const handleCookbookToggle = useCallback(async (cookbookId: string, currentlyChecked: boolean) => {
     // Check if there's already a pending operation for this cookbook
     if (pendingOperations.has(cookbookId)) {
@@ -295,33 +322,6 @@ export function AddToCookbookModal({
     }
   }, [pendingOperations, executeOperation, retryOperation, toast, handleOperationTimeout]);
 
-  const handleOperationTimeout = useCallback((cookbookId: string) => {
-    const operation = pendingOperations.get(cookbookId);
-    if (!operation) return;
-
-    // Revert optimistic update
-    setCookbooks(prev => 
-      prev.map(cookbook => 
-        cookbook.id === cookbookId 
-          ? { ...cookbook, isChecked: operation.originalState }
-          : cookbook
-      )
-    );
-
-    // Remove from pending operations
-    setPendingOperations(prev => {
-      const newMap = new Map(prev);
-      newMap.delete(cookbookId);
-      return newMap;
-    });
-
-    toast({
-      title: "Operation Timeout",
-      description: "The operation took too long and was cancelled. Please try again.",
-      variant: "destructive",
-    });
-  }, [pendingOperations, toast]);
-
   const handleCreateCookbook = useCallback(() => {
     router.push('/cookbooks/new');
     onClose();
@@ -342,14 +342,16 @@ export function AddToCookbookModal({
 
   // Cleanup effect
   useEffect(() => {
+    const abortController = abortControllerRef.current;
+    const timeouts = operationTimeoutRef.current;
+    
     return () => {
       // Cancel any ongoing requests
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort();
+      if (abortController) {
+        abortController.abort();
       }
       
       // Clear all timeouts
-      const timeouts = operationTimeoutRef.current;
       timeouts.forEach(timeoutId => {
         clearTimeout(timeoutId);
       });

@@ -10,7 +10,7 @@ export interface Cookbook {
   title: string;
   description: string | null;
   coverImageUrl: string | null;
-  ownerId: string;
+  ownerId: string | null;
   isPublic: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -36,7 +36,7 @@ export interface CookbookFull extends Cookbook {
     position: number;
   }[];
   collaborators: Collaborator[];
-  owner: User;
+  owner: User | null;
 }
 
 // Collaborator interface

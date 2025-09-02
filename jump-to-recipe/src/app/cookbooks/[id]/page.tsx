@@ -6,6 +6,7 @@ import { cookbooks, cookbookRecipes, cookbookCollaborators } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { CookbookDisplay } from '@/components/cookbooks/cookbook-display';
 import { getCookbookPermission } from '@/lib/cookbook-permissions';
+import type { Ingredient, Instruction } from '@/types/recipe';
 
 export default async function CookbookPage({ params }: { params: Promise<{ id: string }> | { id: string } }) {
   // Ensure params is resolved
@@ -71,7 +72,12 @@ export default async function CookbookPage({ params }: { params: Promise<{ id: s
   const cookbookFull = {
     ...cookbook,
     recipes: cookbookRecipeEntries.map(entry => ({
-      recipe: entry.recipe,
+      recipe: {
+        ...entry.recipe,
+        ingredients: entry.recipe.ingredients as Ingredient[], // Cast jsonb to array
+        instructions: entry.recipe.instructions as Instruction[], // Cast jsonb to array
+        tags: entry.recipe.tags || [], // Ensure tags is always an array
+      },
       position: entry.position,
     })),
     collaborators,

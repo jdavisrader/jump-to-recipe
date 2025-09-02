@@ -49,7 +49,7 @@ export default async function CookbooksPage() {
 
       {hasNoCookbooks ? (
         <div className="text-center py-12">
-          <p className="text-muted-foreground">You don't have any cookbooks yet.</p>
+          <p className="text-muted-foreground">You don&apos;t have any cookbooks yet.</p>
           <Button asChild className="mt-4">
             <Link href="/cookbooks/new">
               <Plus className="h-5 w-5 mr-2" />
@@ -197,17 +197,17 @@ export default async function CookbooksPage() {
                     </CardContent>
                     <CardFooter className="flex justify-between items-center">
                       <div className="flex items-center gap-2">
-                        {(cookbook as any).owner?.image ? (
+                        {cookbook.owner?.image ? (
                           <img
-                            src={(cookbook as any).owner.image}
-                            alt={(cookbook as any).owner.name || 'Owner'}
+                            src={cookbook.owner.image}
+                            alt={cookbook.owner.name || 'Owner'}
                             className="w-6 h-6 rounded-full"
                           />
                         ) : (
                           <User className="w-6 h-6 text-muted-foreground" />
                         )}
                         <span className="text-sm text-muted-foreground">
-                          {(cookbook as any).owner?.name || 'Unknown'}
+                          {cookbook.owner?.name || 'Unknown'}
                         </span>
                       </div>
                       <Button asChild size="sm">
