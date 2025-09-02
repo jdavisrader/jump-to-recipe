@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { db } from '@/db';
 import { cookbooks, cookbookRecipes, recipes } from '@/db/schema';
 import { authOptions } from '@/lib/auth';
-import { getCookbookPermission, hasMinimumPermission } from '@/lib/cookbook-permissions';
+import { hasMinimumPermission } from '@/lib/cookbook-permissions';
 import { sanitizeImageUrl } from '@/lib/image-validation';
 import { eq, asc, inArray } from 'drizzle-orm';
 

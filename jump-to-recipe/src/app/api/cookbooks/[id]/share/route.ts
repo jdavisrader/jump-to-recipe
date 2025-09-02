@@ -229,7 +229,7 @@ export async function DELETE(
     }
     
     // Remove the collaborator
-    const deletedRows = await db
+    await db
       .delete(cookbookCollaborators)
       .where(and(
         eq(cookbookCollaborators.cookbookId, cookbookId),

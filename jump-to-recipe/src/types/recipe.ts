@@ -52,4 +52,6 @@ export interface Recipe {
 }
 
 // Type for creating a new recipe (without id and timestamps)
-export type NewRecipeInput = Omit<Recipe, 'id' | 'createdAt' | 'updatedAt'>;
+export type NewRecipeInput = Omit<Recipe, 'id' | 'createdAt' | 'updatedAt'> & {
+  difficulty?: Difficulty | null;
+};

@@ -6,14 +6,14 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { GroceryListGenerator } from "@/components/grocery-lists/grocery-list-generator";
 import { GroceryListManager } from "@/components/grocery-lists/grocery-list-manager";
-import type { GroceryList } from "@/types/grocery-list";
+
 
 type PageView = "overview" | "generator" | "manager";
 
 export default function GroceryListsPage() {
   const [currentView, setCurrentView] = useState<PageView>("overview");
 
-  const handleListGenerated = (_groceryList: GroceryList) => {
+  const handleListGenerated = () => {
     // After generating a list, show the manager view
     setTimeout(() => {
       setCurrentView("manager");

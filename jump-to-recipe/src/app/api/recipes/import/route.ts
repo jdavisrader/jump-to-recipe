@@ -337,7 +337,7 @@ function extractMicrodataRecipe($: cheerio.CheerioAPI) {
   }
 }
 
-function extractBasicRecipe($: cheerio.CheerioAPI, url: string) {
+function extractBasicRecipe($: cheerio.CheerioAPI) {
   // Basic fallback scraping
   const title = $('h1').first().text().trim() ||
     $('title').text().trim() ||
@@ -757,7 +757,7 @@ async function validateImageUrl(imageUrl: string): Promise<string> {
 
     // Return the URL without trying to fetch it (to avoid network issues)
     return imageUrl;
-  } catch (error) {
+  } catch {
     console.warn(`Invalid image URL: ${imageUrl}. Using placeholder instead.`);
     return '';
   }
