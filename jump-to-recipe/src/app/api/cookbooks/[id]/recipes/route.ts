@@ -6,6 +6,14 @@ import { authOptions } from '@/lib/auth';
 import { hasMinimumPermission } from '@/lib/cookbook-permissions';
 import { addRecipeToCookbookSchema } from '@/lib/validations/cookbook-recipes';
 import { eq, and, desc } from 'drizzle-orm';
+import type { 
+  AddRecipeToCookbookHandler,
+  CookbookParamsType,
+  AddRecipeRequestBody,
+  AddRecipeResponseData,
+  ApiSuccessResponse,
+  ApiErrorResponse
+} from '@/types';
 
 /**
  * POST /api/cookbooks/[id]/recipes
@@ -14,13 +22,19 @@ import { eq, and, desc } from 'drizzle-orm';
  */
 export async function POST(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+  { params }: { params: Promise<CookbookParamsType> }
+): Promise<NextResponse<ApiSuccessResponse<AddRecipeResponseData> | ApiErrorResponse>> {
   try {
     const session = await getServerSession(authOptions);
     
     if (!session?.user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      const errorResponse: ApiErrorResponse = {
+        success: false,
+        error: 'Unauthorized',
+        message: 'Authentication required to access this resource',
+        statusCode: 401,
+      };
+      return NextResponse.json(errorResponse, { status: 401 });
     }
 
     const userId = session.user.id;
@@ -29,24 +43,27 @@ export async function POST(
     // Validate cookbook ID format
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     if (!uuidRegex.test(cookbookId)) {
-      return NextResponse.json(
-        { error: 'Invalid cookbook ID format' },
-        { status: 400 }
-      );
+      const errorResponse: ApiErrorResponse = {
+        success: false,
+        error: 'Invalid cookbook ID format',
+        message: 'Cookbook ID must be a valid UUID',
+        statusCode: 400,
+      };
+      return NextResponse.json(errorResponse, { status: 400 });
     }
 
     // Parse and validate request body
-    const body = await req.json();
+    const body: AddRecipeRequestBody = await req.json();
     const validationResult = addRecipeToCookbookSchema.safeParse(body);
 
     if (!validationResult.success) {
-      return NextResponse.json(
-        { 
-          error: 'Invalid request data',
-          details: validationResult.error.format()
-        },
-        { status: 400 }
-      );
+      const errorResponse: ApiErrorResponse = {
+        success: false,
+        error: 'Invalid request data',
+        message: 'Request validation failed',
+        statusCode: 400,
+      };
+      return NextResponse.json(errorResponse, { status: 400 });
     }
 
     const { recipeId } = validationResult.data;
@@ -57,20 +74,26 @@ export async function POST(
     });
 
     if (!cookbook) {
-      return NextResponse.json(
-        { error: 'Cookbook not found' },
-        { status: 404 }
-      );
+      const errorResponse: ApiErrorResponse = {
+        success: false,
+        error: 'Cookbook not found',
+        message: 'The requested cookbook does not exist',
+        statusCode: 404,
+      };
+      return NextResponse.json(errorResponse, { status: 404 });
     }
 
     // Check if user has edit permissions for this cookbook
     const hasPermission = await hasMinimumPermission(cookbookId, userId, 'edit');
     
     if (!hasPermission) {
-      return NextResponse.json(
-        { error: 'Insufficient permissions to edit this cookbook' },
-        { status: 403 }
-      );
+      const errorResponse: ApiErrorResponse = {
+        success: false,
+        error: 'Insufficient permissions',
+        message: 'You do not have permission to edit this cookbook',
+        statusCode: 403,
+      };
+      return NextResponse.json(errorResponse, { status: 403 });
     }
 
     // Check if recipe exists
@@ -79,10 +102,13 @@ export async function POST(
     });
 
     if (!recipe) {
-      return NextResponse.json(
-        { error: 'Recipe not found' },
-        { status: 404 }
-      );
+      const errorResponse: ApiErrorResponse = {
+        success: false,
+        error: 'Recipe not found',
+        message: 'The requested recipe does not exist',
+        statusCode: 404,
+      };
+      return NextResponse.json(errorResponse, { status: 404 });
     }
 
     // Check if recipe is already in the cookbook
@@ -94,10 +120,13 @@ export async function POST(
     });
 
     if (existingEntry) {
-      return NextResponse.json(
-        { error: 'Recipe is already in this cookbook' },
-        { status: 409 }
-      );
+      const errorResponse: ApiErrorResponse = {
+        success: false,
+        error: 'Recipe already exists',
+        message: 'This recipe is already in the cookbook',
+        statusCode: 409,
+      };
+      return NextResponse.json(errorResponse, { status: 409 });
     }
 
     // Get the highest position in the cookbook to append at the end
@@ -118,26 +147,39 @@ export async function POST(
       })
       .returning();
 
-    return NextResponse.json({
+    const response: ApiSuccessResponse<AddRecipeResponseData> = {
       success: true,
       message: 'Recipe added to cookbook successfully',
-      data: newCookbookRecipe,
-    });
+      data: {
+        cookbookId: newCookbookRecipe.cookbookId,
+        recipeId: newCookbookRecipe.recipeId,
+        position: newCookbookRecipe.position,
+        addedAt: newCookbookRecipe.createdAt.toISOString(),
+      },
+    };
+
+    return NextResponse.json(response);
 
   } catch (error) {
     console.error('Error adding recipe to cookbook:', error);
     
     // Handle unique constraint violation
     if (error instanceof Error && error.message.includes('unique constraint')) {
-      return NextResponse.json(
-        { error: 'Recipe is already in this cookbook' },
-        { status: 409 }
-      );
+      const errorResponse: ApiErrorResponse = {
+        success: false,
+        error: 'Recipe already exists',
+        message: 'This recipe is already in the cookbook',
+        statusCode: 409,
+      };
+      return NextResponse.json(errorResponse, { status: 409 });
     }
 
-    return NextResponse.json(
-      { error: 'Failed to add recipe to cookbook' },
-      { status: 500 }
-    );
+    const errorResponse: ApiErrorResponse = {
+      success: false,
+      error: 'Internal server error',
+      message: 'Failed to add recipe to cookbook',
+      statusCode: 500,
+    };
+    return NextResponse.json(errorResponse, { status: 500 });
   }
 }

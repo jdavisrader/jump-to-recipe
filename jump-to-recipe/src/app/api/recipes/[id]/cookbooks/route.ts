@@ -3,17 +3,13 @@ import { getServerSession } from 'next-auth';
 import { db } from '@/db';
 import { cookbooks, cookbookRecipes, cookbookCollaborators, recipes } from '@/db/schema';
 import { authOptions } from '@/lib/auth';
-
 import { eq, and, desc } from 'drizzle-orm';
-
-interface CookbookOption {
-  id: string;
-  name: string;
-  isChecked: boolean;
-  isOwned: boolean;
-  permission: 'edit' | 'owner';
-  lastUsed?: Date;
-}
+import type { 
+  CookbookOption, 
+  GetRecipeCookbooksResponse, 
+  ApiErrorResponse,
+  RecipeIdParamSchema 
+} from '@/types';
 
 /**
  * GET /api/recipes/[id]/cookbooks
@@ -22,13 +18,19 @@ interface CookbookOption {
  */
 export async function GET(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+  { params }: { params: Promise<RecipeIdParamSchema> }
+): Promise<NextResponse<GetRecipeCookbooksResponse | ApiErrorResponse>> {
   try {
     const session = await getServerSession(authOptions);
 
     if (!session?.user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      const errorResponse: ApiErrorResponse = {
+        success: false,
+        error: 'Unauthorized',
+        message: 'Authentication required to access this resource',
+        statusCode: 401,
+      };
+      return NextResponse.json(errorResponse, { status: 401 });
     }
 
     const userId = session.user.id;
@@ -37,10 +39,13 @@ export async function GET(
     // Validate recipe ID format
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     if (!uuidRegex.test(recipeId)) {
-      return NextResponse.json(
-        { error: 'Invalid recipe ID format' },
-        { status: 400 }
-      );
+      const errorResponse: ApiErrorResponse = {
+        success: false,
+        error: 'Invalid recipe ID format',
+        message: 'Recipe ID must be a valid UUID',
+        statusCode: 400,
+      };
+      return NextResponse.json(errorResponse, { status: 400 });
     }
 
     // Check if recipe exists
@@ -49,10 +54,13 @@ export async function GET(
     });
 
     if (!recipe) {
-      return NextResponse.json(
-        { error: 'Recipe not found' },
-        { status: 404 }
-      );
+      const errorResponse: ApiErrorResponse = {
+        success: false,
+        error: 'Recipe not found',
+        message: 'The requested recipe does not exist',
+        statusCode: 404,
+      };
+      return NextResponse.json(errorResponse, { status: 404 });
     }
 
     // Get all cookbooks owned by the user
@@ -133,16 +141,21 @@ export async function GET(
       return a.name.localeCompare(b.name);
     });
 
-    return NextResponse.json({
+    const response: GetRecipeCookbooksResponse = {
       cookbooks: cookbookOptions,
       totalCount: cookbookOptions.length,
-    });
+    };
+
+    return NextResponse.json(response);
 
   } catch (error) {
     console.error('Error fetching recipe cookbooks:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch recipe cookbooks' },
-      { status: 500 }
-    );
+    const errorResponse: ApiErrorResponse = {
+      success: false,
+      error: 'Internal server error',
+      message: 'Failed to fetch recipe cookbooks',
+      statusCode: 500,
+    };
+    return NextResponse.json(errorResponse, { status: 500 });
   }
 }

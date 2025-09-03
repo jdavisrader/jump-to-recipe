@@ -1,6 +1,10 @@
 // Core application types
 export * from './recipe';
 export * from './comment';
+export * from './add-to-cookbook';
+export * from './validation';
+export * from './components';
+export * from './api';
 
 export interface User {
   id: string;

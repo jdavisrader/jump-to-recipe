@@ -5,6 +5,13 @@ import { cookbooks, cookbookRecipes } from '@/db/schema';
 import { authOptions } from '@/lib/auth';
 import { hasMinimumPermission } from '@/lib/cookbook-permissions';
 import { eq, and } from 'drizzle-orm';
+import type { 
+  RemoveRecipeFromCookbookHandler,
+  CookbookRecipeParamsType,
+  RemoveRecipeResponseData,
+  ApiSuccessResponse,
+  ApiErrorResponse
+} from '@/types';
 
 /**
  * DELETE /api/cookbooks/[id]/recipes/[recipeId]
@@ -13,13 +20,19 @@ import { eq, and } from 'drizzle-orm';
  */
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string; recipeId: string }> }
-) {
+  { params }: { params: Promise<CookbookRecipeParamsType> }
+): Promise<NextResponse<ApiSuccessResponse<RemoveRecipeResponseData> | ApiErrorResponse>> {
   try {
     const session = await getServerSession(authOptions);
     
     if (!session?.user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      const errorResponse: ApiErrorResponse = {
+        success: false,
+        error: 'Unauthorized',
+        message: 'Authentication required to access this resource',
+        statusCode: 401,
+      };
+      return NextResponse.json(errorResponse, { status: 401 });
     }
 
     const userId = session.user.id;
@@ -29,17 +42,23 @@ export async function DELETE(
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     
     if (!uuidRegex.test(cookbookId)) {
-      return NextResponse.json(
-        { error: 'Invalid cookbook ID format' },
-        { status: 400 }
-      );
+      const errorResponse: ApiErrorResponse = {
+        success: false,
+        error: 'Invalid cookbook ID format',
+        message: 'Cookbook ID must be a valid UUID',
+        statusCode: 400,
+      };
+      return NextResponse.json(errorResponse, { status: 400 });
     }
 
     if (!uuidRegex.test(recipeId)) {
-      return NextResponse.json(
-        { error: 'Invalid recipe ID format' },
-        { status: 400 }
-      );
+      const errorResponse: ApiErrorResponse = {
+        success: false,
+        error: 'Invalid recipe ID format',
+        message: 'Recipe ID must be a valid UUID',
+        statusCode: 400,
+      };
+      return NextResponse.json(errorResponse, { status: 400 });
     }
 
     // Check if cookbook exists
@@ -48,20 +67,26 @@ export async function DELETE(
     });
 
     if (!cookbook) {
-      return NextResponse.json(
-        { error: 'Cookbook not found' },
-        { status: 404 }
-      );
+      const errorResponse: ApiErrorResponse = {
+        success: false,
+        error: 'Cookbook not found',
+        message: 'The requested cookbook does not exist',
+        statusCode: 404,
+      };
+      return NextResponse.json(errorResponse, { status: 404 });
     }
 
     // Check if user has edit permissions for this cookbook
     const hasPermission = await hasMinimumPermission(cookbookId, userId, 'edit');
     
     if (!hasPermission) {
-      return NextResponse.json(
-        { error: 'Insufficient permissions to edit this cookbook' },
-        { status: 403 }
-      );
+      const errorResponse: ApiErrorResponse = {
+        success: false,
+        error: 'Insufficient permissions',
+        message: 'You do not have permission to edit this cookbook',
+        statusCode: 403,
+      };
+      return NextResponse.json(errorResponse, { status: 403 });
     }
 
     // Check if recipe is in the cookbook
@@ -73,10 +98,13 @@ export async function DELETE(
     });
 
     if (!cookbookRecipe) {
-      return NextResponse.json(
-        { error: 'Recipe not found in this cookbook' },
-        { status: 404 }
-      );
+      const errorResponse: ApiErrorResponse = {
+        success: false,
+        error: 'Recipe not found',
+        message: 'The recipe is not in this cookbook',
+        statusCode: 404,
+      };
+      return NextResponse.json(errorResponse, { status: 404 });
     }
 
     // Remove recipe from cookbook
@@ -89,16 +117,26 @@ export async function DELETE(
         )
       );
 
-    return NextResponse.json({
+    const response: ApiSuccessResponse<RemoveRecipeResponseData> = {
       success: true,
       message: 'Recipe removed from cookbook successfully',
-    });
+      data: {
+        cookbookId,
+        recipeId,
+        removedAt: new Date().toISOString(),
+      },
+    };
+
+    return NextResponse.json(response);
 
   } catch (error) {
     console.error('Error removing recipe from cookbook:', error);
-    return NextResponse.json(
-      { error: 'Failed to remove recipe from cookbook' },
-      { status: 500 }
-    );
+    const errorResponse: ApiErrorResponse = {
+      success: false,
+      error: 'Internal server error',
+      message: 'Failed to remove recipe from cookbook',
+      statusCode: 500,
+    };
+    return NextResponse.json(errorResponse, { status: 500 });
   }
 }
