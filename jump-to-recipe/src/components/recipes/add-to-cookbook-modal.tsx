@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { Search, Plus, X, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,7 +16,7 @@ interface CookbookOption {
   isChecked: boolean;
   isOwned: boolean;
   permission: 'edit' | 'owner';
-  lastUsed?: Date;
+  lastUsed?: Date | string;
 }
 
 interface AddToCookbookModalProps {
@@ -50,60 +51,92 @@ export function AddToCookbookModal({
   const [retryAttempts, setRetryAttempts] = useState<Map<string, number>>(new Map());
   const { toast } = useToast();
   const router = useRouter();
+  const { data: session, status } = useSession();
   const abortControllerRef = useRef<AbortController | null>(null);
   const operationTimeoutRef = useRef<Map<string, NodeJS.Timeout>>(new Map());
 
-  const fetchCookbooks = useCallback(async () => {
+  // Fetch cookbooks when modal opens
+  useEffect(() => {
+    if (!isOpen) return;
+
+    // Don't fetch if session is still loading
+    if (status === 'loading') {
+      console.log('⏳ Session still loading, waiting...');
+      return;
+    }
+
+    // Don't fetch if not authenticated
+    if (status === 'unauthenticated' || !session) {
+      console.log('❌ Not authenticated, cannot fetch cookbooks');
+      setIsInitialLoading(false);
+      toast({
+        title: "Authentication Required",
+        description: "Please sign in to add recipes to cookbooks.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    console.log('✅ Session authenticated, proceeding with fetch');
     setIsInitialLoading(true);
-    
+
     // Cancel any existing request
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
     }
-    
-    abortControllerRef.current = new AbortController();
-    
-    try {
-      const response = await fetch(`/api/recipes/${recipeId}/cookbooks`, {
-        signal: abortControllerRef.current.signal,
-      });
-      
-      if (!response.ok) {
-        throw new Error(`Failed to fetch cookbooks: ${response.status} ${response.statusText}`);
-      }
-      
-      const data = await response.json();
-      setCookbooks(data.cookbooks || []);
-    } catch (error) {
-      if (error instanceof Error && error.name === 'AbortError') {
-        // Request was cancelled, don't show error
-        return;
-      }
-      
-      console.error('Error fetching cookbooks:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load cookbooks. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsInitialLoading(false);
-    }
-  }, [recipeId, toast]);
 
-  // Fetch cookbooks when modal opens
-  useEffect(() => {
-    if (isOpen) {
-      fetchCookbooks();
-    }
-  }, [isOpen, fetchCookbooks]);
+    abortControllerRef.current = new AbortController();
+
+    const fetchCookbooks = async () => {
+      try {
+        console.log('🔍 Fetching cookbooks for recipe:', recipeId);
+
+        const response = await fetch(`/api/recipes/${recipeId}/cookbooks`, {
+          signal: abortControllerRef.current?.signal,
+          credentials: 'include', // Ensure cookies are sent
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+
+        console.log('📡 Response status:', response.status);
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+          console.error('❌ API Error:', response.status, errorData);
+          throw new Error(`Failed to fetch cookbooks: ${response.status} ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        console.log('✅ Cookbooks fetched:', data.cookbooks?.length || 0);
+        setCookbooks(data.cookbooks || []);
+      } catch (error) {
+        if (error instanceof Error && error.name === 'AbortError') {
+          // Request was cancelled, don't show error
+          console.log('🚫 Request cancelled');
+          return;
+        }
+
+        console.error('❌ Error fetching cookbooks:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load cookbooks. Please try again.",
+          variant: "destructive",
+        });
+      } finally {
+        setIsInitialLoading(false);
+      }
+    };
+
+    fetchCookbooks();
+  }, [isOpen, recipeId, status]); // Removed unstable dependencies: toast, session
 
 
 
   // Filter and sort cookbooks based on search query
   const filteredCookbooks = useMemo(() => {
     let filtered = cookbooks;
-    
+
     // Apply search filter
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
@@ -111,19 +144,26 @@ export function AddToCookbookModal({
         cookbook.name.toLowerCase().includes(query)
       );
     }
-    
+
     // Sort: recently used, owned, then collaborated
     return filtered.sort((a, b) => {
       // First sort by last used date (most recent first)
       if (a.lastUsed && b.lastUsed) {
-        const timeDiff = b.lastUsed.getTime() - a.lastUsed.getTime();
-        if (timeDiff !== 0) return timeDiff;
+        // Ensure lastUsed is a Date object
+        const aDate = a.lastUsed instanceof Date ? a.lastUsed : new Date(a.lastUsed);
+        const bDate = b.lastUsed instanceof Date ? b.lastUsed : new Date(b.lastUsed);
+
+        // Check if dates are valid
+        if (!isNaN(aDate.getTime()) && !isNaN(bDate.getTime())) {
+          const timeDiff = bDate.getTime() - aDate.getTime();
+          if (timeDiff !== 0) return timeDiff;
+        }
       }
-      
+
       // Then prioritize owned cookbooks
       if (a.isOwned && !b.isOwned) return -1;
       if (!a.isOwned && b.isOwned) return 1;
-      
+
       // Finally sort by name
       return a.name.localeCompare(b.name);
     });
@@ -131,10 +171,10 @@ export function AddToCookbookModal({
 
   const executeOperation = useCallback(async (operation: PendingOperation): Promise<OperationResult> => {
     const { cookbookId, operation: op } = operation;
-    
+
     try {
       let response;
-      
+
       if (op === 'remove') {
         response = await fetch(`/api/cookbooks/${cookbookId}/recipes/${recipeId}`, {
           method: 'DELETE',
@@ -165,7 +205,7 @@ export function AddToCookbookModal({
       if (error instanceof Error && error.name === 'AbortError') {
         throw error; // Re-throw abort errors
       }
-      
+
       return {
         success: false,
         cookbookId,
@@ -177,7 +217,7 @@ export function AddToCookbookModal({
 
   const retryOperation = useCallback(async (operation: PendingOperation, maxRetries = 2) => {
     const currentAttempts = retryAttempts.get(operation.cookbookId) || 0;
-    
+
     if (currentAttempts >= maxRetries) {
       return {
         success: false,
@@ -188,11 +228,11 @@ export function AddToCookbookModal({
     }
 
     setRetryAttempts(prev => new Map(prev).set(operation.cookbookId, currentAttempts + 1));
-    
+
     // Exponential backoff: 1s, 2s, 4s
     const delay = Math.pow(2, currentAttempts) * 1000;
     await new Promise(resolve => setTimeout(resolve, delay));
-    
+
     return executeOperation(operation);
   }, [executeOperation, retryAttempts]);
 
@@ -201,9 +241,9 @@ export function AddToCookbookModal({
     if (!operation) return;
 
     // Revert optimistic update
-    setCookbooks(prev => 
-      prev.map(cookbook => 
-        cookbook.id === cookbookId 
+    setCookbooks(prev =>
+      prev.map(cookbook =>
+        cookbook.id === cookbookId
           ? { ...cookbook, isChecked: operation.originalState }
           : cookbook
       )
@@ -242,9 +282,9 @@ export function AddToCookbookModal({
     };
 
     // Optimistic UI update
-    setCookbooks(prev => 
-      prev.map(cookbook => 
-        cookbook.id === cookbookId 
+    setCookbooks(prev =>
+      prev.map(cookbook =>
+        cookbook.id === cookbookId
           ? { ...cookbook, isChecked: !currentlyChecked }
           : cookbook
       )
@@ -257,12 +297,12 @@ export function AddToCookbookModal({
     const timeoutId = setTimeout(() => {
       handleOperationTimeout(cookbookId);
     }, 30000);
-    
+
     operationTimeoutRef.current.set(cookbookId, timeoutId);
 
     try {
       let result = await executeOperation(operation);
-      
+
       // Retry on failure (network errors, temporary server issues)
       if (!result.success && !result.error?.includes('AbortError')) {
         result = await retryOperation(operation);
@@ -287,13 +327,13 @@ export function AddToCookbookModal({
       if (error instanceof Error && error.name === 'AbortError') {
         return; // Don't show error for cancelled operations
       }
-      
+
       console.error('Error updating cookbook:', error);
-      
+
       // Revert optimistic update on error
-      setCookbooks(prev => 
-        prev.map(cookbook => 
-          cookbook.id === cookbookId 
+      setCookbooks(prev =>
+        prev.map(cookbook =>
+          cookbook.id === cookbookId
             ? { ...cookbook, isChecked: operation.originalState }
             : cookbook
         )
@@ -312,7 +352,7 @@ export function AddToCookbookModal({
         clearTimeout(timeoutId);
         operationTimeoutRef.current.delete(cookbookId);
       }
-      
+
       // Remove from pending operations
       setPendingOperations(prev => {
         const newMap = new Map(prev);
@@ -344,13 +384,13 @@ export function AddToCookbookModal({
   useEffect(() => {
     const abortController = abortControllerRef.current;
     const timeouts = operationTimeoutRef.current;
-    
+
     return () => {
       // Cancel any ongoing requests
       if (abortController) {
         abortController.abort();
       }
-      
+
       // Clear all timeouts
       timeouts.forEach(timeoutId => {
         clearTimeout(timeoutId);
@@ -365,7 +405,7 @@ export function AddToCookbookModal({
       setSearchQuery("");
       setPendingOperations(new Map());
       setRetryAttempts(new Map());
-      
+
       // Clear timeouts
       const timeouts = operationTimeoutRef.current;
       timeouts.forEach(timeoutId => {
@@ -450,7 +490,7 @@ export function AddToCookbookModal({
                       const pendingOperation = pendingOperations.get(cookbook.id);
                       const isPending = !!pendingOperation;
                       const retryCount = retryAttempts.get(cookbook.id) || 0;
-                      
+
                       return (
                         <div
                           key={cookbook.id}
@@ -466,7 +506,7 @@ export function AddToCookbookModal({
                             disabled={isPending}
                             className="shrink-0"
                           />
-                          
+
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2">
                               <span className="font-medium truncate">

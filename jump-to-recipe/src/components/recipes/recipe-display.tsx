@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { RecipeImage } from "./recipe-image";
 import { RecipeComments } from "./recipe-comments";
+import { AddToCookbookButton } from "./add-to-cookbook-button";
 import type { Recipe } from "@/types/recipe";
 import { useSession } from "next-auth/react";
 import { useState } from "react";
@@ -106,17 +107,18 @@ export function RecipeDisplay({ recipe, onEdit, canEdit = false }: RecipeDisplay
           </div>
         )}
 
-        {/* Source Link */}
-        {recipe.sourceUrl && (
-          <div>
+        {/* Action Buttons */}
+        <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
+          <AddToCookbookButton recipeId={recipe.id} />
+          {recipe.sourceUrl && (
             <Button asChild variant="outline" size="sm">
               <a href={recipe.sourceUrl} target="_blank" rel="noopener noreferrer">
                 <ExternalLink className="h-4 w-4 mr-2" />
                 View Original Recipe
               </a>
             </Button>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
