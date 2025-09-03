@@ -26,7 +26,7 @@ export async function GET(
 ) {
   try {
     const session = await getServerSession(authOptions);
-    
+
     if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -115,14 +115,20 @@ export async function GET(
     cookbookOptions.sort((a, b) => {
       // First sort by last used date (most recent first)
       if (a.lastUsed && b.lastUsed) {
-        const timeDiff = b.lastUsed.getTime() - a.lastUsed.getTime();
-        if (timeDiff !== 0) return timeDiff;
+        // Ensure lastUsed is a Date object and is valid
+        const aDate = a.lastUsed instanceof Date ? a.lastUsed : new Date(a.lastUsed);
+        const bDate = b.lastUsed instanceof Date ? b.lastUsed : new Date(b.lastUsed);
+
+        if (!isNaN(aDate.getTime()) && !isNaN(bDate.getTime())) {
+          const timeDiff = bDate.getTime() - aDate.getTime();
+          if (timeDiff !== 0) return timeDiff;
+        }
       }
-      
+
       // Then prioritize owned cookbooks
       if (a.isOwned && !b.isOwned) return -1;
       if (!a.isOwned && b.isOwned) return 1;
-      
+
       // Finally sort by name
       return a.name.localeCompare(b.name);
     });
