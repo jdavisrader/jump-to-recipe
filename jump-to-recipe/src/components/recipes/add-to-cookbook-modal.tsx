@@ -9,35 +9,19 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/components/ui/use-toast";
 import { cn } from "@/lib/utils";
-
-interface CookbookOption {
-  id: string;
-  name: string;
-  isChecked: boolean;
-  isOwned: boolean;
-  permission: 'edit' | 'owner';
-  lastUsed?: Date | string;
-}
-
-interface AddToCookbookModalProps {
-  recipeId: string;
-  isOpen: boolean;
-  onClose: () => void;
-}
-
-interface PendingOperation {
-  cookbookId: string;
-  operation: 'add' | 'remove';
-  originalState: boolean;
-  timestamp: number;
-}
-
-interface OperationResult {
-  success: boolean;
-  cookbookId: string;
-  operation: 'add' | 'remove';
-  error?: string;
-}
+import type {
+  CookbookOption,
+  AddToCookbookModalProps,
+  PendingOperation,
+  OperationResult,
+  GetRecipeCookbooksResponse,
+  AddRecipeResponse,
+  RemoveRecipeResponse,
+  ApiErrorResponse,
+  CookbookToggleHandler,
+  ModalCloseHandler,
+  CreateCookbookHandler
+} from "@/types";
 
 export function AddToCookbookModal({
   recipeId,
@@ -102,12 +86,17 @@ export function AddToCookbookModal({
         console.log('📡 Response status:', response.status);
 
         if (!response.ok) {
-          const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+          const errorData: ApiErrorResponse = await response.json().catch(() => ({ 
+            success: false,
+            error: 'Unknown error',
+            message: 'Failed to parse error response',
+            statusCode: response.status
+          }));
           console.error('❌ API Error:', response.status, errorData);
           throw new Error(`Failed to fetch cookbooks: ${response.status} ${response.statusText}`);
         }
 
-        const data = await response.json();
+        const data: GetRecipeCookbooksResponse = await response.json();
         console.log('✅ Cookbooks fetched:', data.cookbooks?.length || 0);
         setCookbooks(data.cookbooks || []);
       } catch (error) {
@@ -263,7 +252,7 @@ export function AddToCookbookModal({
     });
   }, [pendingOperations, toast]);
 
-  const handleCookbookToggle = useCallback(async (cookbookId: string, currentlyChecked: boolean) => {
+  const handleCookbookToggle: CookbookToggleHandler = useCallback(async (cookbookId: string, currentlyChecked: boolean) => {
     // Check if there's already a pending operation for this cookbook
     if (pendingOperations.has(cookbookId)) {
       toast({
@@ -362,12 +351,12 @@ export function AddToCookbookModal({
     }
   }, [pendingOperations, executeOperation, retryOperation, toast, handleOperationTimeout]);
 
-  const handleCreateCookbook = useCallback(() => {
+  const handleCreateCookbook: CreateCookbookHandler = useCallback(() => {
     router.push('/cookbooks/new');
     onClose();
   }, [router, onClose]);
 
-  const handleClose = useCallback(() => {
+  const handleClose: ModalCloseHandler = useCallback(() => {
     // Don't close if there are pending operations
     if (pendingOperations.size > 0) {
       toast({

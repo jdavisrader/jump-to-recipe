@@ -55,3 +55,30 @@ export interface Recipe {
 export type NewRecipeInput = Omit<Recipe, 'id' | 'createdAt' | 'updatedAt'> & {
   difficulty?: Difficulty | null;
 };
+
+// Extended recipe types for cookbook integration
+export interface RecipeInCookbook {
+  recipe: Recipe;
+  position: number;
+  addedAt: Date;
+}
+
+export interface RecipeWithCookbooks extends Recipe {
+  cookbooks: {
+    cookbook: {
+      id: string;
+      title: string;
+      isOwned: boolean;
+      permission: 'view' | 'edit' | 'owner';
+    };
+    position: number;
+    addedAt: Date;
+  }[];
+}
+
+// Recipe display context types
+export interface RecipeDisplayContext {
+  showAddToCookbook: boolean;
+  userCanEdit: boolean;
+  isOwner: boolean;
+}

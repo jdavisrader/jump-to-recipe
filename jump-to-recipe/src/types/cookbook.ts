@@ -68,3 +68,39 @@ export interface CollaboratorInput {
   userId: string;
   permission: CollaboratorPermission;
 }
+
+// Extended types for add-to-cookbook feature
+export interface CookbookRecipeRelation {
+  id: string;
+  cookbookId: string;
+  recipeId: string;
+  position: number;
+  addedAt: Date;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface CookbookWithRecipeStatus extends Cookbook {
+  hasRecipe: boolean;
+  recipePosition?: number;
+  recipeAddedAt?: Date;
+}
+
+// API operation types for cookbook-recipe management
+export interface AddRecipeToCookbookInput {
+  recipeId: string;
+  position?: number; // Optional, defaults to end of list
+}
+
+export interface RemoveRecipeFromCookbookInput {
+  recipeId: string;
+}
+
+export interface CookbookRecipeOperationResult {
+  success: boolean;
+  cookbookId: string;
+  recipeId: string;
+  operation: 'add' | 'remove';
+  position?: number;
+  message: string;
+}
