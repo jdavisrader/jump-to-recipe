@@ -15,8 +15,6 @@ import type {
   PendingOperation,
   OperationResult,
   GetRecipeCookbooksResponse,
-  AddRecipeResponse,
-  RemoveRecipeResponse,
   ApiErrorResponse,
   CookbookToggleHandler,
   ModalCloseHandler,
@@ -38,6 +36,9 @@ export function AddToCookbookModal({
   const { data: session, status } = useSession();
   const abortControllerRef = useRef<AbortController | null>(null);
   const operationTimeoutRef = useRef<Map<string, NodeJS.Timeout>>(new Map());
+  const modalRef = useRef<HTMLDivElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const previousActiveElementRef = useRef<HTMLElement | null>(null);
 
   // Fetch cookbooks when modal opens
   useEffect(() => {
@@ -388,6 +389,70 @@ export function AddToCookbookModal({
     };
   }, []);
 
+  // Focus management and keyboard navigation
+  useEffect(() => {
+    if (isOpen) {
+      // Store the previously focused element
+      previousActiveElementRef.current = document.activeElement as HTMLElement;
+      
+      // Focus the search input when modal opens (after a brief delay to ensure it's rendered)
+      const timer = setTimeout(() => {
+        if (searchInputRef.current) {
+          searchInputRef.current.focus();
+        }
+      }, 100);
+
+      // Handle keyboard navigation
+      const handleKeyDown = (event: KeyboardEvent) => {
+        // Close modal on Escape key (if no pending operations)
+        if (event.key === 'Escape' && pendingOperations.size === 0) {
+          event.preventDefault();
+          handleClose();
+          return;
+        }
+
+        // Trap focus within modal
+        if (event.key === 'Tab') {
+          const modal = modalRef.current;
+          if (!modal) return;
+
+          const focusableElements = modal.querySelectorAll(
+            'button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"]):not([disabled])'
+          );
+          const firstElement = focusableElements[0] as HTMLElement;
+          const lastElement = focusableElements[focusableElements.length - 1] as HTMLElement;
+
+          if (event.shiftKey) {
+            // Shift + Tab: focus previous element
+            if (document.activeElement === firstElement) {
+              event.preventDefault();
+              lastElement?.focus();
+            }
+          } else {
+            // Tab: focus next element
+            if (document.activeElement === lastElement) {
+              event.preventDefault();
+              firstElement?.focus();
+            }
+          }
+        }
+      };
+
+      document.addEventListener('keydown', handleKeyDown);
+      
+      return () => {
+        clearTimeout(timer);
+        document.removeEventListener('keydown', handleKeyDown);
+      };
+    } else {
+      // Restore focus to previously focused element when modal closes
+      if (previousActiveElementRef.current) {
+        previousActiveElementRef.current.focus();
+        previousActiveElementRef.current = null;
+      }
+    }
+  }, [isOpen, pendingOperations.size, handleClose]);
+
   // Reset state when modal closes
   useEffect(() => {
     if (!isOpen) {
@@ -407,15 +472,35 @@ export function AddToCookbookModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-background rounded-lg shadow-lg w-full max-w-md max-h-[80vh] flex flex-col">
+    <div 
+      className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 sm:p-6"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="modal-title"
+      aria-describedby="modal-description"
+      onClick={(e) => {
+        // Close modal when clicking backdrop (but not when there are pending operations)
+        if (e.target === e.currentTarget && pendingOperations.size === 0) {
+          handleClose();
+        }
+      }}
+    >
+      <div 
+        ref={modalRef}
+        className="bg-background rounded-lg shadow-lg w-full max-w-md max-h-[90vh] sm:max-h-[80vh] flex flex-col"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b">
+        <div className="flex items-center justify-between p-4 sm:p-6 border-b">
           <div className="flex items-center gap-2">
-            <h2 className="text-lg font-semibold">Add to Cookbook</h2>
+            <h2 id="modal-title" className="text-lg font-semibold">Add to Cookbook</h2>
             {pendingOperations.size > 0 && (
-              <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                <Loader2 className="h-3 w-3 animate-spin" />
+              <div 
+                className="flex items-center gap-1 text-sm text-muted-foreground"
+                aria-live="polite"
+                aria-label={`${pendingOperations.size} operation${pendingOperations.size > 1 ? 's' : ''} in progress`}
+              >
+                <Loader2 className="h-3 w-3 animate-spin" aria-hidden="true" />
                 <span>{pendingOperations.size} operation{pendingOperations.size > 1 ? 's' : ''}</span>
               </div>
             )}
@@ -425,85 +510,135 @@ export function AddToCookbookModal({
             size="icon"
             onClick={handleClose}
             disabled={pendingOperations.size > 0}
-            className="h-8 w-8"
-            title={pendingOperations.size > 0 ? "Please wait for operations to complete" : "Close"}
+            className="h-8 w-8 min-h-[44px] min-w-[44px] sm:h-8 sm:w-8 sm:min-h-[32px] sm:min-w-[32px] touch-manipulation"
+            aria-label={pendingOperations.size > 0 ? "Please wait for operations to complete before closing" : "Close dialog"}
           >
-            <X className="h-4 w-4" />
+            <X className="h-4 w-4" aria-hidden="true" />
           </Button>
+        </div>
+
+        {/* Hidden description for screen readers */}
+        <div id="modal-description" className="sr-only">
+          Dialog to select cookbooks to add this recipe to. Use the search field to filter cookbooks, 
+          then check or uncheck cookbooks to add or remove the recipe.
         </div>
 
         {/* Content */}
         <div className="flex-1 overflow-hidden flex flex-col">
           {isInitialLoading ? (
-            <div className="flex-1 flex items-center justify-center p-6">
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Loading cookbooks...
+            <div className="flex-1 flex items-center justify-center p-4 sm:p-6">
+              <div 
+                className="flex items-center gap-2 text-muted-foreground"
+                role="status"
+                aria-live="polite"
+              >
+                <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                <span>Loading cookbooks...</span>
               </div>
             </div>
           ) : cookbooks.length === 0 ? (
             // Empty state - no editable cookbooks
-            <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
+            <div className="flex-1 flex flex-col items-center justify-center p-4 sm:p-6 text-center">
               <p className="text-muted-foreground mb-4">
                 You don&apos;t have any cookbooks yet. Create your first cookbook to start organizing your recipes.
               </p>
-              <Button onClick={handleCreateCookbook} className="gap-2">
-                <Plus className="h-4 w-4" />
+              <Button 
+                onClick={handleCreateCookbook} 
+                className="gap-2 min-h-[44px] touch-manipulation"
+                aria-label="Create your first cookbook"
+              >
+                <Plus className="h-4 w-4" aria-hidden="true" />
                 Create Cookbook
               </Button>
             </div>
           ) : (
             <>
               {/* Search */}
-              <div className="p-6 pb-4">
+              <div className="p-4 sm:p-6 pb-3 sm:pb-4">
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Search 
+                    className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" 
+                    aria-hidden="true"
+                  />
                   <Input
+                    ref={searchInputRef}
                     placeholder="Search cookbooks..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-9"
+                    className="pl-9 min-h-[44px] text-base sm:text-sm"
+                    aria-label="Search cookbooks by name"
+                    aria-describedby="search-help"
                   />
+                  <div id="search-help" className="sr-only">
+                    Type to filter the list of cookbooks by name
+                  </div>
                 </div>
               </div>
 
               {/* Cookbook List */}
-              <div className="flex-1 overflow-y-auto px-6">
+              <div 
+                className="flex-1 overflow-y-auto px-4 sm:px-6"
+                role="group"
+                aria-labelledby="cookbook-list-label"
+              >
+                <div id="cookbook-list-label" className="sr-only">
+                  List of cookbooks you can edit
+                </div>
+                
                 {filteredCookbooks.length === 0 ? (
-                  <div className="text-center py-8 text-muted-foreground">
+                  <div 
+                    className="text-center py-8 text-muted-foreground"
+                    role="status"
+                    aria-live="polite"
+                  >
                     No cookbooks found matching &quot;{searchQuery}&quot;
                   </div>
                 ) : (
-                  <div className="space-y-2">
+                  <div className="space-y-2" role="list">
                     {filteredCookbooks.map((cookbook) => {
                       const pendingOperation = pendingOperations.get(cookbook.id);
                       const isPending = !!pendingOperation;
                       const retryCount = retryAttempts.get(cookbook.id) || 0;
+                      const checkboxId = `cookbook-${cookbook.id}`;
+                      const statusId = `status-${cookbook.id}`;
 
                       return (
                         <div
                           key={cookbook.id}
+                          role="listitem"
                           className={cn(
                             "flex items-center space-x-3 p-3 rounded-lg border transition-colors",
-                            "hover:bg-accent/50",
+                            "hover:bg-accent/50 focus-within:bg-accent/50",
+                            // Enhanced touch targets for mobile
+                            "min-h-[60px] sm:min-h-[auto]",
                             isPending && "opacity-75"
                           )}
                         >
                           <Checkbox
+                            id={checkboxId}
                             checked={cookbook.isChecked}
                             onCheckedChange={() => handleCookbookToggle(cookbook.id, cookbook.isChecked)}
                             disabled={isPending}
-                            className="shrink-0"
+                            className="shrink-0 h-5 w-5 sm:h-4 sm:w-4"
+                            aria-describedby={statusId}
+                            aria-label={`${cookbook.isChecked ? 'Remove' : 'Add'} recipe ${cookbook.isChecked ? 'from' : 'to'} ${cookbook.name} cookbook`}
                           />
 
-                          <div className="flex-1 min-w-0">
+                          <label 
+                            htmlFor={checkboxId}
+                            className="flex-1 min-w-0 cursor-pointer"
+                          >
                             <div className="flex items-center gap-2">
-                              <span className="font-medium truncate">
+                              <span className="font-medium truncate text-base sm:text-sm">
                                 {cookbook.name}
                               </span>
                               {isPending && (
-                                <div className="flex items-center gap-1 shrink-0">
-                                  <Loader2 className="h-3 w-3 animate-spin" />
+                                <div 
+                                  className="flex items-center gap-1 shrink-0"
+                                  aria-live="polite"
+                                  aria-label={`Operation in progress${retryCount > 0 ? `, retry ${retryCount}` : ''}`}
+                                >
+                                  <Loader2 className="h-3 w-3 animate-spin" aria-hidden="true" />
                                   {retryCount > 0 && (
                                     <span className="text-xs text-muted-foreground">
                                       (retry {retryCount})
@@ -512,20 +647,23 @@ export function AddToCookbookModal({
                                 </div>
                               )}
                             </div>
-                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                            <div 
+                              id={statusId}
+                              className="flex items-center gap-2 text-xs sm:text-xs text-muted-foreground mt-1"
+                            >
                               <span>
                                 {cookbook.isOwned ? 'Owned' : 'Collaborator'} • {cookbook.permission}
                               </span>
                               {isPending && pendingOperation && (
-                                <span className="flex items-center gap-1">
-                                  <span>•</span>
+                                <span className="flex items-center gap-1" aria-live="polite">
+                                  <span aria-hidden="true">•</span>
                                   <span>
                                     {pendingOperation.operation === 'add' ? 'Adding...' : 'Removing...'}
                                   </span>
                                 </span>
                               )}
                             </div>
-                          </div>
+                          </label>
                         </div>
                       );
                     })}
@@ -534,13 +672,14 @@ export function AddToCookbookModal({
               </div>
 
               {/* Footer */}
-              <div className="p-6 pt-4 border-t">
+              <div className="p-4 sm:p-6 pt-3 sm:pt-4 border-t">
                 <Button
                   variant="outline"
                   onClick={handleCreateCookbook}
-                  className="w-full gap-2"
+                  className="w-full gap-2 min-h-[44px] touch-manipulation"
+                  aria-label="Create a new cookbook"
                 >
-                  <Plus className="h-4 w-4" />
+                  <Plus className="h-4 w-4" aria-hidden="true" />
                   Create New Cookbook
                 </Button>
               </div>

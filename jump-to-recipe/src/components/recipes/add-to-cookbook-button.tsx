@@ -39,11 +39,24 @@ export function AddToCookbookButton({
         variant={variant}
         size={size}
         disabled={disabled}
-        className={cn(className)}
+        className={cn(
+          // Enhanced touch targets for mobile
+          "min-h-[44px] min-w-[44px] touch-manipulation",
+          // Improved focus visibility
+          "focus-visible:ring-2 focus-visible:ring-offset-2",
+          className
+        )}
+        aria-label="Add recipe to cookbook"
+        aria-describedby="add-to-cookbook-description"
       >
-        <BookOpen className="h-4 w-4 mr-2" />
+        <BookOpen className="h-4 w-4 mr-2" aria-hidden="true" />
         Add to Cookbook
       </Button>
+
+      {/* Hidden description for screen readers */}
+      <span id="add-to-cookbook-description" className="sr-only">
+        Opens a dialog to select cookbooks to add this recipe to
+      </span>
 
       <AddToCookbookModal
         recipeId={recipeId}

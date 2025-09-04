@@ -108,12 +108,22 @@ export function RecipeDisplay({ recipe, onEdit, canEdit = false }: RecipeDisplay
         )}
 
         {/* Action Buttons */}
-        <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
+        <div className="flex flex-col sm:flex-row gap-3 justify-center items-stretch sm:items-center">
           <AddToCookbookButton recipeId={recipe.id} />
           {recipe.sourceUrl && (
-            <Button asChild variant="outline" size="sm">
-              <a href={recipe.sourceUrl} target="_blank" rel="noopener noreferrer">
-                <ExternalLink className="h-4 w-4 mr-2" />
+            <Button 
+              asChild 
+              variant="outline" 
+              size="sm"
+              className="min-h-[44px] touch-manipulation"
+            >
+              <a 
+                href={recipe.sourceUrl} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                aria-label="View original recipe in a new tab"
+              >
+                <ExternalLink className="h-4 w-4 mr-2" aria-hidden="true" />
                 View Original Recipe
               </a>
             </Button>

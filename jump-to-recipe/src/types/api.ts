@@ -156,7 +156,7 @@ export interface ValidationError {
   code: string;
 }
 
-export interface ValidationErrorResponse extends ApiErrorResponse {
+export interface ValidationErrorResponse extends BaseApiErrorResponse {
   errors: ValidationError[];
 }
 
@@ -168,7 +168,7 @@ export interface RateLimitInfo {
   retryAfter?: number; // Seconds
 }
 
-export interface RateLimitResponse extends ApiErrorResponse {
+export interface RateLimitResponse extends BaseApiErrorResponse {
   rateLimit: RateLimitInfo;
 }
 
@@ -179,7 +179,7 @@ export interface PaginationParams {
   offset?: number;
 }
 
-export interface PaginatedResponse<T> extends ApiSuccessResponse<T[]> {
+export interface PaginatedResponse<T> extends BaseApiSuccessResponse<T[]> {
   pagination: {
     page: number;
     limit: number;
