@@ -45,7 +45,7 @@ export function RecipeFeed({ initialData }: RecipeFeedProps) {
       setError(null);
 
       // Fetch 3 recipes per section for the home page preview
-      const response = await fetch('/api/recipes/discover?limit=3');
+      const response = await fetch('/api/recipes/discover?limit=4');
       if (!response.ok) {
         throw new Error('Failed to fetch feed data');
       }
