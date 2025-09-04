@@ -32,7 +32,7 @@ export async function GET(req: NextRequest) {
         const currentUserId = session?.user?.id;
 
         // Base where condition for visibility
-        const baseWhere = currentUserId 
+        const baseWhere = currentUserId
             ? sql`(${recipes.visibility} = 'public' OR ${recipes.authorId} = ${currentUserId})`
             : eq(recipes.visibility, 'public');
 
@@ -189,6 +189,9 @@ export async function GET(req: NextRequest) {
 
                 if (userTags.size > 0) {
                     const userTagsArray = Array.from(userTags);
+                    // Convert JavaScript array to PostgreSQL array literal
+                    const tagsArrayLiteral = `{${userTagsArray.map(tag => `"${tag.replace(/"/g, '\\"')}"`).join(',')}}`;
+
                     recommendedRecipes = await db
                         .select({
                             id: recipes.id,
@@ -215,7 +218,7 @@ export async function GET(req: NextRequest) {
                         .where(and(
                             baseWhere,
                             sql`${recipes.authorId} != ${currentUserId}`,
-                            sql`${recipes.tags} && ${userTagsArray}::text[]`
+                            sql`${recipes.tags} && ${tagsArrayLiteral}::text[]`
                         ))
                         .orderBy(desc(recipes.viewCount), desc(recipes.createdAt))
                         .limit(limit)

@@ -8,8 +8,8 @@ export default function Home() {
   return (
     <div className="flex flex-col min-h-[calc(100vh-3.5rem)]">
       {/* Hero Section */}
-      <section className="relative w-full py-12 md:py-24 lg:py-32 xl:py-48 bg-gradient-to-b from-background to-muted/30">
-        <div className="container px-4 md:px-6">
+      <section className="relative w-full py-12 bg-gradient-to-b from-background to-muted/30">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col items-center text-center">
             <div className="flex flex-col justify-center space-y-4 max-w-3xl">
               <div className="space-y-2">
@@ -17,7 +17,7 @@ export default function Home() {
                   Your Recipes, Organized
                 </h1>
                 <p className="text-muted-foreground md:text-xl">
-                  Collect, organize, and share your favorite recipes with Jump to Recipe. 
+                  Collect, organize, and share your favorite recipes with Jump to Recipe.
                   Import from URLs, create digital cookbooks, and generate smart grocery lists.
                 </p>
               </div>
@@ -39,7 +39,7 @@ export default function Home() {
 
       {/* Features Section */}
       <section className="w-full py-12 md:py-24 lg:py-32 bg-background">
-        <div className="container px-4 md:px-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col items-center justify-center space-y-4 text-center">
             <div className="space-y-2">
               <div className="inline-block rounded-lg bg-muted px-3 py-1 text-sm">Features</div>
@@ -89,7 +89,7 @@ export default function Home() {
 
       {/* Recipe Feed Section */}
       <section className="w-full py-12 md:py-24 lg:py-32 bg-muted/30">
-        <div className="container px-4 md:px-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col items-center justify-center space-y-4 text-center mb-12">
             <div className="space-y-2">
               <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">Discover Recipes</h2>
@@ -104,7 +104,7 @@ export default function Home() {
 
       {/* CTA Section */}
       <section className="w-full py-12 md:py-24 lg:py-32 bg-primary text-primary-foreground">
-        <div className="container px-4 md:px-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col items-center justify-center space-y-4 text-center">
             <div className="space-y-2">
               <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">Ready to Get Started?</h2>
@@ -112,7 +112,7 @@ export default function Home() {
                 Join thousands of home cooks who are organizing their recipes with Jump to Recipe.
               </p>
             </div>
-            <CTAButtons 
+            <CTAButtons
               primary={{ text: 'Create Account', href: '/auth/register', variant: 'secondary', size: 'lg' }}
               secondary={{ text: 'Sign In', href: '/auth/login', variant: 'outline', size: 'lg' }}
               className="justify-center"
@@ -123,7 +123,7 @@ export default function Home() {
 
       {/* Footer */}
       <footer className="w-full py-6 bg-background border-t">
-        <div className="container px-4 md:px-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col items-center justify-center gap-4 md:flex-row md:justify-between">
             <div className="text-center md:text-left">
               <p className="text-sm text-muted-foreground">
