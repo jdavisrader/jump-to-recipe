@@ -1,7 +1,7 @@
 // API utility functions for consistent error handling and response formatting
 
 import { NextResponse } from 'next/server';
-import type { ApiErrorResponse, ApiSuccessResponse } from '@/types';
+import type { BaseApiErrorResponse, BaseApiSuccessResponse } from '@/types';
 
 /**
  * Creates a standardized error response
@@ -10,8 +10,8 @@ export function createErrorResponse(
   error: string,
   message: string,
   statusCode: number
-): NextResponse<ApiErrorResponse> {
-  const errorResponse: ApiErrorResponse = {
+): NextResponse<BaseApiErrorResponse> {
+  const errorResponse: BaseApiErrorResponse = {
     success: false,
     error,
     message,
@@ -27,8 +27,8 @@ export function createSuccessResponse<T>(
   data: T,
   message: string,
   statusCode: number = 200
-): NextResponse<ApiSuccessResponse<T>> {
-  const successResponse: ApiSuccessResponse<T> = {
+): NextResponse<BaseApiSuccessResponse<T>> {
+  const successResponse: BaseApiSuccessResponse<T> = {
     success: true,
     data,
     message,
