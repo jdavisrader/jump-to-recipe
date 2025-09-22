@@ -28,7 +28,10 @@ export default async function CookbookPage({ params }: { params: Promise<{ id: s
         columns: {
           id: true,
           name: true,
+          email: true,
           image: true,
+          createdAt: true,
+          updatedAt: true,
         }
       }
     }
@@ -80,7 +83,17 @@ export default async function CookbookPage({ params }: { params: Promise<{ id: s
       },
       position: entry.position,
     })),
-    collaborators,
+    collaborators: collaborators.map(collab => ({
+      ...collab,
+      permission: collab.permission as 'view' | 'edit', // Cast string to CollaboratorPermission
+      user: collab.user ? {
+        ...collab.user,
+        image: collab.user.image, // Keep as string | null
+        createdAt: new Date(), // Placeholder since we don't need these fields
+        updatedAt: new Date(), // Placeholder since we don't need these fields
+        role: undefined, // Optional field
+      } : undefined,
+    })),
   };
   
   const isOwner = cookbook.ownerId === userId;

@@ -18,6 +18,12 @@ export default async function CookbooksPage() {
   const userId = session.user.id;
   const { owned, collaborated, public: publicCookbooks } = await getUserAccessibleCookbooks(userId);
 
+  // Type assertion to include owner property
+  type CookbookWithOwner = typeof owned[0] & {
+    owner?: { id: string; name: string; image: string | null } | null;
+  };
+  const typedPublicCookbooks = publicCookbooks as CookbookWithOwner[];
+
   const hasNoCookbooks = owned.length === 0 && collaborated.length === 0 && publicCookbooks.length === 0;
 
   return (
@@ -173,7 +179,7 @@ export default async function CookbooksPage() {
             <div className="space-y-4">
               <h2 className="text-2xl font-semibold">Public Cookbooks</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {publicCookbooks.map((cookbook) => (
+                {typedPublicCookbooks.map((cookbook) => (
                   <Card key={cookbook.id} className="flex flex-col overflow-hidden">
                     {/* Cover Image */}
                     <div className="aspect-video relative">

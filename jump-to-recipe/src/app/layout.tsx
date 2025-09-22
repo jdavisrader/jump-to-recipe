@@ -5,6 +5,7 @@ import { AuthProvider } from "@/components/auth-provider";
 import { Navbar } from "@/components/navbar";
 import "./globals.css";
 import "./browser-compatibility.css";
+import "./accessibility.css";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",

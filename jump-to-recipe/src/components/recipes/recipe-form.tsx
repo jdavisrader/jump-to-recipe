@@ -105,12 +105,20 @@ export function RecipeForm({
     );
   };
 
-  const handleSubmit = async (data: NewRecipeInput) => {
+  const handleSubmit = async (data: any) => {
     try {
       // Convert form data to match NewRecipeInput type
       const recipeData: NewRecipeInput = {
         ...data,
+        description: data.description || null,
         difficulty: data.difficulty || null,
+        prepTime: data.prepTime || null,
+        cookTime: data.cookTime || null,
+        servings: data.servings || null,
+        notes: data.notes || null,
+        imageUrl: data.imageUrl || null,
+        sourceUrl: data.sourceUrl || null,
+        authorId: data.authorId || null,
       };
       await onSubmit(recipeData);
     } catch (error) {

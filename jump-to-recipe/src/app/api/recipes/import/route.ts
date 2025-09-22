@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
 
     // If both fail, try basic HTML scraping
     if (!recipeData) {
-      recipeData = extractBasicRecipe($, url);
+      recipeData = extractBasicRecipe($);
     }
 
     // Create a fallback recipe data object if all extraction methods failed
@@ -154,7 +154,7 @@ export async function POST(request: NextRequest) {
 
       // Validate with schema
       const validationResult = createRecipeSchema.safeParse(recipe);
-      
+
       if (!validationResult.success) {
         console.error('Recipe validation failed:', validationResult.error.issues);
         return NextResponse.json(

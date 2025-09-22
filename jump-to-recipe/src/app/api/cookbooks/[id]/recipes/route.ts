@@ -11,8 +11,8 @@ import type {
   CookbookParamsType,
   AddRecipeRequestBody,
   AddRecipeResponseData,
-  BaseApiSuccessResponse,
-  BaseApiErrorResponse
+  ApiSuccessResponse,
+  ApiErrorResponse
 } from '@/types';
 
 /**
