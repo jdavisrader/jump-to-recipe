@@ -131,6 +131,23 @@ export async function GET(req: NextRequest) {
         // Filter by author if provided
         if (authorId) {
             whereConditions.push(eq(recipes.authorId, authorId));
+            
+            // Security check: users can only see their own private recipes
+            // If requesting specific author's recipes, ensure proper access control
+            if (authorId === currentUserId) {
+                // User is requesting their own recipes - show all (public and private)
+                // Remove the general visibility filter for this user's recipes
+                const visibilityIndex = whereConditions.findIndex(condition => 
+                    condition.toString().includes('visibility')
+                );
+                if (visibilityIndex !== -1) {
+                    whereConditions.splice(visibilityIndex, 1);
+                }
+                // No additional visibility filter needed - user can see all their own recipes
+            } else {
+                // User is requesting someone else's recipes - only show public ones
+                // The existing visibility filter will handle this
+            }
         }
 
         // Determine sort order with relevance scoring for search queries
@@ -239,8 +256,40 @@ export async function GET(req: NextRequest) {
         });
     } catch (error) {
         console.error('Error searching recipes:', error);
+        
+        // Provide more specific error information
+        if (error instanceof Error) {
+            // Database connection errors
+            if (error.message.includes('connection') || error.message.includes('timeout')) {
+                return NextResponse.json(
+                    { 
+                        error: 'Database connection error',
+                        message: 'Unable to connect to the database. Please try again later.',
+                        retryable: true
+                    },
+                    { status: 503 }
+                );
+            }
+            
+            // Query errors (potentially from deleted/corrupted data)
+            if (error.message.includes('invalid') || error.message.includes('constraint')) {
+                return NextResponse.json(
+                    { 
+                        error: 'Data integrity error',
+                        message: 'Some recipes may have been deleted or are no longer accessible.',
+                        retryable: false
+                    },
+                    { status: 422 }
+                );
+            }
+        }
+        
         return NextResponse.json(
-            { error: 'Failed to search recipes' },
+            { 
+                error: 'Failed to search recipes',
+                message: 'An unexpected error occurred while searching recipes.',
+                retryable: true
+            },
             { status: 500 }
         );
     }

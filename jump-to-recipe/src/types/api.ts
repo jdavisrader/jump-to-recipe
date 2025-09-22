@@ -25,6 +25,10 @@ export interface BaseApiErrorResponse extends BaseApiResponse {
   statusCode: number;
 }
 
+// Type aliases for backward compatibility
+export type ApiSuccessResponse<T = unknown> = BaseApiSuccessResponse<T>;
+export type ApiErrorResponse = BaseApiErrorResponse;
+
 // Request parameter types
 export interface RecipeParamsType {
   id: string; // Recipe UUID

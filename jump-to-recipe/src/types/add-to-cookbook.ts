@@ -56,13 +56,7 @@ export interface GetRecipeCookbooksResponse {
   totalCount: number;
 }
 
-// Error response types
-export interface ApiErrorResponse {
-  success: false;
-  error: string;
-  message: string;
-  statusCode: number;
-}
+// Error response types are imported from api.ts
 
 // Internal operation tracking types
 export interface PendingOperation {

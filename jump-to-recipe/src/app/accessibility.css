@@ -1,0 +1,122 @@
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .card {
+    border-width: 2px;
+  }
+  
+  .button {
+    border-width: 2px;
+  }
+  
+  .input {
+    border-width: 2px;
+  }
+  
+  .focus\:ring-2:focus {
+    --tw-ring-width: 3px;
+  }
+  
+  .focus-within\:ring-2:focus-within {
+    --tw-ring-width: 3px;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .transition-shadow,
+  .transition-transform,
+  .transition-colors,
+  .animate-spin {
+    transition: none !important;
+    animation: none !important;
+  }
+  
+  .hover\:scale-105:hover {
+    transform: none !important;
+  }
+}
+
+/* Text scaling support */
+@media (min-resolution: 1.5dppx) {
+  .text-xs {
+    font-size: 0.8125rem; /* 13px */
+  }
+  
+  .text-sm {
+    font-size: 0.9375rem; /* 15px */
+  }
+}
+
+/* Focus management improvements */
+.focus\:outline-none:focus {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+}
+
+.focus\:ring-2:focus {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 2px var(--ring);
+}
+
+.focus-within\:ring-2:focus-within {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 2px var(--ring);
+}
+
+/* Skip link styling */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.focus\:not-sr-only:focus {
+  position: static;
+  width: auto;
+  height: auto;
+  padding: 0.5rem 1rem;
+  margin: 0;
+  overflow: visible;
+  clip: auto;
+  white-space: normal;
+}
+
+/* Improved touch targets for mobile */
+@media (max-width: 640px) {
+  .button,
+  .input,
+  .select-trigger,
+  [role="button"],
+  button {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  .card {
+    margin-bottom: 0.5rem;
+  }
+}
+
+/* Print styles */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  
+  .card {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+  
+  .button {
+    display: none;
+  }
+}

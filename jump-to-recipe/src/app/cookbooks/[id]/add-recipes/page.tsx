@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -23,7 +23,7 @@ export default function AddRecipesPage({ params }: { params: Promise<{ id: strin
   const [selectedRecipes, setSelectedRecipes] = useState<Set<string>>(new Set());
   const [isAdding, setIsAdding] = useState(false);
   const [cookbookId, setCookbookId] = useState<string>('');
-  
+
   // Handle async params
   useEffect(() => {
     const getParams = async () => {
@@ -32,114 +32,114 @@ export default function AddRecipesPage({ params }: { params: Promise<{ id: strin
     };
     getParams();
   }, [params]);
-  
+
   // Fetch cookbook and user recipes
-  const fetchData = useCallback(async () => {
+  useEffect(() => {
     if (!cookbookId) return;
-    
-    try {
-      // Fetch cookbook
-      const cookbookRes = await fetch(`/api/cookbooks/${cookbookId}`);
-      
-      if (!cookbookRes.ok) {
-        throw new Error('Failed to fetch cookbook');
+
+    const fetchData = async () => {
+      try {
+        // Fetch cookbook
+        const cookbookRes = await fetch(`/api/cookbooks/${cookbookId}`);
+
+        if (!cookbookRes.ok) {
+          throw new Error('Failed to fetch cookbook');
+        }
+
+        const cookbookData = await cookbookRes.json();
+        setCookbook(cookbookData.cookbook);
+
+        // Get IDs of recipes already in cookbook
+        const existingRecipeIds = new Set(
+          cookbookData.cookbook.recipes.map((item: { recipe: Recipe; position: number }) => item.recipe.id)
+        );
+
+        // Fetch user recipes
+        const recipesRes = await fetch('/api/recipes?limit=100');
+
+        if (!recipesRes.ok) {
+          throw new Error('Failed to fetch recipes');
+        }
+
+        const recipesData = await recipesRes.json();
+
+        // Filter out recipes already in cookbook
+        const availableRecipes = recipesData.recipes.filter(
+          (recipe: Recipe) => !existingRecipeIds.has(recipe.id)
+        );
+
+        setUserRecipes(availableRecipes);
+        setFilteredRecipes(availableRecipes);
+      } catch (error) {
+        toast({
+          title: 'Error',
+          description: error instanceof Error ? error.message : 'Failed to load data',
+          variant: 'destructive',
+        });
+      } finally {
+        setIsLoading(false);
       }
-      
-      const cookbookData = await cookbookRes.json();
-      setCookbook(cookbookData.cookbook);
-      
-      // Get IDs of recipes already in cookbook
-      const existingRecipeIds = new Set(
-        cookbookData.cookbook.recipes.map((item: { recipe: Recipe; position: number }) => item.recipe.id)
-      );
-      
-      // Fetch user recipes
-      const recipesRes = await fetch('/api/recipes?limit=100');
-      
-      if (!recipesRes.ok) {
-        throw new Error('Failed to fetch recipes');
-      }
-      
-      const recipesData = await recipesRes.json();
-      
-      // Filter out recipes already in cookbook
-      const availableRecipes = recipesData.recipes.filter(
-        (recipe: Recipe) => !existingRecipeIds.has(recipe.id)
-      );
-      
-      setUserRecipes(availableRecipes);
-      setFilteredRecipes(availableRecipes);
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: error instanceof Error ? error.message : 'Failed to load data',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoading(false);
-    }
+    };
+
+    fetchData();
   }, [cookbookId, toast]);
 
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
-  
   // Filter recipes based on search query
   useEffect(() => {
     if (!searchQuery.trim()) {
       setFilteredRecipes(userRecipes);
       return;
     }
-    
+
     const query = searchQuery.toLowerCase();
-    const filtered = userRecipes.filter(recipe => 
+    const filtered = userRecipes.filter(recipe =>
       recipe.title.toLowerCase().includes(query) ||
       recipe.description?.toLowerCase().includes(query) ||
       recipe.tags.some(tag => tag.toLowerCase().includes(query))
     );
-    
+
     setFilteredRecipes(filtered);
   }, [searchQuery, userRecipes]);
-  
+
   const toggleRecipeSelection = (recipeId: string) => {
     const newSelected = new Set(selectedRecipes);
-    
+
     if (newSelected.has(recipeId)) {
       newSelected.delete(recipeId);
     } else {
       newSelected.add(recipeId);
     }
-    
+
     setSelectedRecipes(newSelected);
   };
-  
+
   const handleAddSelectedRecipes = async () => {
-    if (selectedRecipes.size === 0) return;
-    
+    if (selectedRecipes.size === 0 || !cookbook) return;
+
     setIsAdding(true);
-    
+
     try {
       // Get current recipes in cookbook
       const currentRecipes = cookbook.recipes || [];
       const highestPosition = currentRecipes.length > 0
         ? Math.max(...currentRecipes.map((item: { recipe: Recipe; position: number }) => item.position))
         : -1;
-      
+
       // Prepare new recipes to add
       const recipesToAdd = Array.from(selectedRecipes).map((recipeId, index) => ({
         recipeId,
         position: highestPosition + 1 + index,
       }));
-      
+
       // Get current recipe IDs
       const currentRecipeIds = currentRecipes.map((item: { recipe: Recipe; position: number }) => ({
         recipeId: item.recipe.id,
         position: item.position,
       }));
-      
+
       // Combine current and new recipes
       const allRecipes = [...currentRecipeIds, ...recipesToAdd];
-      
+
       // Update cookbook
       const response = await fetch(`/api/cookbooks/${cookbookId}`, {
         method: 'PUT',
@@ -150,17 +150,17 @@ export default function AddRecipesPage({ params }: { params: Promise<{ id: strin
           recipes: allRecipes,
         }),
       });
-      
+
       if (!response.ok) {
         const data = await response.json();
         throw new Error(data.error || 'Failed to add recipes');
       }
-      
+
       toast({
         title: 'Recipes added',
         description: `Added ${selectedRecipes.size} recipes to your cookbook`,
       });
-      
+
       // Refresh the page to show updated cookbook
       router.refresh();
       router.push(`/cookbooks/${cookbookId}`);
@@ -174,7 +174,7 @@ export default function AddRecipesPage({ params }: { params: Promise<{ id: strin
       setIsAdding(false);
     }
   };
-  
+
   const handleSaveOrder = () => {
     router.refresh();
     router.push(`/cookbooks/${cookbookId}`);
@@ -213,7 +213,7 @@ export default function AddRecipesPage({ params }: { params: Promise<{ id: strin
           </Link>
         </Button>
       </div>
-      
+
       {/* Current Recipes */}
       {cookbook.recipes && cookbook.recipes.length > 0 && (
         <div className="space-y-4">
@@ -229,11 +229,11 @@ export default function AddRecipesPage({ params }: { params: Promise<{ id: strin
           </Card>
         </div>
       )}
-      
+
       {/* Add Recipes */}
       <div className="space-y-4">
         <h2 className="text-xl font-semibold">Add Recipes</h2>
-        
+
         <div className="flex items-center justify-between">
           <div className="relative flex-1 max-w-md">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
@@ -244,7 +244,7 @@ export default function AddRecipesPage({ params }: { params: Promise<{ id: strin
               className="pl-10"
             />
           </div>
-          
+
           <Button
             onClick={handleAddSelectedRecipes}
             disabled={selectedRecipes.size === 0 || isAdding}
@@ -257,7 +257,7 @@ export default function AddRecipesPage({ params }: { params: Promise<{ id: strin
             Add Selected ({selectedRecipes.size})
           </Button>
         </div>
-        
+
         {filteredRecipes.length === 0 ? (
           <Card>
             <CardContent className="py-6 text-center">
@@ -281,11 +281,10 @@ export default function AddRecipesPage({ params }: { params: Promise<{ id: strin
             {filteredRecipes.map((recipe) => (
               <div
                 key={recipe.id}
-                className={`cursor-pointer transition-all ${
-                  selectedRecipes.has(recipe.id)
-                    ? 'ring-2 ring-primary rounded-lg scale-[1.02]'
-                    : ''
-                }`}
+                className={`cursor-pointer transition-all ${selectedRecipes.has(recipe.id)
+                  ? 'ring-2 ring-primary rounded-lg scale-[1.02]'
+                  : ''
+                  }`}
                 onClick={() => toggleRecipeSelection(recipe.id)}
               >
                 <RecipeCard recipe={recipe} />

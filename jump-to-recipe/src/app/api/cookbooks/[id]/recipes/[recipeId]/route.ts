@@ -9,8 +9,8 @@ import type {
   RemoveRecipeFromCookbookHandler,
   CookbookRecipeParamsType,
   RemoveRecipeResponseData,
-  BaseApiSuccessResponse,
-  BaseApiErrorResponse
+  ApiSuccessResponse,
+  ApiErrorResponse
 } from '@/types';
 
 /**

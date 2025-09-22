@@ -26,14 +26,32 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
   
-  // Check if user is authenticated by looking for the session token
-  const sessionToken = request.cookies.get('next-auth.session-token')?.value;
+  // Protected routes that require authentication
+  const protectedRoutes = [
+    '/my-recipes',
+    '/recipes/new',
+    '/recipes/import',
+    '/cookbooks',
+    '/grocery-lists'
+  ];
   
-  if (!sessionToken) {
-    // If no session token, redirect to login
-    const url = new URL('/auth/login', request.url);
-    url.searchParams.set('callbackUrl', pathname);
-    return NextResponse.redirect(url);
+  const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route));
+  
+  if (isProtectedRoute) {
+    // Check if user is authenticated by looking for the session token
+    const sessionToken = request.cookies.get('next-auth.session-token')?.value ||
+                         request.cookies.get('__Secure-next-auth.session-token')?.value;
+    
+    if (!sessionToken) {
+      // If no session token, redirect to login with callback URL
+      const url = new URL('/auth/login', request.url);
+      url.searchParams.set('callbackUrl', pathname + request.nextUrl.search);
+      
+      // Add error handling headers
+      const response = NextResponse.redirect(url);
+      response.headers.set('x-middleware-cache', 'no-cache');
+      return response;
+    }
   }
   
   // For role-based access control, we'll need to implement this in the page components

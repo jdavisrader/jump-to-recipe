@@ -1,4 +1,4 @@
-import { render, waitFor } from '@testing-library/react';
+import { render, waitFor, fireEvent } from '@testing-library/react';
 import { screen } from '@testing-library/dom';
 
 import { AddToCookbookModal } from '../add-to-cookbook-modal';
