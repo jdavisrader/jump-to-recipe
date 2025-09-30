@@ -5,8 +5,6 @@
 
 import React from "react";
 
-import React from "react";
-
 export interface PerformanceMetric {
   name: string;
   value: number;
@@ -46,7 +44,7 @@ class PerformanceMonitor {
       const markName = `${name}-start`;
       try {
         window.performance.mark(markName);
-        
+
         if (process.env.NODE_ENV === 'development') {
           console.log(`Performance mark: ${markName}`, context);
         }
@@ -67,20 +65,20 @@ class PerformanceMonitor {
       const startMark = `${name}-start`;
       const endMark = `${name}-end`;
       const measureName = `${name}-duration`;
-      
+
       try {
         window.performance.mark(endMark);
         window.performance.measure(measureName, startMark, endMark);
-        
+
         const measure = window.performance.getEntriesByName(measureName)[0];
         const duration = measure?.duration || 0;
-        
+
         this.recordMetric(name, duration, context);
-        
+
         if (process.env.NODE_ENV === 'development') {
           console.log(`Performance measure: ${measureName} = ${duration}ms`, context);
         }
-        
+
         return duration;
       } catch (error) {
         // Silently fail in test environments
@@ -103,12 +101,12 @@ class PerformanceMonitor {
       timestamp: Date.now(),
       context,
     };
-    
+
     this.metrics.push(metric);
-    
+
     // Update specific metric categories
     this.updateLoadingMetrics(name, value);
-    
+
     // Keep only last 100 metrics to prevent memory leaks
     if (this.metrics.length > 100) {
       this.metrics = this.metrics.slice(-100);
@@ -120,7 +118,7 @@ class PerformanceMonitor {
    */
   trackUserInteraction(type: keyof UserInteractionMetrics, context?: Record<string, any>): void {
     this.userMetrics[type]++;
-    
+
     this.recordMetric(`user-interaction-${type}`, this.userMetrics[type], context);
   }
 
@@ -183,7 +181,7 @@ class PerformanceMonitor {
   getAverageMetric(name: string): number {
     const metrics = this.getMetricsByName(name);
     if (metrics.length === 0) return 0;
-    
+
     const sum = metrics.reduce((acc, metric) => acc + metric.value, 0);
     return sum / metrics.length;
   }
@@ -198,12 +196,12 @@ class PerformanceMonitor {
     overall: boolean;
   } {
     const metrics = this.getLoadingMetrics();
-    
+
     // Performance requirements from the spec
     const initialLoadOk = metrics.initialLoad <= 2000; // 2 seconds
     const searchOk = metrics.searchTime <= 1000; // 1 second
     const paginationOk = metrics.paginationTime <= 1000; // 1 second
-    
+
     return {
       initialLoadOk,
       searchOk,
@@ -218,35 +216,40 @@ class PerformanceMonitor {
   generateReport(): {
     loadingMetrics: LoadingMetrics;
     userMetrics: UserInteractionMetrics;
-    performanceCheck: ReturnType<typeof this.checkPerformanceRequirements>;
+    performanceCheck: {
+      initialLoadOk: boolean;
+      searchOk: boolean;
+      paginationOk: boolean;
+      overall: boolean;
+    };
     recommendations: string[];
   } {
     const loadingMetrics = this.getLoadingMetrics();
     const userMetrics = this.getUserMetrics();
     const performanceCheck = this.checkPerformanceRequirements();
     const recommendations: string[] = [];
-    
+
     // Generate recommendations based on metrics
     if (!performanceCheck.initialLoadOk) {
       recommendations.push('Initial load time exceeds 2 seconds. Consider implementing lazy loading or reducing initial data fetch size.');
     }
-    
+
     if (!performanceCheck.searchOk) {
       recommendations.push('Search response time exceeds 1 second. Consider implementing search debouncing or client-side filtering.');
     }
-    
+
     if (!performanceCheck.paginationOk) {
       recommendations.push('Pagination loading time exceeds 1 second. Consider implementing infinite scroll or reducing page size.');
     }
-    
+
     if (userMetrics.errorEncounters > userMetrics.searchInteractions * 0.1) {
       recommendations.push('High error rate detected. Review error handling and network reliability.');
     }
-    
+
     if (userMetrics.retryAttempts > userMetrics.errorEncounters * 0.5) {
       recommendations.push('High retry rate suggests network issues. Consider implementing better offline support.');
     }
-    
+
     return {
       loadingMetrics,
       userMetrics,
@@ -277,7 +280,17 @@ class PerformanceMonitor {
     userAgent: string;
     url: string;
     metrics: PerformanceMetric[];
-    summary: ReturnType<typeof this.generateReport>;
+    summary: {
+      loadingMetrics: LoadingMetrics;
+      userMetrics: UserInteractionMetrics;
+      performanceCheck: {
+        initialLoadOk: boolean;
+        searchOk: boolean;
+        paginationOk: boolean;
+        overall: boolean;
+      };
+      recommendations: string[];
+    };
   } {
     return {
       timestamp: Date.now(),
@@ -330,15 +343,15 @@ export function withPerformanceTracking<T extends object>(
 ) {
   return function PerformanceTrackedComponent(props: T) {
     const { markStart, markEnd } = usePerformanceMonitor();
-    
+
     React.useEffect(() => {
       markStart(`${componentName}-render`);
-      
+
       return () => {
         markEnd(`${componentName}-render`);
       };
     }, [markStart, markEnd]);
-    
+
     return React.createElement(Component, props);
   };
 }
@@ -352,7 +365,7 @@ export async function measureAsync<T>(
   context?: Record<string, any>
 ): Promise<T> {
   performanceMonitor.markStart(name, context);
-  
+
   try {
     const result = await operation();
     performanceMonitor.markEnd(name, { ...context, success: true });
@@ -376,29 +389,30 @@ export function trackWebVitals() {
         element: (lastEntry as any).element?.tagName,
       });
     });
-    
+
     try {
       lcpObserver.observe({ entryTypes: ['largest-contentful-paint'] });
     } catch (error) {
       console.warn('LCP observer not supported:', error);
     }
-    
+
     // Track First Input Delay (FID)
     const fidObserver = new PerformanceObserver((list) => {
       const entries = list.getEntries();
       entries.forEach((entry) => {
-        performanceMonitor.recordMetric('web-vitals-fid', entry.processingStart - entry.startTime, {
-          eventType: (entry as any).name,
+        const eventEntry = entry as PerformanceEventTiming;
+        performanceMonitor.recordMetric('web-vitals-fid', eventEntry.processingStart - eventEntry.startTime, {
+          eventType: eventEntry.name,
         });
       });
     });
-    
+
     try {
       fidObserver.observe({ entryTypes: ['first-input'] });
     } catch (error) {
       console.warn('FID observer not supported:', error);
     }
-    
+
     // Track Cumulative Layout Shift (CLS)
     let clsValue = 0;
     const clsObserver = new PerformanceObserver((list) => {
@@ -410,7 +424,7 @@ export function trackWebVitals() {
       });
       performanceMonitor.recordMetric('web-vitals-cls', clsValue);
     });
-    
+
     try {
       clsObserver.observe({ entryTypes: ['layout-shift'] });
     } catch (error) {
