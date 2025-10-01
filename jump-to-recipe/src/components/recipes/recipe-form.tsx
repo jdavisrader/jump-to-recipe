@@ -105,7 +105,7 @@ export function RecipeForm({
     );
   };
 
-  const handleSubmit = async (data: any) => {
+  const handleSubmit = async (data: NewRecipeInput) => {
     try {
       // Convert form data to match NewRecipeInput type
       const recipeData: NewRecipeInput = {

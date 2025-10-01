@@ -4,7 +4,6 @@ import type { ReactNode } from 'react';
 import type { 
   CookbookOption, 
   PendingOperation, 
-  OperationResult,
   CookbookToggleHandler,
   ModalCloseHandler,
   CreateCookbookHandler 

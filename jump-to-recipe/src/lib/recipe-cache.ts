@@ -36,7 +36,7 @@ interface RecipeSearchResult {
         query: string;
         hasQuery: boolean;
         sortBy: string;
-        appliedFilters: Record<string, any>;
+        appliedFilters: Record<string, unknown>;
     };
 }
 

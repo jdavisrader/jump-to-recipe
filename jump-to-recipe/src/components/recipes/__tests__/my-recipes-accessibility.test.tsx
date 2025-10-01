@@ -1,14 +1,16 @@
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { EmptyState } from '@/components/recipes/empty-state';
 import { RecipeSearch } from '@/components/recipes/recipe-search';
 
 // Mock Next.js components
+const MockLink = ({ children, href, ...props }: { children: React.ReactNode; href: string; [key: string]: unknown }) => (
+  <a href={href} {...props}>
+    {children}
+  </a>
+);
+
 jest.mock('next/link', () => {
-  return ({ children, href, ...props }: any) => (
-    <a href={href} {...props}>
-      {children}
-    </a>
-  );
+  return MockLink;
 });
 
 jest.mock('next/navigation', () => ({
@@ -112,7 +114,7 @@ describe('My Recipes Components Accessibility', () => {
       const mockOnSearch = jest.fn();
       render(<RecipeSearch onSearch={mockOnSearch} />);
       
-      const sortLabel = screen.getByText('Sort by:');
+      screen.getByText('Sort by:');
       const sortTrigger = screen.getByRole('combobox');
       expect(sortTrigger).toHaveAttribute('id', 'sort');
     });

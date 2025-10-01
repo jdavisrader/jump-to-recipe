@@ -82,7 +82,7 @@ export default function AddRecipesPage({ params }: { params: Promise<{ id: strin
     };
 
     fetchData();
-  }, [cookbookId]); // Removed toast from dependencies
+  }, [cookbookId, toast]);
 
   // Filter recipes based on search query
   useEffect(() => {

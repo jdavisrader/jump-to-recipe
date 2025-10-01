@@ -1,5 +1,6 @@
 import { Suspense } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { db } from '@/db';
@@ -88,10 +89,12 @@ async function DiscoverCookbooks() {
           <CardFooter className="flex justify-between items-center">
             <div className="flex items-center gap-2">
               {cookbook.owner?.image ? (
-                <img
+                <Image
                   src={cookbook.owner.image}
                   alt={cookbook.owner.name || 'User'}
-                  className="w-6 h-6 rounded-full"
+                  width={24}
+                  height={24}
+                  className="rounded-full"
                 />
               ) : (
                 <User className="w-6 h-6 text-muted-foreground" />

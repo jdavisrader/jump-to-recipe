@@ -7,7 +7,6 @@ import { hasMinimumPermission } from '@/lib/cookbook-permissions';
 import { addRecipeToCookbookSchema } from '@/lib/validations/cookbook-recipes';
 import { eq, and, desc } from 'drizzle-orm';
 import type { 
-  AddRecipeToCookbookHandler,
   CookbookParamsType,
   AddRecipeRequestBody,
   AddRecipeResponseData,

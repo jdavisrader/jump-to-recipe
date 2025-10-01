@@ -10,12 +10,12 @@ import { usePerformanceMonitor, trackWebVitals } from '@/lib/performance-monitor
 import { recipeCache } from '@/lib/recipe-cache';
 
 interface PerformanceContextValue {
-  markStart: (name: string, context?: Record<string, any>) => void;
-  markEnd: (name: string, context?: Record<string, any>) => number;
-  trackInteraction: (type: string, context?: Record<string, any>) => void;
-  getReport: () => any;
+  markStart: (name: string, context?: Record<string, unknown>) => void;
+  markEnd: (name: string, context?: Record<string, unknown>) => number;
+  trackInteraction: (type: string, context?: Record<string, unknown>) => void;
+  getReport: () => Record<string, unknown>;
   optimizeCache: () => void;
-  getCacheStats: () => any;
+  getCacheStats: () => Record<string, unknown>;
 }
 
 const PerformanceContext = createContext<PerformanceContextValue | null>(null);
@@ -79,7 +79,7 @@ export function PerformanceProvider({
     if (typeof window === 'undefined' || !('memory' in performance)) return;
 
     const checkMemoryUsage = () => {
-      const memory = (performance as any).memory;
+      const memory = (performance as { memory?: { usedJSHeapSize: number; totalJSHeapSize: number; jsHeapSizeLimit: number } }).memory;
       if (memory) {
         monitor.recordMetric('memory-used-js-heap', memory.usedJSHeapSize);
         monitor.recordMetric('memory-total-js-heap', memory.totalJSHeapSize);
@@ -167,14 +167,9 @@ export function withPerformanceTracking<P extends object>(
  */
 export function PerformanceDebugger() {
   const { getReport, getCacheStats } = usePerformanceContext();
-  
-  if (process.env.NODE_ENV !== 'development') {
-    return null;
-  }
-
   const [showDebugger, setShowDebugger] = React.useState(false);
-  const [report, setReport] = React.useState<any>(null);
-  const [cacheStats, setCacheStats] = React.useState<any>(null);
+  const [report, setReport] = React.useState<Record<string, unknown> | null>(null);
+  const [cacheStats, setCacheStats] = React.useState<Record<string, unknown> | null>(null);
 
   const updateStats = useCallback(() => {
     setReport(getReport());
@@ -188,6 +183,10 @@ export function PerformanceDebugger() {
       return () => clearInterval(interval);
     }
   }, [showDebugger, updateStats]);
+  
+  if (process.env.NODE_ENV !== 'development') {
+    return null;
+  }
 
   if (!showDebugger) {
     return (

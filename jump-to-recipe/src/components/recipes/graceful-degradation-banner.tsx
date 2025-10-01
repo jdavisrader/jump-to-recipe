@@ -10,7 +10,6 @@ import { Badge } from '@/components/ui/badge';
 import { 
   AlertTriangle, 
   X, 
-  Wifi, 
   Search, 
   ChevronRight,
   Info

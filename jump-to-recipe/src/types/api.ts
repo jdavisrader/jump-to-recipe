@@ -48,6 +48,7 @@ export interface AddRecipeRequestBody {
   recipeId: string;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface RemoveRecipeRequestBody {
   // DELETE requests typically don't have a body
 }
@@ -86,7 +87,7 @@ export interface RemoveRecipeResponseData {
 }
 
 // API handler types
-export type ApiHandler<TParams = unknown, TQuery = unknown, TBody = unknown, TResponse = unknown> = (
+export type ApiHandler<TParams = unknown, TResponse = unknown> = (
   request: NextRequest,
   context: { params: Promise<TParams> }
 ) => Promise<NextResponse<TResponse>>;
