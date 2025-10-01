@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -107,10 +108,12 @@ export function CookbookDisplay({ cookbook, isOwner, canEdit }: CookbookDisplayP
           
           <div className="flex items-center gap-2">
             {cookbook.owner?.image ? (
-              <img
+              <Image
                 src={cookbook.owner.image}
                 alt={cookbook.owner.name || 'Owner'}
-                className="w-6 h-6 rounded-full"
+                width={24}
+                height={24}
+                className="rounded-full"
               />
             ) : (
               <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center">

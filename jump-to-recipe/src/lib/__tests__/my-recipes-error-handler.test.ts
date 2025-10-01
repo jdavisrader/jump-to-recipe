@@ -8,7 +8,7 @@ import {
   fetchWithRetry,
   isRecipeAccessibilityError,
   getGracefulDegradationStrategy,
-  DEFAULT_RETRY_CONFIG,
+
 } from '../my-recipes-error-handler';
 
 // Mock fetch and Response for testing
@@ -28,21 +28,21 @@ class MockResponse {
     this.ok = init.status >= 200 && init.status < 300;
   }
 
-  async json() {
+  async json(): Promise<unknown> {
     return JSON.parse(this.body);
   }
 
-  async text() {
+  async text(): Promise<string> {
     return this.body;
   }
 }
 
 // Replace global Response with mock
-(global as any).Response = MockResponse;
+(global as { Response: typeof MockResponse }).Response = MockResponse;
 
 // Mock AbortSignal.timeout for Node.js environment
 if (!AbortSignal.timeout) {
-  (AbortSignal as any).timeout = (ms: number) => {
+  (AbortSignal as { timeout?: (ms: number) => AbortSignal }).timeout = (ms: number) => {
     const controller = new AbortController();
     setTimeout(() => controller.abort(), ms);
     return controller.signal;

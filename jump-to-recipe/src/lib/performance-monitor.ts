@@ -9,7 +9,7 @@ export interface PerformanceMetric {
   name: string;
   value: number;
   timestamp: number;
-  context?: Record<string, any>;
+  context?: Record<string, unknown>;
 }
 
 export interface LoadingMetrics {
@@ -39,7 +39,7 @@ class PerformanceMonitor {
   /**
    * Mark the start of a performance measurement
    */
-  markStart(name: string, context?: Record<string, any>): void {
+  markStart(name: string, context?: Record<string, unknown>): void {
     if (typeof window !== 'undefined' && window.performance && typeof window.performance.mark === 'function') {
       const markName = `${name}-start`;
       try {
@@ -60,7 +60,7 @@ class PerformanceMonitor {
   /**
    * Mark the end of a performance measurement and calculate duration
    */
-  markEnd(name: string, context?: Record<string, any>): number {
+  markEnd(name: string, context?: Record<string, unknown>): number {
     if (typeof window !== 'undefined' && window.performance && typeof window.performance.mark === 'function') {
       const startMark = `${name}-start`;
       const endMark = `${name}-end`;
@@ -94,7 +94,7 @@ class PerformanceMonitor {
   /**
    * Record a custom metric
    */
-  recordMetric(name: string, value: number, context?: Record<string, any>): void {
+  recordMetric(name: string, value: number, context?: Record<string, unknown>): void {
     const metric: PerformanceMetric = {
       name,
       value,
@@ -116,7 +116,7 @@ class PerformanceMonitor {
   /**
    * Track user interactions
    */
-  trackUserInteraction(type: keyof UserInteractionMetrics, context?: Record<string, any>): void {
+  trackUserInteraction(type: keyof UserInteractionMetrics, context?: Record<string, unknown>): void {
     this.userMetrics[type]++;
 
     this.recordMetric(`user-interaction-${type}`, this.userMetrics[type], context);
@@ -309,15 +309,15 @@ export const performanceMonitor = new PerformanceMonitor();
  * React hook for performance monitoring
  */
 export function usePerformanceMonitor() {
-  const markStart = (name: string, context?: Record<string, any>) => {
+  const markStart = (name: string, context?: Record<string, unknown>) => {
     performanceMonitor.markStart(name, context);
   };
 
-  const markEnd = (name: string, context?: Record<string, any>) => {
+  const markEnd = (name: string, context?: Record<string, unknown>) => {
     return performanceMonitor.markEnd(name, context);
   };
 
-  const trackInteraction = (type: keyof UserInteractionMetrics, context?: Record<string, any>) => {
+  const trackInteraction = (type: keyof UserInteractionMetrics, context?: Record<string, unknown>) => {
     performanceMonitor.trackUserInteraction(type, context);
   };
 
@@ -362,7 +362,7 @@ export function withPerformanceTracking<T extends object>(
 export async function measureAsync<T>(
   name: string,
   operation: () => Promise<T>,
-  context?: Record<string, any>
+  context?: Record<string, unknown>
 ): Promise<T> {
   performanceMonitor.markStart(name, context);
 
@@ -386,7 +386,7 @@ export function trackWebVitals() {
       const entries = list.getEntries();
       const lastEntry = entries[entries.length - 1];
       performanceMonitor.recordMetric('web-vitals-lcp', lastEntry.startTime, {
-        element: (lastEntry as any).element?.tagName,
+        element: (lastEntry as { element?: { tagName: string } }).element?.tagName,
       });
     });
 
@@ -418,8 +418,9 @@ export function trackWebVitals() {
     const clsObserver = new PerformanceObserver((list) => {
       const entries = list.getEntries();
       entries.forEach((entry) => {
-        if (!(entry as any).hadRecentInput) {
-          clsValue += (entry as any).value;
+        const layoutShiftEntry = entry as { hadRecentInput?: boolean; value?: number };
+        if (!layoutShiftEntry.hadRecentInput) {
+          clsValue += layoutShiftEntry.value || 0;
         }
       });
       performanceMonitor.recordMetric('web-vitals-cls', clsValue);

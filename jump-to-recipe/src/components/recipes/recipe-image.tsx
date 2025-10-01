@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { ImageIcon } from "lucide-react";
 
@@ -34,11 +35,12 @@ export function RecipeImage({
   }
 
   return (
-    <img
+    <Image
       src={src}
       alt={alt}
+      width={400}
+      height={300}
       className={cn("object-cover", className)}
-      loading="lazy"
       onError={() => setHasError(true)}
     />
   );

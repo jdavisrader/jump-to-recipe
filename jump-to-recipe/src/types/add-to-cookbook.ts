@@ -32,6 +32,7 @@ export interface AddRecipeRequest {
   recipeId: string;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface RemoveRecipeRequest {
   // No body needed for DELETE request
 }

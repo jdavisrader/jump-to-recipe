@@ -2,7 +2,7 @@
  * Tests for performance monitoring utilities
  */
 
-import { performanceMonitor, usePerformanceMonitor, measureAsync, trackWebVitals } from '../performance-monitor';
+import { performanceMonitor, measureAsync, trackWebVitals } from '../performance-monitor';
 
 // Mock performance API
 const mockPerformance = {
@@ -20,14 +20,14 @@ Object.defineProperty(global, 'performance', {
 
 // Mock PerformanceObserver
 class MockPerformanceObserver {
-  callback: (list: any) => void;
+  callback: (list: { getEntries: () => unknown[] }) => void;
   
-  constructor(callback: (list: any) => void) {
+  constructor(callback: (list: { getEntries: () => unknown[] }) => void) {
     this.callback = callback;
   }
   
-  observe() {}
-  disconnect() {}
+  observe(): void {}
+  disconnect(): void {}
 }
 
 Object.defineProperty(global, 'PerformanceObserver', {
@@ -230,7 +230,7 @@ describe('measureAsync utility', () => {
 
 describe('trackWebVitals', () => {
   test('should set up performance observers', () => {
-    const observeSpy = jest.spyOn(MockPerformanceObserver.prototype, 'observe');
+    jest.spyOn(MockPerformanceObserver.prototype, 'observe');
     
     trackWebVitals();
     
@@ -240,7 +240,7 @@ describe('trackWebVitals', () => {
 
   test('should handle unsupported performance observers gracefully', () => {
     const consoleSpy = jest.spyOn(console, 'warn').mockImplementation();
-    const observeSpy = jest.spyOn(MockPerformanceObserver.prototype, 'observe')
+    jest.spyOn(MockPerformanceObserver.prototype, 'observe')
       .mockImplementation(() => {
         throw new Error('Not supported');
       });

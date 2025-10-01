@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { BookOpen } from "lucide-react";
 
@@ -35,11 +36,12 @@ export function CookbookImage({
   }
 
   return (
-    <img
+    <Image
       src={src}
       alt={alt}
+      width={300}
+      height={200}
       className={cn("object-cover", className)}
-      loading="lazy"
       onError={() => setHasError(true)}
     />
   );

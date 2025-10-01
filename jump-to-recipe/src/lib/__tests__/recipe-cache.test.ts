@@ -2,7 +2,7 @@
  * Tests for recipe caching system
  */
 
-import { recipeCache, useRecipeCache, fetchWithCache, warmCache } from '../recipe-cache';
+import { recipeCache, fetchWithCache, warmCache } from '../recipe-cache';
 import type { SearchParams } from '@/components/recipes/recipe-search';
 
 // Mock data
@@ -133,7 +133,7 @@ describe('Recipe Cache', () => {
       const maxSize = 2; // Use smaller size for clearer test
       
       // Create a new cache instance with small size
-      const RecipeCacheClass = recipeCache.constructor as any;
+      const RecipeCacheClass = recipeCache.constructor as new (maxSize: number) => typeof recipeCache;
       const smallCache = new RecipeCacheClass(maxSize);
 
       // Fill cache to capacity
@@ -172,7 +172,7 @@ describe('Recipe Cache', () => {
       jest.advanceTimersByTime(1500);
 
       // Trigger cleanup (normally done by setInterval)
-      (recipeCache as any).cleanup();
+      (recipeCache as { cleanup: () => void }).cleanup();
 
       expect(recipeCache.getSizeInfo().current).toBe(0);
     });
@@ -218,7 +218,8 @@ describe('Recipe Cache', () => {
     test('should optimize cache by removing low-value entries', () => {
       const userId = 'user-123';
       const maxSize = 10;
-      const cache = new (recipeCache.constructor as any)(maxSize);
+      const RecipeCacheClass = recipeCache.constructor as new (maxSize: number) => typeof recipeCache;
+      const cache = new RecipeCacheClass(maxSize);
 
       // Fill cache near capacity
       for (let i = 0; i < 9; i++) {

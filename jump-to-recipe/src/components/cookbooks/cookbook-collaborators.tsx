@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -128,10 +129,12 @@ export function CookbookCollaborators({
               >
                 <div className="flex items-center gap-3">
                   {collaborator.user?.image ? (
-                    <img
+                    <Image
                       src={collaborator.user.image}
                       alt={collaborator.user?.name || 'User'}
-                      className="w-8 h-8 rounded-full"
+                      width={32}
+                      height={32}
+                      className="rounded-full"
                     />
                   ) : (
                     <UserCircle className="w-8 h-8 text-muted-foreground" />

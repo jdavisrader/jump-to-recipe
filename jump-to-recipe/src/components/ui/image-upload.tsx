@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { useDropzone } from "react-dropzone";
+import Image from "next/image";
 import { Upload, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -86,10 +87,11 @@ export function ImageUpload({
     return (
       <div className={cn("relative group", className)}>
         <div className="relative aspect-square w-full overflow-hidden rounded-lg border">
-          <img
+          <Image
             src={value}
             alt="Uploaded image"
-            className="h-full w-full object-cover"
+            fill
+            className="object-cover"
           />
           {onRemove && !disabled && (
             <Button

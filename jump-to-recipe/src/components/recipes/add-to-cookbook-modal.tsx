@@ -119,7 +119,7 @@ export function AddToCookbookModal({
     };
 
     fetchCookbooks();
-  }, [isOpen, recipeId, status]); // Removed unstable dependencies: toast, session
+  }, [isOpen, recipeId, status, session, toast]); // Added back dependencies
 
 
 

@@ -6,7 +6,6 @@ import { authOptions } from '@/lib/auth';
 import { hasMinimumPermission } from '@/lib/cookbook-permissions';
 import { eq, and } from 'drizzle-orm';
 import type { 
-  RemoveRecipeFromCookbookHandler,
   CookbookRecipeParamsType,
   RemoveRecipeResponseData,
   ApiSuccessResponse,

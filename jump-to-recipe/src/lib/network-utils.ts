@@ -31,7 +31,9 @@ export function getConnectionType(): 'fast' | 'slow' | 'offline' {
   }
 
   // Use Network Information API if available
-  const connection = (navigator as any).connection || (navigator as any).mozConnection || (navigator as any).webkitConnection;
+  const connection = (navigator as { connection?: { effectiveType?: string; downlink?: number } }).connection || 
+                    (navigator as { mozConnection?: { effectiveType?: string; downlink?: number } }).mozConnection || 
+                    (navigator as { webkitConnection?: { effectiveType?: string; downlink?: number } }).webkitConnection;
   
   if (connection) {
     const { effectiveType, downlink } = connection;
@@ -81,7 +83,7 @@ export async function testConnectivity(timeout = 5000): Promise<boolean> {
 
     clearTimeout(timeoutId);
     return response.ok;
-  } catch (error) {
+  } catch {
     return false;
   }
 }
@@ -119,7 +121,9 @@ export function setupNetworkMonitoring(
   window.addEventListener('offline', handleOffline);
 
   // Listen for connection changes if supported
-  const connection = (navigator as any).connection || (navigator as any).mozConnection || (navigator as any).webkitConnection;
+  const connection = (navigator as { connection?: EventTarget & { effectiveType?: string; downlink?: number } }).connection || 
+                    (navigator as { mozConnection?: EventTarget & { effectiveType?: string; downlink?: number } }).mozConnection || 
+                    (navigator as { webkitConnection?: EventTarget & { effectiveType?: string; downlink?: number } }).webkitConnection;
   if (connection) {
     const handleConnectionChange = () => {
       const newStatus = getNetworkStatus();

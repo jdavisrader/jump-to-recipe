@@ -9,6 +9,7 @@ export interface AddRecipeValidationSchema {
   recipeId: UUID;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface RemoveRecipeValidationSchema {
   // No body validation needed for DELETE requests
 }

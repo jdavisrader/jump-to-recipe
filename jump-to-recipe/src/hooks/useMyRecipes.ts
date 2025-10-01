@@ -16,7 +16,7 @@ import {
   type MyRecipesError,
   type ErrorContext,
 } from '@/lib/my-recipes-error-handler';
-import { getNetworkAwareRetryConfig, getNetworkStatus, isOnline } from '@/lib/network-utils';
+import { getNetworkAwareRetryConfig, isOnline } from '@/lib/network-utils';
 import { usePerformanceMonitor } from '@/lib/performance-monitor';
 import { useRecipeCache, fetchWithCache } from '@/lib/recipe-cache';
 
@@ -150,10 +150,10 @@ async function fetchRecipeData(userId: string, searchParams: SearchParams) {
 }
 
 export function useMyRecipes(): UseMyRecipesState & UseMyRecipesActions {
-  const { data: session, status } = useSession();
+  const { data: session } = useSession();
   const router = useRouter();
   const { markStart, markEnd, trackInteraction } = usePerformanceMonitor();
-  const { get: getCached, set: setCached, prefetch } = useRecipeCache();
+  const { get: getCached, prefetch } = useRecipeCache();
   
   // State management
   const [recipes, setRecipes] = useState<RecipeWithAuthor[]>([]);

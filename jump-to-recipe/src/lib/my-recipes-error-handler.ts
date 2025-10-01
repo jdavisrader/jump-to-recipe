@@ -13,7 +13,7 @@ export interface RetryConfig {
 export interface ErrorContext {
   operation?: string;
   userId?: string;
-  searchParams?: Record<string, any>;
+  searchParams?: Record<string, unknown>;
   timestamp: number;
 }
 
