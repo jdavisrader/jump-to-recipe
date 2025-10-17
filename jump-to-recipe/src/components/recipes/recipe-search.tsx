@@ -285,12 +285,12 @@ export function RecipeSearch({ onSearch, isLoading, disabled = false }: RecipeSe
             {/* Difficulty */}
             <div className="space-y-2">
               <Label htmlFor="difficulty-select">Difficulty</Label>
-              <Select value={difficulty} onValueChange={setDifficulty}>
+              <Select value={difficulty || "any"} onValueChange={(value) => setDifficulty(value === "any" ? "" : value)}>
                 <SelectTrigger id="difficulty-select">
                   <SelectValue placeholder="Any difficulty" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Any difficulty</SelectItem>
+                  <SelectItem value="any">Any difficulty</SelectItem>
                   <SelectItem value="easy">Easy</SelectItem>
                   <SelectItem value="medium">Medium</SelectItem>
                   <SelectItem value="hard">Hard</SelectItem>

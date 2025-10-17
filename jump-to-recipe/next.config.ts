@@ -84,6 +84,11 @@ const nextConfig: NextConfig = {
         hostname: 'assets.bonappetit.com',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'raderfamilyfarms.com',
+        pathname: '/**',
+      },
       // Generic patterns for common CDNs
       {
         protocol: 'https',
