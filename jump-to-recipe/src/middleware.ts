@@ -28,6 +28,7 @@ export async function middleware(request: NextRequest) {
   
   // Protected routes that require authentication
   const protectedRoutes = [
+    '/profile',
     '/my-recipes',
     '/recipes/new',
     '/recipes/import',
