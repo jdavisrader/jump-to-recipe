@@ -14,3 +14,7 @@ export { AddToCookbookModal } from './add-to-cookbook-modal';
 export { EmptyState } from './empty-state';
 export { MyRecipesErrorDisplay } from './my-recipes-error-display';
 export { GracefulDegradationBanner } from './graceful-degradation-banner';
+export { RecipeIngredientsWithSections } from './recipe-ingredients-with-sections';
+export { RecipeInstructionsWithSections } from './recipe-instructions-with-sections';
+export { EmptySectionWarningModal } from './empty-section-warning-modal';
+export { RecipeMigrationHelper, RecipeRevertHelper } from './recipe-migration-helper';

@@ -5,6 +5,7 @@ export * from './add-to-cookbook';
 export * from './validation';
 export * from './components';
 export * from './api';
+export * from './sections';
 
 export interface User {
   id: string;

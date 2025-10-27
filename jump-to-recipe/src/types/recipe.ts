@@ -34,6 +34,18 @@ export interface Recipe {
   description: string | null;
   ingredients: Ingredient[];
   instructions: Instruction[];
+  ingredientSections?: Array<{
+    id: string;
+    name: string;
+    order: number;
+    items: Ingredient[];
+  }>;
+  instructionSections?: Array<{
+    id: string;
+    name: string;
+    order: number;
+    items: Instruction[];
+  }>;
   prepTime: number | null;
   cookTime: number | null;
   servings: number | null;

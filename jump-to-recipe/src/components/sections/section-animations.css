@@ -1,0 +1,289 @@
+/* Section Animation Styles */
+
+/* Smooth drag and drop animations */
+.section-drag-preview {
+  /* Enhanced shadow and elevation for better visual feedback */
+  box-shadow: 
+    0 25px 50px -12px rgba(0, 0, 0, 0.25),
+    0 0 0 1px rgba(59, 130, 246, 0.3),
+    0 0 20px rgba(59, 130, 246, 0.2);
+  z-index: 1000;
+  /* No transitions during drag to avoid conflicts with drag library */
+  /* Ensure the preview stays visible and prominent */
+  opacity: 1 !important;
+}
+
+.section-drag-placeholder {
+  /* More subtle placeholder effect */
+  opacity: 0.3;
+  transform: scale(0.98);
+  /* No transitions - instant feedback for immediate drop response */
+  /* Add a dashed border to show where the section will return */
+  border-style: dashed !important;
+  border-color: rgba(59, 130, 246, 0.5) !important;
+  background-color: rgba(59, 130, 246, 0.05) !important;
+}
+
+/* Drop zone feedback */
+.section-drop-zone-active {
+  /* Subtle background highlight when dragging over */
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.05), rgba(147, 51, 234, 0.05));
+  border-radius: 0.75rem;
+  /* No transition for instant feedback */
+  /* Add a subtle border to indicate drop zone */
+  outline: 2px dashed rgba(59, 130, 246, 0.3);
+  outline-offset: 4px;
+}
+
+/* Section item animations */
+.section-item-enter {
+  animation: slideInFromLeft 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.section-item-exit {
+  animation: slideOutToRight 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Enhanced section container styles */
+.section-container {
+  /* Ensure sections have clear visual boundaries */
+  background: white;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  /* Only transition visual properties, not positioning */
+  transition: box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+              border-color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+              background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.section-container:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border-color: rgba(0, 0, 0, 0.2);
+}
+
+/* Drag handle improvements */
+.section-drag-handle {
+  /* Make drag handle more prominent and tactile */
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 6px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.section-drag-handle:hover {
+  background: rgba(0, 0, 0, 0.1);
+  transform: scale(1.05);
+}
+
+.section-drag-handle:active {
+  background: rgba(59, 130, 246, 0.2);
+  transform: scale(0.95);
+}
+
+@keyframes slideInFromLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+@keyframes slideOutToRight {
+  from {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(20px) scale(0.95);
+  }
+}
+
+/* Loading state animations */
+.section-skeleton {
+  background: linear-gradient(90deg, 
+    rgba(0, 0, 0, 0.1) 25%, 
+    rgba(0, 0, 0, 0.05) 50%, 
+    rgba(0, 0, 0, 0.1) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* Button hover animations */
+.section-button {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-origin: center;
+}
+
+.section-button:hover {
+  transform: scale(1.05);
+}
+
+.section-button:active {
+  transform: scale(0.95);
+}
+
+.section-button:disabled {
+  transform: none;
+  opacity: 0.5;
+}
+
+/* Loading spinner animation */
+.section-spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Empty section indicator */
+.section-empty-indicator {
+  animation: gentlePulse 2s ease-in-out infinite;
+}
+
+@keyframes gentlePulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+.section-empty-dot {
+  animation: bounce 1s ease-in-out infinite;
+  animation-delay: 0.5s;
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+/* Focus animations */
+.section-focus-ring {
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
+  transition: box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Modal animations */
+.section-modal-backdrop {
+  animation: fadeIn 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.section-modal-content {
+  animation: modalSlideIn 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .section-drag-preview,
+  .section-drag-placeholder,
+  .section-drop-zone,
+  .section-button,
+  .section-focus-ring,
+  .section-modal-backdrop,
+  .section-modal-content {
+    transition: none;
+    animation: none;
+  }
+  
+  .section-item-enter,
+  .section-item-exit {
+    animation: none;
+  }
+  
+  .section-skeleton {
+    animation: none;
+    background: rgba(0, 0, 0, 0.1);
+  }
+  
+  .section-empty-indicator,
+  .section-empty-dot {
+    animation: none;
+  }
+  
+  .section-spinner {
+    animation: spin 1s linear infinite; /* Keep spinner for functionality */
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .section-drop-zone {
+    border-color: currentColor;
+    background: transparent;
+  }
+  
+  .section-drop-zone-active {
+    background: rgba(0, 0, 0, 0.1);
+  }
+  
+  .section-skeleton {
+    background: rgba(0, 0, 0, 0.2);
+  }
+}
+
+/* Dark mode adjustments */
+@media (prefers-color-scheme: dark) {
+  .section-skeleton {
+    background: linear-gradient(90deg, 
+      rgba(255, 255, 255, 0.1) 25%, 
+      rgba(255, 255, 255, 0.05) 50%, 
+      rgba(255, 255, 255, 0.1) 75%
+    );
+  }
+  
+  .section-drop-zone {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(147, 51, 234, 0.2));
+    border-color: rgba(59, 130, 246, 0.4);
+  }
+  
+  .section-drop-zone-active {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.3), rgba(147, 51, 234, 0.3));
+    border-color: rgba(59, 130, 246, 0.6);
+  }
+}
