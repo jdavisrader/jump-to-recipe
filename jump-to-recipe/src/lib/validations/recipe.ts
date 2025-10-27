@@ -23,12 +23,44 @@ export const instructionSchema = z.object({
   duration: z.number().int().positive().optional(),
 });
 
-// Recipe validation
-export const recipeSchema = z.object({
+// Extended ingredient with section reference
+export const extendedIngredientSchema = ingredientSchema.extend({
+  sectionId: z.string().optional(),
+});
+
+// Extended instruction with section reference
+export const extendedInstructionSchema = instructionSchema.extend({
+  sectionId: z.string().optional(),
+});
+
+// Section validation schemas
+export const ingredientSectionSchema = z.object({
+  id: z.string(),
+  name: z.string().transform((val) => val.trim() || 'Untitled Section'),
+  order: z.number().int().nonnegative('Order must be non-negative'),
+  items: z.array(ingredientSchema),
+});
+
+export const instructionSectionSchema = z.object({
+  id: z.string(),
+  name: z.string().transform((val) => val.trim() || 'Untitled Section'),
+  order: z.number().int().nonnegative('Order must be non-negative'),
+  items: z.array(instructionSchema),
+});
+
+// Section validation error schema
+export const sectionValidationErrorSchema = z.object({
+  sectionId: z.string(),
+  type: z.enum(['empty_name', 'empty_section', 'invalid_order']),
+  message: z.string(),
+});
+
+// Base recipe validation (backward compatible)
+export const baseRecipeSchema = z.object({
   title: z.string().min(1, 'Title is required').max(500, 'Title is too long'),
   description: z.string().nullable().optional(),
-  ingredients: z.array(ingredientSchema).min(1, 'At least one ingredient is required'),
-  instructions: z.array(instructionSchema).min(1, 'At least one instruction is required'),
+  ingredients: z.array(extendedIngredientSchema).min(1, 'At least one ingredient is required'),
+  instructions: z.array(extendedInstructionSchema).min(1, 'At least one instruction is required'),
   prepTime: z.number().int().positive().nullable().optional(),
   cookTime: z.number().int().positive().nullable().optional(),
   servings: z.number().int().positive().nullable().optional(),
@@ -43,6 +75,15 @@ export const recipeSchema = z.object({
   viewCount: z.number().int().nonnegative().default(0),
   likeCount: z.number().int().nonnegative().default(0),
 });
+
+// Extended recipe validation with sections support
+export const recipeWithSectionsSchema = baseRecipeSchema.extend({
+  ingredientSections: z.array(ingredientSectionSchema).optional(),
+  instructionSections: z.array(instructionSectionSchema).optional(),
+});
+
+// Main recipe schema (maintains backward compatibility)
+export const recipeSchema = recipeWithSectionsSchema;
 
 // Schema for creating a new recipe
 export const createRecipeSchema = recipeSchema;
@@ -64,3 +105,124 @@ export const recipeFilterSchema = z.object({
   page: z.number().int().positive().default(1),
   limit: z.number().int().positive().max(100).default(10),
 });
+
+// Validation functions for sections
+export interface SectionValidationResult {
+  isValid: boolean;
+  errors: z.ZodError['issues'];
+  warnings: {
+    emptySections: Array<{
+      sectionId: string;
+      sectionName: string;
+      type: 'ingredient' | 'instruction';
+    }>;
+  };
+}
+
+/**
+ * Validates a recipe with sections and returns validation results including warnings
+ */
+export function validateRecipeWithSections(data: unknown): SectionValidationResult {
+  const result = recipeSchema.safeParse(data);
+  const warnings = { emptySections: [] as Array<{ sectionId: string; sectionName: string; type: 'ingredient' | 'instruction' }> };
+
+  if (!result.success) {
+    return {
+      isValid: false,
+      errors: result.error.issues,
+      warnings,
+    };
+  }
+
+  const recipe = result.data;
+
+  // Check for empty ingredient sections
+  if (recipe.ingredientSections) {
+    recipe.ingredientSections.forEach((section) => {
+      if (section.items.length === 0) {
+        warnings.emptySections.push({
+          sectionId: section.id,
+          sectionName: section.name,
+          type: 'ingredient',
+        });
+      }
+    });
+  }
+
+  // Check for empty instruction sections
+  if (recipe.instructionSections) {
+    recipe.instructionSections.forEach((section) => {
+      if (section.items.length === 0) {
+        warnings.emptySections.push({
+          sectionId: section.id,
+          sectionName: section.name,
+          type: 'instruction',
+        });
+      }
+    });
+  }
+
+  return {
+    isValid: true,
+    errors: [],
+    warnings,
+  };
+}
+
+/**
+ * Validates section names and provides fallback for empty names
+ */
+export function validateSectionName(name: string): string {
+  const trimmedName = name.trim();
+  return trimmedName.length > 0 ? trimmedName : 'Untitled Section';
+}
+
+/**
+ * Validates that sections have proper order values
+ */
+export function validateSectionOrder(sections: Array<{ id: string; order: number }>): boolean {
+  const orders = sections.map(s => s.order);
+  const uniqueOrders = new Set(orders);
+  
+  // Check for duplicate orders
+  if (orders.length !== uniqueOrders.size) {
+    return false;
+  }
+  
+  // Check for negative orders
+  return orders.every(order => order >= 0);
+}
+
+/**
+ * Custom validation for recipes that ensures either flat arrays or sections are used consistently
+ */
+export function validateRecipeStructure(data: any): { isValid: boolean; message?: string } {
+  // If sections are provided, ensure they contain all items
+  if (data.ingredientSections || data.instructionSections) {
+    const flatIngredients = data.ingredients || [];
+    const flatInstructions = data.instructions || [];
+    
+    // Count items in sections
+    const sectionIngredientCount = (data.ingredientSections || [])
+      .reduce((total: number, section: any) => total + (section.items?.length || 0), 0);
+    const sectionInstructionCount = (data.instructionSections || [])
+      .reduce((total: number, section: any) => total + (section.items?.length || 0), 0);
+    
+    // If using sections, flat arrays should either be empty or match section content
+    if (data.ingredientSections && flatIngredients.length > 0 && flatIngredients.length !== sectionIngredientCount) {
+      return {
+        isValid: false,
+        message: 'Ingredient sections and flat ingredients array are inconsistent',
+      };
+    }
+    
+    if (data.instructionSections && flatInstructions.length > 0 && flatInstructions.length !== sectionInstructionCount) {
+      return {
+        isValid: false,
+        message: 'Instruction sections and flat instructions array are inconsistent',
+      };
+    }
+  }
+  
+  return { isValid: true };
+}

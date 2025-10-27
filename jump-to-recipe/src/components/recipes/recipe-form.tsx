@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Plus, Minus, Clock, Users, ChefHat } from "lucide-react";
+import { Clock, Users, ChefHat } from "lucide-react";
 import { v4 as uuidv4 } from "uuid";
 
 import { Button } from "@/components/ui/button";
@@ -26,12 +26,22 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 
-import { createRecipeSchema } from "@/lib/validations/recipe";
+import { createRecipeSchema, validateRecipeWithSections } from "@/lib/validations/recipe";
 import type { NewRecipeInput } from "@/types/recipe";
+import type { IngredientSection, InstructionSection } from "@/types/sections";
 import { RecipeImageUpload } from "@/components/recipes/recipe-image-upload";
+import { RecipeIngredientsWithSections } from "@/components/recipes/recipe-ingredients-with-sections";
+import { RecipeInstructionsWithSections } from "@/components/recipes/recipe-instructions-with-sections";
+import { EmptySectionWarningModal } from "@/components/recipes/empty-section-warning-modal";
+
+// Extended input type to support sections
+interface ExtendedRecipeInput extends NewRecipeInput {
+  ingredientSections?: IngredientSection[];
+  instructionSections?: InstructionSection[];
+}
 
 interface RecipeFormProps {
-  initialData?: Partial<NewRecipeInput>;
+  initialData?: Partial<ExtendedRecipeInput>;
   onSubmit: (data: NewRecipeInput) => Promise<void>;
   isLoading?: boolean;
   submitLabel?: string;
@@ -54,6 +64,8 @@ export function RecipeForm({
       instructions: initialData?.instructions || [
         { id: uuidv4(), step: 1, content: "", duration: undefined },
       ],
+      ingredientSections: initialData?.ingredientSections || [],
+      instructionSections: initialData?.instructionSections || [],
       prepTime: initialData?.prepTime || undefined,
       cookTime: initialData?.cookTime || undefined,
       servings: initialData?.servings || undefined,
@@ -67,25 +79,17 @@ export function RecipeForm({
     },
   });
 
-  const {
-    fields: ingredientFields,
-    append: appendIngredient,
-    remove: removeIngredient,
-  } = useFieldArray({
-    control: form.control,
-    name: "ingredients",
-  });
-
-  const {
-    fields: instructionFields,
-    append: appendInstruction,
-    remove: removeInstruction,
-  } = useFieldArray({
-    control: form.control,
-    name: "instructions",
-  });
+  // Field arrays are now managed by the section components
+  // Keep these for backward compatibility but they're handled internally
 
   const [tagInput, setTagInput] = useState("");
+  const [showEmptySectionWarning, setShowEmptySectionWarning] = useState(false);
+  const [emptySections, setEmptySections] = useState<Array<{
+    sectionId: string;
+    sectionName: string;
+    type: 'ingredient' | 'instruction';
+  }>>([]);
+  const [pendingSubmitData, setPendingSubmitData] = useState<any>(null);
 
   const handleAddTag = () => {
     if (tagInput.trim()) {
@@ -105,25 +109,57 @@ export function RecipeForm({
     );
   };
 
-  const handleSubmit = async (data: NewRecipeInput) => {
+  const handleSubmit = async (data: any) => {
     try {
-      // Convert form data to match NewRecipeInput type
-      const recipeData: NewRecipeInput = {
-        ...data,
-        description: data.description || null,
-        difficulty: data.difficulty || null,
-        prepTime: data.prepTime || null,
-        cookTime: data.cookTime || null,
-        servings: data.servings || null,
-        notes: data.notes || null,
-        imageUrl: data.imageUrl || null,
-        sourceUrl: data.sourceUrl || null,
-        authorId: data.authorId || null,
-      };
-      await onSubmit(recipeData);
+      // Validate the recipe with sections
+      const validationResult = validateRecipeWithSections(data);
+      
+      // Show warning for empty sections if any exist
+      if (validationResult.warnings.emptySections.length > 0) {
+        setEmptySections(validationResult.warnings.emptySections);
+        setPendingSubmitData(data);
+        setShowEmptySectionWarning(true);
+        return;
+      }
+
+      // If no empty sections, proceed with submission
+      await submitRecipe(data);
     } catch (error) {
       console.error("Error submitting recipe:", error);
     }
+  };
+
+  const submitRecipe = async (data: any) => {
+    // Convert form data to match NewRecipeInput type
+    const recipeData: NewRecipeInput = {
+      ...data,
+      description: data.description || null,
+      difficulty: data.difficulty || null,
+      prepTime: data.prepTime || null,
+      cookTime: data.cookTime || null,
+      servings: data.servings || null,
+      notes: data.notes || null,
+      imageUrl: data.imageUrl || null,
+      sourceUrl: data.sourceUrl || null,
+      authorId: data.authorId || null,
+    };
+    
+    await onSubmit(recipeData);
+  };
+
+  const handleEmptySectionConfirm = async () => {
+    if (pendingSubmitData) {
+      setShowEmptySectionWarning(false);
+      await submitRecipe(pendingSubmitData);
+      setPendingSubmitData(null);
+      setEmptySections([]);
+    }
+  };
+
+  const handleEmptySectionCancel = () => {
+    setShowEmptySectionWarning(false);
+    setPendingSubmitData(null);
+    setEmptySections([]);
   };
 
   return (
@@ -278,216 +314,25 @@ export function RecipeForm({
           </CardContent>
         </Card>
 
-        {/* Ingredients */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Ingredients</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {ingredientFields.map((field, index) => (
-              <div key={field.id} className="flex gap-2 items-start">
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-2 flex-1">
-                  <FormField
-                    control={form.control}
-                    name={`ingredients.${index}.name`}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormControl>
-                          <Input placeholder="Ingredient name" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+        {/* Ingredients with Sections */}
+        <RecipeIngredientsWithSections
+          control={form.control as any}
+          watch={form.watch as any}
+          errors={form.formState.errors as any}
+          setError={form.setError as any}
+          clearErrors={form.clearErrors as any}
+          isLoading={isLoading}
+        />
 
-                  <FormField
-                    control={form.control}
-                    name={`ingredients.${index}.amount`}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormControl>
-                          <Input
-                            type="number"
-                            step="0.1"
-                            placeholder="Amount"
-                            {...field}
-                            onChange={(e) =>
-                              field.onChange(
-                                e.target.value ? parseFloat(e.target.value) : 0
-                              )
-                            }
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name={`ingredients.${index}.unit`}
-                    render={({ field }) => (
-                      <FormItem>
-                        <Select onValueChange={field.onChange} defaultValue={typeof field.value === 'string' ? field.value : undefined}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Unit" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-
-                            <SelectItem value="g">g</SelectItem>
-                            <SelectItem value="kg">kg</SelectItem>
-                            <SelectItem value="ml">ml</SelectItem>
-                            <SelectItem value="l">l</SelectItem>
-                            <SelectItem value="tsp">tsp</SelectItem>
-                            <SelectItem value="tbsp">tbsp</SelectItem>
-                            <SelectItem value="cup">cup</SelectItem>
-                            <SelectItem value="oz">oz</SelectItem>
-                            <SelectItem value="lb">lb</SelectItem>
-                            <SelectItem value="fl oz">fl oz</SelectItem>
-                            <SelectItem value="pint">pint</SelectItem>
-                            <SelectItem value="quart">quart</SelectItem>
-                            <SelectItem value="gallon">gallon</SelectItem>
-                            <SelectItem value="pinch">pinch</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name={`ingredients.${index}.notes`}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormControl>
-                          <Input placeholder="Notes (optional)" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => removeIngredient(index)}
-                  disabled={ingredientFields.length === 1}
-                >
-                  <Minus className="h-4 w-4" />
-                </Button>
-              </div>
-            ))}
-
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() =>
-                appendIngredient({
-                  id: uuidv4(),
-                  name: "",
-                  amount: 0,
-                  unit: "",
-                  displayAmount: "",
-                  notes: "",
-                })
-              }
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Add Ingredient
-            </Button>
-          </CardContent>
-        </Card>
-
-        {/* Instructions */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Instructions</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {instructionFields.map((field, index) => (
-              <div key={field.id} className="flex gap-2 items-start">
-                <div className="flex-1 space-y-2">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-muted-foreground">
-                      Step {index + 1}
-                    </span>
-                    <FormField
-                      control={form.control}
-                      name={`instructions.${index}.duration`}
-                      render={({ field }) => (
-                        <FormItem className="flex-1">
-                          <FormControl>
-                            <Input
-                              type="number"
-                              placeholder="Duration (min)"
-                              className="w-32"
-                              {...field}
-                              onChange={(e) =>
-                                field.onChange(
-                                  e.target.value
-                                    ? parseInt(e.target.value)
-                                    : undefined
-                                )
-                              }
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-
-                  <FormField
-                    control={form.control}
-                    name={`instructions.${index}.content`}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormControl>
-                          <Textarea
-                            placeholder="Describe this step..."
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => removeInstruction(index)}
-                  disabled={instructionFields.length === 1}
-                >
-                  <Minus className="h-4 w-4" />
-                </Button>
-              </div>
-            ))}
-
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() =>
-                appendInstruction({
-                  id: uuidv4(),
-                  step: instructionFields.length + 1,
-                  content: "",
-                  duration: undefined,
-                })
-              }
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Add Step
-            </Button>
-          </CardContent>
-        </Card>
+        {/* Instructions with Sections */}
+        <RecipeInstructionsWithSections
+          control={form.control as any}
+          watch={form.watch as any}
+          errors={form.formState.errors as any}
+          setError={form.setError as any}
+          clearErrors={form.clearErrors as any}
+          isLoading={isLoading}
+        />
 
         {/* Tags */}
         <Card>
@@ -621,6 +466,14 @@ export function RecipeForm({
           {isLoading ? "Saving..." : submitLabel}
         </Button>
       </form>
+
+      <EmptySectionWarningModal
+        isOpen={showEmptySectionWarning}
+        onClose={handleEmptySectionCancel}
+        onConfirm={handleEmptySectionConfirm}
+        emptySections={emptySections}
+        isLoading={isLoading}
+      />
     </Form>
   );
 }
