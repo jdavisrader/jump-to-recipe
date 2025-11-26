@@ -38,11 +38,13 @@ import { RecipeImage } from "./recipe-image";
 import { RecipeIngredientsWithSections } from "./recipe-ingredients-with-sections";
 import { RecipeInstructionsWithSections } from "./recipe-instructions-with-sections";
 import { EmptySectionWarningModal } from "./empty-section-warning-modal";
+import { RecipePhotosManager } from "./recipe-photos-manager";
 import type { Recipe, NewRecipeInput } from "@/types/recipe";
+import type { RecipePhoto } from "@/types/recipe-photos";
 
 interface RecipeEditorProps {
-  recipe: Recipe;
-  onSave: (data: Partial<NewRecipeInput>) => Promise<void>;
+  recipe: Recipe & { photos?: RecipePhoto[] };
+  onSave: (data: Partial<NewRecipeInput>, photos?: RecipePhoto[]) => Promise<void>;
   onCancel: () => void;
   isLoading?: boolean;
 }
@@ -62,6 +64,7 @@ export function RecipeEditor({
     type: 'ingredient' | 'instruction';
   }>>([]);
   const [pendingSubmitData, setPendingSubmitData] = useState<Partial<NewRecipeInput> | null>(null);
+  const [photos, setPhotos] = useState<RecipePhoto[]>(recipe.photos || []);
 
   const form = useForm({
     resolver: zodResolver(updateRecipeSchema),
@@ -123,7 +126,7 @@ export function RecipeEditor({
   };
 
   const saveRecipe = async (data: Partial<NewRecipeInput>) => {
-    await onSave(data);
+    await onSave(data, photos);
   };
 
   const handleEmptySectionConfirm = async () => {
@@ -695,6 +698,52 @@ export function RecipeEditor({
               <div className="text-sm leading-relaxed whitespace-pre-wrap">
                 {form.watch("notes") || "No notes added yet."}
               </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Recipe Photos */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle>Recipe Photos</CardTitle>
+              <Button
+                type="button"
+                size="sm"
+                variant="ghost"
+                onClick={() => handleSectionEdit("photos")}
+              >
+                <Edit className="h-4 w-4" />
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {editingSection === "photos" ? (
+              <div className="space-y-4">
+                <RecipePhotosManager
+                  recipeId={recipe.id}
+                  photos={photos}
+                  canEdit={true}
+                  onPhotosChange={setPhotos}
+                />
+                <div className="flex gap-2">
+                  <Button type="button" size="sm" onClick={handleSectionSave}>
+                    <Save className="h-4 w-4 mr-1" />
+                    Save
+                  </Button>
+                  <Button type="button" size="sm" variant="outline" onClick={handleSectionCancel}>
+                    <X className="h-4 w-4 mr-1" />
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <RecipePhotosManager
+                recipeId={recipe.id}
+                photos={photos}
+                canEdit={false}
+                onPhotosChange={() => {}} // Read-only mode
+              />
             )}
           </CardContent>
         </Card>

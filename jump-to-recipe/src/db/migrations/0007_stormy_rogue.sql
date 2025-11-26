@@ -1,0 +1,2 @@
+CREATE INDEX "idx_recipe_photos_recipe_id" ON "recipe_photos" USING btree ("recipe_id");--> statement-breakpoint
+CREATE INDEX "idx_recipe_photos_position" ON "recipe_photos" USING btree ("recipe_id","position") WHERE "recipe_photos"."deleted_at" IS NULL;

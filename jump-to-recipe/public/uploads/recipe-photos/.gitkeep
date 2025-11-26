@@ -1,0 +1,2 @@
+# This file ensures the recipe-photos directory is tracked in git
+# Recipe photos will be stored in subdirectories by recipe ID

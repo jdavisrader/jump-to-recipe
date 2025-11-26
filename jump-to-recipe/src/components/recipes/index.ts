@@ -18,3 +18,7 @@ export { RecipeIngredientsWithSections } from './recipe-ingredients-with-section
 export { RecipeInstructionsWithSections } from './recipe-instructions-with-sections';
 export { EmptySectionWarningModal } from './empty-section-warning-modal';
 export { RecipeMigrationHelper, RecipeRevertHelper } from './recipe-migration-helper';
+export { RecipePhotosUpload } from './recipe-photos-upload';
+export { RecipePhotosManager } from './recipe-photos-manager';
+export { PhotoLightbox } from './photo-lightbox';
+export { RecipePhotosViewer } from './recipe-photos-viewer';

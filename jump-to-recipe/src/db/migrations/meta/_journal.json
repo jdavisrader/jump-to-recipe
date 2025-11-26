@@ -43,6 +43,20 @@
       "when": 1754361704737,
       "tag": "0005_glossy_namora",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1763097618157,
+      "tag": "0006_optimal_firelord",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1763097647156,
+      "tag": "0007_stormy_rogue",
+      "breakpoints": true
     }
   ]
 }

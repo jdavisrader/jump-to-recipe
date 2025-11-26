@@ -88,6 +88,22 @@ export interface RecipeWithCookbooks extends Recipe {
   }[];
 }
 
+// Extended recipe types for photos integration
+export interface RecipeWithPhotos extends Recipe {
+  photos: Array<{
+    id: string;
+    recipeId: string;
+    filePath: string;
+    fileName: string;
+    fileSize: number;
+    mimeType: string;
+    position: number;
+    deletedAt: Date | null;
+    createdAt: Date;
+    updatedAt: Date;
+  }>;
+}
+
 // Recipe display context types
 export interface RecipeDisplayContext {
   showAddToCookbook: boolean;
