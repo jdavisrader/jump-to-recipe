@@ -1,6 +1,7 @@
 import { relations } from 'drizzle-orm';
 import { users } from './users';
 import { recipes } from './recipes';
+import { recipePhotos } from './recipe-photos';
 import { cookbooks, cookbookRecipes, cookbookCollaborators } from './cookbooks';
 import { comments } from './comments';
 import { groceryLists } from './grocery-lists';
@@ -22,6 +23,7 @@ export const recipesRelations = relations(recipes, ({ one, many }) => ({
   }),
   cookbookRecipes: many(cookbookRecipes),
   comments: many(comments),
+  photos: many(recipePhotos),
 }));
 
 // Cookbook relations
@@ -75,5 +77,13 @@ export const groceryListsRelations = relations(groceryLists, ({ one }) => ({
   user: one(users, {
     fields: [groceryLists.userId],
     references: [users.id],
+  }),
+}));
+
+// Recipe photos relations
+export const recipePhotosRelations = relations(recipePhotos, ({ one }) => ({
+  recipe: one(recipes, {
+    fields: [recipePhotos.recipeId],
+    references: [recipes.id],
   }),
 }));

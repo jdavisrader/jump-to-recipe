@@ -7,7 +7,12 @@ import { S3Client, PutObjectCommand, DeleteObjectCommand } from '@aws-sdk/client
 // Configuration
 const UPLOAD_DIR = path.join(process.cwd(), 'public', 'uploads');
 const MAX_FILE_SIZE = 4 * 1024 * 1024; // 4MB
-const ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+const ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/heic'];
+
+// Recipe photo specific configuration
+const MAX_RECIPE_PHOTO_SIZE_MB = parseInt(process.env.MAX_RECIPE_PHOTO_SIZE_MB || '10');
+const MAX_RECIPE_PHOTO_COUNT = parseInt(process.env.MAX_RECIPE_PHOTO_COUNT || '10');
+const MAX_RECIPE_PHOTO_SIZE = MAX_RECIPE_PHOTO_SIZE_MB * 1024 * 1024;
 
 // S3 Configuration (optional)
 const s3Client = process.env.AWS_ACCESS_KEY_ID ? new S3Client({
@@ -29,15 +34,22 @@ export interface FileUploadResult {
 }
 
 export interface FileUploadOptions {
-  category: 'recipes' | 'cookbooks' | 'avatars';
+  category: 'recipes' | 'cookbooks' | 'avatars' | 'recipe-photos';
   maxWidth?: number;
   maxHeight?: number;
   quality?: number;
+  recipeId?: string; // Required for recipe-photos category
 }
 
 // Ensure upload directory exists
-async function ensureUploadDir(category: string) {
-  const categoryDir = path.join(UPLOAD_DIR, category);
+async function ensureUploadDir(category: string, recipeId?: string) {
+  let categoryDir = path.join(UPLOAD_DIR, category);
+  
+  // For recipe-photos, create subdirectory by recipeId
+  if (category === 'recipe-photos' && recipeId) {
+    categoryDir = path.join(categoryDir, recipeId);
+  }
+  
   if (!existsSync(categoryDir)) {
     await mkdir(categoryDir, { recursive: true });
   }
@@ -49,23 +61,52 @@ function generateFilename(originalName: string, category: string): string {
   const timestamp = Date.now();
   const random = Math.random().toString(36).substring(2, 8);
   const ext = path.extname(originalName).toLowerCase();
+  
+  // For recipe-photos, use a simpler naming convention since they're in subdirectories
+  if (category === 'recipe-photos') {
+    return `${timestamp}_${random}${ext}`;
+  }
+  
   return `${category}_${timestamp}_${random}${ext}`;
 }
 
 // Validate file
-export function validateFile(file: File): { isValid: boolean; error?: string } {
+export function validateFile(file: File, category?: string): { isValid: boolean; error?: string } {
   if (!ALLOWED_TYPES.includes(file.type)) {
     return {
       isValid: false,
-      error: 'Invalid file type. Please upload JPEG, PNG, GIF, or WebP images only.'
+      error: 'Invalid file type. Please upload JPEG, PNG, GIF, WebP, or HEIC images only.'
     };
   }
 
-  if (file.size > MAX_FILE_SIZE) {
+  // Use recipe photo specific limits for recipe-photos category
+  const maxSize = category === 'recipe-photos' ? MAX_RECIPE_PHOTO_SIZE : MAX_FILE_SIZE;
+  const maxSizeMB = category === 'recipe-photos' ? MAX_RECIPE_PHOTO_SIZE_MB : (MAX_FILE_SIZE / (1024 * 1024));
+
+  if (file.size > maxSize) {
     return {
       isValid: false,
-      error: `File size too large. Maximum size is ${MAX_FILE_SIZE / (1024 * 1024)}MB.`
+      error: `File size too large. Maximum size is ${maxSizeMB}MB.`
     };
+  }
+
+  return { isValid: true };
+}
+
+// Validate multiple recipe photos
+export function validateRecipePhotos(files: File[]): { isValid: boolean; error?: string } {
+  if (files.length > MAX_RECIPE_PHOTO_COUNT) {
+    return {
+      isValid: false,
+      error: `Too many photos. Maximum is ${MAX_RECIPE_PHOTO_COUNT} photos per recipe.`
+    };
+  }
+
+  for (const file of files) {
+    const validation = validateFile(file, 'recipe-photos');
+    if (!validation.isValid) {
+      return validation;
+    }
   }
 
   return { isValid: true };
@@ -81,8 +122,15 @@ async function processImage(
   // Get image metadata
   const metadata = await image.metadata();
   
-  // Resize if needed
-  if (options.maxWidth || options.maxHeight) {
+  // Apply recipe photo specific settings
+  if (options.category === 'recipe-photos') {
+    // Recipe photos: max 1200x800, 85% quality
+    image = image.resize(1200, 800, {
+      fit: 'inside',
+      withoutEnlargement: true
+    });
+  } else if (options.maxWidth || options.maxHeight) {
+    // Other categories: use provided dimensions
     image = image.resize(options.maxWidth, options.maxHeight, {
       fit: 'inside',
       withoutEnlargement: true
@@ -90,7 +138,7 @@ async function processImage(
   }
 
   // Set quality and format
-  const quality = options.quality || 85;
+  const quality = options.category === 'recipe-photos' ? 85 : (options.quality || 85);
   
   if (metadata.format === 'jpeg' || metadata.format === 'jpg') {
     image = image.jpeg({ quality });
@@ -108,14 +156,18 @@ async function processImage(
 async function uploadToLocal(
   buffer: Buffer,
   filename: string,
-  category: string
+  category: string,
+  recipeId?: string
 ): Promise<string> {
-  const categoryDir = await ensureUploadDir(category);
+  const categoryDir = await ensureUploadDir(category, recipeId);
   const filePath = path.join(categoryDir, filename);
   
   await writeFile(filePath, buffer);
   
   // Return URL path relative to public directory
+  if (category === 'recipe-photos' && recipeId) {
+    return `/uploads/${category}/${recipeId}/${filename}`;
+  }
   return `/uploads/${category}/${filename}`;
 }
 
@@ -124,13 +176,18 @@ async function uploadToS3(
   buffer: Buffer,
   filename: string,
   category: string,
-  contentType: string
+  contentType: string,
+  recipeId?: string
 ): Promise<string> {
   if (!s3Client || !S3_BUCKET) {
     throw new Error('S3 not configured');
   }
 
-  const key = `${category}/${filename}`;
+  // For recipe-photos, include recipeId in the key
+  let key = `${category}/${filename}`;
+  if (category === 'recipe-photos' && recipeId) {
+    key = `${category}/${recipeId}/${filename}`;
+  }
   
   const command = new PutObjectCommand({
     Bucket: S3_BUCKET,
@@ -151,8 +208,13 @@ export async function uploadFile(
   file: File,
   options: FileUploadOptions
 ): Promise<FileUploadResult> {
+  // Validate recipeId is provided for recipe-photos
+  if (options.category === 'recipe-photos' && !options.recipeId) {
+    throw new Error('recipeId is required for recipe-photos category');
+  }
+
   // Validate file
-  const validation = validateFile(file);
+  const validation = validateFile(file, options.category);
   if (!validation.isValid) {
     throw new Error(validation.error);
   }
@@ -170,9 +232,9 @@ export async function uploadFile(
   // Upload to storage
   let url: string;
   if (USE_S3) {
-    url = await uploadToS3(buffer, filename, options.category, file.type);
+    url = await uploadToS3(buffer, filename, options.category, file.type, options.recipeId);
   } else {
-    url = await uploadToLocal(buffer, filename, options.category);
+    url = await uploadToLocal(buffer, filename, options.category, options.recipeId);
   }
 
   return {
@@ -231,6 +293,28 @@ export async function deleteFile(url: string): Promise<void> {
   }
 }
 
+// Upload multiple recipe photos
+export async function uploadRecipePhotos(
+  files: File[],
+  recipeId: string
+): Promise<FileUploadResult[]> {
+  // Validate all files first
+  const validation = validateRecipePhotos(files);
+  if (!validation.isValid) {
+    throw new Error(validation.error);
+  }
+
+  // Upload all files
+  const uploadPromises = files.map(file => 
+    uploadFile(file, { 
+      category: 'recipe-photos', 
+      recipeId 
+    })
+  );
+
+  return Promise.all(uploadPromises);
+}
+
 // Get image dimensions and metadata
 export async function getImageInfo(file: File): Promise<{
   width: number;
@@ -250,3 +334,11 @@ export async function getImageInfo(file: File): Promise<{
     size: file.size,
   };
 }
+
+// Export configuration constants (server-side only)
+export const FILE_STORAGE_CONFIG = {
+  MAX_RECIPE_PHOTO_SIZE_MB,
+  MAX_RECIPE_PHOTO_COUNT,
+  MAX_RECIPE_PHOTO_SIZE,
+  ALLOWED_TYPES,
+} as const;

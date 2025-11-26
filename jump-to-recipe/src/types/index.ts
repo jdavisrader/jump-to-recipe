@@ -1,5 +1,6 @@
 // Core application types
 export * from './recipe';
+export * from './recipe-photos';
 export * from './comment';
 export * from './add-to-cookbook';
 export * from './validation';

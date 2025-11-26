@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Clock, Users, ChefHat } from "lucide-react";
+import { Clock, Users, ChefHat, X } from "lucide-react";
 import { v4 as uuidv4 } from "uuid";
 
 import { Button } from "@/components/ui/button";
@@ -29,22 +29,35 @@ import {
 import { createRecipeSchema, validateRecipeWithSections } from "@/lib/validations/recipe";
 import type { NewRecipeInput } from "@/types/recipe";
 import type { IngredientSection, InstructionSection } from "@/types/sections";
+import type { RecipePhoto } from "@/types/recipe-photos";
+
+// Extended RecipePhoto type for new recipe uploads
+interface TempRecipePhoto extends RecipePhoto {
+  _tempFile?: File;
+}
 import { RecipeImageUpload } from "@/components/recipes/recipe-image-upload";
 import { RecipeIngredientsWithSections } from "@/components/recipes/recipe-ingredients-with-sections";
 import { RecipeInstructionsWithSections } from "@/components/recipes/recipe-instructions-with-sections";
 import { EmptySectionWarningModal } from "@/components/recipes/empty-section-warning-modal";
+import { RecipePhotosManager } from "@/components/recipes/recipe-photos-manager";
+import { RecipePhotosUpload } from "@/components/recipes/recipe-photos-upload";
+import { useDropzone } from "react-dropzone";
+import { Upload } from "lucide-react";
+import { cn } from "@/lib/utils";
 
-// Extended input type to support sections
+// Extended input type to support sections and photos
 interface ExtendedRecipeInput extends NewRecipeInput {
   ingredientSections?: IngredientSection[];
   instructionSections?: InstructionSection[];
+  photos?: RecipePhoto[];
 }
 
 interface RecipeFormProps {
   initialData?: Partial<ExtendedRecipeInput>;
-  onSubmit: (data: NewRecipeInput) => Promise<void>;
+  onSubmit: (data: NewRecipeInput, photos?: RecipePhoto[]) => Promise<void>;
   isLoading?: boolean;
   submitLabel?: string;
+  recipeId?: string; // For editing existing recipes with photos
 }
 
 export function RecipeForm({
@@ -52,6 +65,7 @@ export function RecipeForm({
   onSubmit,
   isLoading = false,
   submitLabel = "Save Recipe",
+  recipeId,
 }: RecipeFormProps) {
   const form = useForm({
     resolver: zodResolver(createRecipeSchema),
@@ -90,6 +104,7 @@ export function RecipeForm({
     type: 'ingredient' | 'instruction';
   }>>([]);
   const [pendingSubmitData, setPendingSubmitData] = useState<any>(null);
+  const [photos, setPhotos] = useState<TempRecipePhoto[]>(initialData?.photos || []);
 
   const handleAddTag = () => {
     if (tagInput.trim()) {
@@ -144,7 +159,7 @@ export function RecipeForm({
       authorId: data.authorId || null,
     };
     
-    await onSubmit(recipeData);
+    await onSubmit(recipeData, photos);
   };
 
   const handleEmptySectionConfirm = async () => {
@@ -462,6 +477,29 @@ export function RecipeForm({
           </CardContent>
         </Card>
 
+        {/* Original Recipe Photos */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Original Recipe Photos</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {recipeId ? (
+              <RecipePhotosManager
+                recipeId={recipeId}
+                photos={photos}
+                canEdit={true}
+                onPhotosChange={setPhotos}
+              />
+            ) : (
+              <NewRecipePhotosUpload
+                photos={photos}
+                onPhotosChange={setPhotos}
+                disabled={isLoading}
+              />
+            )}
+          </CardContent>
+        </Card>
+
         <Button type="submit" disabled={isLoading} className="w-full">
           {isLoading ? "Saving..." : submitLabel}
         </Button>
@@ -475,5 +513,199 @@ export function RecipeForm({
         isLoading={isLoading}
       />
     </Form>
+  );
+}
+
+// Component for handling photo uploads for new recipes (before recipe is created)
+interface NewRecipePhotosUploadProps {
+  photos: TempRecipePhoto[];
+  onPhotosChange: (photos: TempRecipePhoto[]) => void;
+  disabled?: boolean;
+}
+
+function NewRecipePhotosUpload({ photos, onPhotosChange, disabled }: NewRecipePhotosUploadProps) {
+  const maxFiles = 10;
+  const maxFileSize = 10 * 1024 * 1024; // 10MB
+  const [error, setError] = useState<string | null>(null);
+
+  const onDrop = (acceptedFiles: File[], rejectedFiles: any[]) => {
+    if (disabled) return;
+
+    // Clear any previous errors
+    setError(null);
+
+    // Handle rejected files
+    if (rejectedFiles.length > 0) {
+      const errorMessages = rejectedFiles.map(({ file, errors }) => {
+        const errorMsg = errors.map((e: any) => {
+          if (e.code === 'file-too-large') {
+            return `${file.name} is too large (max 10MB)`;
+          }
+          if (e.code === 'file-invalid-type') {
+            return `${file.name} is not a supported image format`;
+          }
+          return e.message;
+        }).join(', ');
+        return errorMsg;
+      });
+      setError(errorMessages.join('; '));
+      return;
+    }
+
+    const totalPhotos = photos.length + acceptedFiles.length;
+    if (totalPhotos > maxFiles) {
+      setError(`You can only upload up to ${maxFiles} photos. You currently have ${photos.length} photos.`);
+      return;
+    }
+
+    // Create photo objects with preview URLs
+    const newPhotos: TempRecipePhoto[] = acceptedFiles.map((file, index) => ({
+      id: `temp-${Date.now()}-${index}`,
+      recipeId: "temp-new-recipe",
+      filePath: URL.createObjectURL(file), // Use object URL for preview
+      fileName: file.name,
+      fileSize: file.size,
+      mimeType: file.type,
+      position: photos.length + index,
+      deletedAt: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      // Store the actual file for later upload
+      _tempFile: file,
+    }));
+
+    onPhotosChange([...photos, ...newPhotos]);
+  };
+
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop,
+    accept: {
+      'image/*': ['.png', '.jpg', '.jpeg', '.gif', '.webp', '.heic']
+    },
+    maxSize: maxFileSize,
+    disabled,
+  });
+
+  const removePhoto = (photoId: string) => {
+    const photoToRemove = photos.find(p => p.id === photoId);
+    if (photoToRemove && photoToRemove.filePath.startsWith('blob:')) {
+      // Revoke the object URL to free memory
+      URL.revokeObjectURL(photoToRemove.filePath);
+    }
+    onPhotosChange(photos.filter(p => p.id !== photoId));
+  };
+
+  const clearAllPhotos = () => {
+    // Revoke all object URLs to free memory
+    photos.forEach(photo => {
+      if (photo.filePath.startsWith('blob:')) {
+        URL.revokeObjectURL(photo.filePath);
+      }
+    });
+    onPhotosChange([]);
+    setError(null);
+  };
+
+  return (
+    <div className="space-y-4">
+      <p className="text-sm text-muted-foreground">
+        Upload photos of the original recipe to help preserve the visual details and presentation.
+      </p>
+
+      {/* Error Message */}
+      {error && (
+        <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+          <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+        </div>
+      )}
+      
+      {/* Upload Area */}
+      <div
+        {...getRootProps()}
+        className={cn(
+          "border-2 border-dashed border-gray-300 rounded-lg p-6 text-center transition-colors hover:border-gray-400",
+          isDragActive && "border-blue-400 bg-blue-50",
+          disabled && "opacity-50 cursor-not-allowed",
+          !disabled && "cursor-pointer"
+        )}
+      >
+        <input {...getInputProps()} />
+        <div className="flex flex-col items-center justify-center space-y-2">
+          <Upload className="h-8 w-8 text-gray-400" />
+          <p className="text-sm text-gray-600 dark:text-gray-300">
+            {isDragActive
+              ? "Drop the photos here..."
+              : "Drag & drop photos here, or click to select"}
+          </p>
+          <p className="text-xs text-gray-400">
+            JPEG, PNG, WEBP, HEIC up to 10MB each
+          </p>
+          <p className="text-xs text-gray-400">
+            {photos.length}/{maxFiles} photos
+          </p>
+        </div>
+      </div>
+
+      {/* Photo Preview Grid */}
+      {photos.length > 0 && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h4 className="text-sm font-medium">Recipe Photos</h4>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={clearAllPhotos}
+            >
+              Clear All
+            </Button>
+          </div>
+          
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+            {photos.map((photo, index) => (
+              <div key={photo.id} className="relative group">
+                <div className="relative aspect-square overflow-hidden rounded-lg border-2 border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 transition-colors">
+                  <img
+                    src={photo.filePath}
+                    alt={photo.fileName}
+                    className="w-full h-full object-cover"
+                  />
+
+                  {/* Delete Button */}
+                  <Button
+                    type="button"
+                    onClick={() => removePhoto(photo.id)}
+                    variant="destructive"
+                    size="sm"
+                    className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8 p-0"
+                    aria-label={`Delete photo ${photo.fileName}`}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+
+                  {/* Position Indicator */}
+                  <div className="absolute bottom-2 left-2 px-2 py-1 bg-black/70 text-white text-xs rounded">
+                    {index + 1}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Empty State */}
+      {photos.length === 0 && (
+        <div className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-800/50">
+          <Upload className="h-12 w-12 text-gray-400 mb-4" />
+          <div className="text-gray-500 dark:text-gray-400 text-center">
+            <div className="text-lg font-medium mb-2">No photos yet</div>
+            <div className="text-sm">
+              Upload photos to showcase your recipe visually
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }

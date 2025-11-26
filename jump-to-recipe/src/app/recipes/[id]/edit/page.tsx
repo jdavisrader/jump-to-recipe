@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { RecipeForm } from "@/components/recipes";
 import type { Recipe, NewRecipeInput } from "@/types/recipe";
+import type { RecipePhoto } from "@/types/recipe-photos";
 
 interface EditRecipePageProps {
   params: Promise<{
@@ -14,7 +15,7 @@ interface EditRecipePageProps {
 
 export default function EditRecipePage({ params }: EditRecipePageProps) {
   const { id } = use(params);
-  const [recipe, setRecipe] = useState<Recipe | null>(null);
+  const [recipe, setRecipe] = useState<(Recipe & { photos?: RecipePhoto[] }) | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingRecipe, setIsLoadingRecipe] = useState(true);
   const router = useRouter();
@@ -24,12 +25,22 @@ export default function EditRecipePage({ params }: EditRecipePageProps) {
   useEffect(() => {
     const fetchRecipe = async () => {
       try {
-        const response = await fetch(`/api/recipes/${id}`);
-        if (!response.ok) {
+        // Fetch recipe data
+        const recipeResponse = await fetch(`/api/recipes/${id}`);
+        if (!recipeResponse.ok) {
           throw new Error('Failed to fetch recipe');
         }
-        const recipeData = await response.json();
-        setRecipe(recipeData);
+        const recipeData = await recipeResponse.json();
+
+        // Fetch recipe photos
+        const photosResponse = await fetch(`/api/recipes/${id}/photos`);
+        let photos: RecipePhoto[] = [];
+        if (photosResponse.ok) {
+          const photosData = await photosResponse.json();
+          photos = photosData.photos || [];
+        }
+
+        setRecipe({ ...recipeData, photos });
       } catch (error) {
         console.error('Error fetching recipe:', error);
         alert('Failed to load recipe');
@@ -42,7 +53,7 @@ export default function EditRecipePage({ params }: EditRecipePageProps) {
     fetchRecipe();
   }, [id, router]);
 
-  const handleUpdateRecipe = async (data: NewRecipeInput) => {
+  const handleUpdateRecipe = async (data: NewRecipeInput, photos?: RecipePhoto[]) => {
     if (!session?.user?.id) {
       alert("You must be logged in to edit a recipe.");
       router.push("/auth/login");
@@ -155,10 +166,12 @@ export default function EditRecipePage({ params }: EditRecipePageProps) {
           imageUrl: recipe.imageUrl,
           sourceUrl: recipe.sourceUrl,
           visibility: recipe.visibility,
+          photos: recipe.photos,
         }}
         onSubmit={handleUpdateRecipe}
         isLoading={isLoading}
         submitLabel="Update Recipe"
+        recipeId={recipe.id}
       />
     </div>
   );

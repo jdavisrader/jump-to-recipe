@@ -86,7 +86,7 @@ export function RecipeIngredientsWithSections({
           id: `section-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`,
           name: 'Ingredients',
           order: 0,
-          items: ingredients.map(ingredient => ({ ...ingredient })), // Create copies to avoid reference issues
+          items: ingredients.map((ingredient: Ingredient) => ({ ...ingredient })), // Create copies to avoid reference issues
         };
         appendSection(defaultSection);
       } else {
@@ -102,13 +102,13 @@ export function RecipeIngredientsWithSections({
       setUseSections(true);
     } else {
       // Convert sections back to flat ingredients
-      const allIngredients = ingredientSections.flatMap((section: IngredientSection) => 
+      const allIngredients = ingredientSections.flatMap((section: IngredientSection) =>
         section.items.map(item => ({ ...item })) // Create copies to avoid reference issues
       );
-      
+
       // Clear sections using replace method
       replaceSections([]);
-      
+
       // Replace flat ingredients with all ingredients from sections
       if (allIngredients.length > 0) {
         replaceIngredients(allIngredients);
@@ -123,7 +123,7 @@ export function RecipeIngredientsWithSections({
           notes: '',
         }]);
       }
-      
+
       setUseSections(false);
     }
   };
@@ -136,10 +136,10 @@ export function RecipeIngredientsWithSections({
 
     // Check if we actually need to update to prevent infinite loops
     const currentSections = ingredientSections || [];
-    const sectionsChanged = 
+    const sectionsChanged =
       currentSections.length !== newSections.length ||
-      currentSections.some((current, index) => 
-        !newSections[index] || 
+      currentSections.some((current: IngredientSection, index: number) =>
+        !newSections[index] ||
         current.id !== newSections[index].id ||
         current.name !== newSections[index].name ||
         current.order !== newSections[index].order ||
@@ -156,7 +156,7 @@ export function RecipeIngredientsWithSections({
       ...section,
       name: validateSectionName(section.name),
     }));
-    
+
     replaceSections(validatedSections);
 
     // Validate sections after update
@@ -262,8 +262,8 @@ export function RecipeIngredientsWithSections({
             render={({ field }) => (
               <FormItem>
                 <FormControl>
-                  <Input 
-                    placeholder="Ingredient name" 
+                  <Input
+                    placeholder="Ingredient name"
                     {...field}
                     onBlur={(e) => {
                       field.onBlur();
@@ -511,7 +511,7 @@ export function RecipeIngredientsWithSections({
                 )}
               </div>
             )}
-            
+
             <SectionManager
               sections={ingredientSections}
               onSectionsChange={handleSectionsChange}

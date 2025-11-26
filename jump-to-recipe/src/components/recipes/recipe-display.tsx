@@ -7,9 +7,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { RecipeImage } from "./recipe-image";
 import { RecipeComments } from "./recipe-comments";
 import { AddToCookbookButton } from "./add-to-cookbook-button";
+import { RecipePhotosViewer } from "./recipe-photos-viewer";
 import type { Recipe } from "@/types/recipe";
+import type { RecipePhoto } from "@/types/recipe-photos";
 import { useSession } from "next-auth/react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 interface RecipeDisplayProps {
   recipe: Recipe;
@@ -20,9 +22,33 @@ interface RecipeDisplayProps {
 export function RecipeDisplay({ recipe, onEdit, canEdit = false }: RecipeDisplayProps) {
   const { data: session } = useSession();
   const [commentsEnabled, setCommentsEnabled] = useState(recipe.commentsEnabled ?? true);
+  const [photos, setPhotos] = useState<RecipePhoto[]>([]);
+  const [photosLoading, setPhotosLoading] = useState(true);
   const totalTime = (recipe.prepTime || 0) + (recipe.cookTime || 0);
   
   const isRecipeOwner = session?.user?.id === recipe.authorId;
+
+  // Fetch recipe photos
+  useEffect(() => {
+    const fetchPhotos = async () => {
+      try {
+        setPhotosLoading(true);
+        const response = await fetch(`/api/recipes/${recipe.id}/photos`);
+        if (response.ok) {
+          const data = await response.json();
+          setPhotos(data.photos || []);
+        } else {
+          console.error('Failed to fetch photos:', response.statusText);
+        }
+      } catch (error) {
+        console.error('Error fetching photos:', error);
+      } finally {
+        setPhotosLoading(false);
+      }
+    };
+
+    fetchPhotos();
+  }, [recipe.id]);
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -205,6 +231,31 @@ export function RecipeDisplay({ recipe, onEdit, canEdit = false }: RecipeDisplay
           </CardContent>
         </Card>
       )}
+
+      {/* Recipe Photos */}
+      {photosLoading ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>Recipe Photos</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="aspect-square bg-muted rounded-lg animate-pulse" />
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      ) : photos.length > 0 ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>Recipe Photos</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <RecipePhotosViewer photos={photos} />
+          </CardContent>
+        </Card>
+      ) : null}
 
       {/* Comments and Notes Section */}
       <RecipeComments
