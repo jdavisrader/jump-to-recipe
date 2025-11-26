@@ -22,3 +22,4 @@ export { RecipePhotosUpload } from './recipe-photos-upload';
 export { RecipePhotosManager } from './recipe-photos-manager';
 export { PhotoLightbox } from './photo-lightbox';
 export { RecipePhotosViewer } from './recipe-photos-viewer';
+export { DeleteRecipeSection } from './delete-recipe-section';

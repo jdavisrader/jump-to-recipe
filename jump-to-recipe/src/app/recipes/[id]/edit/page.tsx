@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect, use } from "react";
+import { useState, useEffect, use, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { RecipeForm } from "@/components/recipes";
+import { RecipeForm, DeleteRecipeSection } from "@/components/recipes";
 import type { Recipe, NewRecipeInput } from "@/types/recipe";
 import type { RecipePhoto } from "@/types/recipe-photos";
 
@@ -20,6 +20,17 @@ export default function EditRecipePage({ params }: EditRecipePageProps) {
   const [isLoadingRecipe, setIsLoadingRecipe] = useState(true);
   const router = useRouter();
   const { data: session, status } = useSession();
+
+  // Check if user can delete the recipe
+  const canDelete = useMemo(() => {
+    if (!session?.user || !recipe) return false;
+
+    const isOwner = recipe.authorId === session.user.id;
+    const isAdmin = session.user.role === 'admin';
+    const isElevated = session.user.role === 'elevated';
+
+    return isOwner || isAdmin || isElevated;
+  }, [session, recipe]);
 
   // Fetch the recipe data
   useEffect(() => {
@@ -173,6 +184,25 @@ export default function EditRecipePage({ params }: EditRecipePageProps) {
         submitLabel="Update Recipe"
         recipeId={recipe.id}
       />
+
+      {canDelete && (
+        <div className="mt-8 pt-8 border-t">
+          <div className="flex flex-col gap-4">
+            <div>
+              <h2 className="text-lg font-semibold text-destructive">
+                Danger Zone
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                Once you delete a recipe, there is no going back.
+              </p>
+            </div>
+            <DeleteRecipeSection
+              recipeId={recipe.id}
+              recipeTitle={recipe.title}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
