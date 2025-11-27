@@ -1,0 +1,131 @@
+# Implementation Plan
+
+- [x] 1. Simplify SectionManager component to remove drag-and-drop
+  - Remove `@hello-pangea/dnd` imports (DragDropContext, Droppable, Draggable, DropResult)
+  - Remove `draggedSectionId` state variable
+  - Remove `handleDragEnd` and `handleDragStart` functions
+  - Replace drag-wrapped section rendering with direct `.map()` iteration
+  - Remove drag-related CSS classes from section containers
+  - Update section container styling to remove drag-specific transitions and states
+  - Verify `handleAddSection` still appends sections to bottom with correct order
+  - Verify `handleSectionDelete` still reindexes remaining sections correctly
+  - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 2.1, 2.2, 2.3, 2.4, 2.5_
+
+- [x] 2. Simplify SectionHeader component to remove drag handle
+  - Remove drag handle UI (GripVertical icon and its container div)
+  - Remove `isDragging` prop from component interface
+  - Remove drag-related styling and CSS classes
+  - Update layout to display only EditableTitle and delete button
+  - Adjust spacing and alignment for simplified two-element layout
+  - Remove drag-related hover states and transitions
+  - Verify rename functionality still works correctly
+  - Verify delete button and confirmation modal still work
+  - _Requirements: 2.1, 2.2, 2.5, 3.1, 3.2, 3.3, 3.4, 3.5, 4.1, 4.2, 4.3, 4.4, 4.5, 4.6_
+
+- [x] 3. Update section-related CSS and animations
+  - Remove drag-specific CSS classes from section-animations.css
+  - Remove `.section-drag-preview` styles
+  - Remove `.section-drag-placeholder` styles
+  - Remove `.section-drop-zone-active` styles
+  - Remove drag-related transform animations
+  - Keep section item entry animations
+  - Keep empty state indicator animations
+  - Keep loading skeleton animations
+  - _Requirements: 2.1, 2.5_
+
+- [x] 4. Update SectionManager unit tests
+  - Remove drag-and-drop mock setup from test files
+  - Remove tests for `handleDragEnd` functionality
+  - Remove tests for drag state management
+  - Add test to verify sections render without drag wrappers
+  - Add test to verify "Add Section" appends to bottom
+  - Add test to verify section deletion reindexes order correctly
+  - Update existing tests to work with simplified rendering
+  - Verify empty state tests still pass
+  - Verify loading state tests still pass
+  - _Requirements: 1.1, 1.3, 1.4, 1.5, 2.1, 2.2, 2.3, 2.4, 2.5, 4.5, 4.6_
+
+- [x] 5. Update SectionHeader unit tests
+  - Remove tests for drag handle rendering
+  - Remove tests for `isDragging` prop behavior
+  - Update snapshot tests to reflect simplified layout
+  - Verify rename tests still pass
+  - Verify delete button tests still pass
+  - Verify confirmation modal tests still pass
+  - Add test to confirm drag handle is not rendered
+  - _Requirements: 2.1, 2.2, 2.5, 3.1, 3.2, 3.3, 3.4, 3.5, 4.1, 4.2, 4.3, 4.4_
+
+- [x] 6. Update integration tests for recipe forms
+  - Update tests in recipe-form-with-sections.test.tsx
+  - Remove drag-and-drop interaction tests
+  - Add test for creating multiple sections and verifying append order
+  - Add test for deleting middle section and verifying order stability
+  - Add test for renaming section and verifying order unchanged
+  - Verify section creation workflow tests still pass
+  - Verify section deletion workflow tests still pass
+  - Verify form submission with sections still works
+  - _Requirements: 1.1, 1.3, 1.4, 1.5, 3.5, 4.5, 4.6, 5.1, 5.2, 5.3, 5.4, 5.5_
+
+- [x] 7. Update integration tests for recipe editor
+  - Update tests in recipe-editor-with-sections.test.tsx
+  - Remove drag-and-drop reordering tests
+  - Verify section editing tests still pass
+  - Verify inline editing tests still pass
+  - Add test for loading existing recipe and verifying section order preserved
+  - Add test for editing recipe without changing section order
+  - _Requirements: 3.5, 4.5, 4.6, 5.1, 5.2, 5.3, 5.4, 6.1, 6.2, 6.3, 6.4, 6.5_
+
+- [x] 8. Update accessibility tests
+  - Update section-accessibility.test.tsx
+  - Remove keyboard drag-and-drop navigation tests
+  - Remove ARIA labels for drag handles
+  - Verify keyboard navigation for rename still works
+  - Verify keyboard navigation for delete still works
+  - Verify screen reader announcements for section operations
+  - Add test to verify simplified tab order
+  - Verify focus management after section deletion
+  - _Requirements: 2.1, 2.4, 3.1, 4.1, 7.1, 7.2, 7.3, 7.4, 7.5_
+
+- [x] 9. Update animation and performance tests
+  - Update section-animations.test.tsx
+  - Remove drag animation tests
+  - Verify section item entry animations still work
+  - Verify empty state animations still work
+  - Update section-performance.test.tsx
+  - Remove drag performance benchmarks
+  - Add performance test for simplified rendering
+  - Verify render performance improvements
+  - _Requirements: 1.5, 2.5, 5.1, 5.2, 5.3, 5.4, 5.5_
+
+- [x] 10. Verify backward compatibility with existing recipes
+  - Create test to load existing recipe with sections
+  - Verify section order is preserved from database
+  - Verify sections display in correct order
+  - Test editing existing recipe without changing order
+  - Test saving existing recipe and verifying data integrity
+  - Verify no data migration is needed
+  - Test recipes without sections still work correctly
+  - _Requirements: 6.1, 6.2, 6.3, 6.4, 6.5, 7.1, 7.2, 7.3, 7.4, 7.5_
+
+- [x] 11. Update component documentation
+  - Update SectionManager component JSDoc comments
+  - Update SectionHeader component JSDoc comments
+  - Remove references to drag-and-drop in comments
+  - Update README.md in sections folder if it exists
+  - Document append-only behavior
+  - Document order stability guarantees
+  - _Requirements: 1.1, 1.3, 1.4, 1.5, 2.1, 2.2, 2.3, 2.4, 2.5_
+
+- [ ] 12. Manual QA testing
+  - Test creating new recipe with multiple sections
+  - Verify sections appear in creation order
+  - Test adding sections and verify they append to bottom
+  - Test renaming sections and verify order unchanged
+  - Test deleting sections and verify order stability
+  - Test adding/removing items within sections
+  - Test empty section warnings
+  - Test loading existing recipes with sections
+  - Test responsive behavior on mobile devices
+  - Test dark mode styling
+  - Verify no visual regressions
+  - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 2.1, 2.2, 2.3, 2.4, 2.5, 3.1, 3.2, 3.3, 3.4, 3.5, 4.1, 4.2, 4.3, 4.4, 4.5, 4.6, 5.1, 5.2, 5.3, 5.4, 5.5, 6.1, 6.2, 6.3, 6.4, 6.5, 7.1, 7.2, 7.3, 7.4, 7.5, 8.1, 8.2, 8.3, 8.4, 8.5_
