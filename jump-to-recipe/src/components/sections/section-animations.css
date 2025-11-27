@@ -1,40 +1,5 @@
 /* Section Animation Styles */
 
-/* Smooth drag and drop animations */
-.section-drag-preview {
-  /* Enhanced shadow and elevation for better visual feedback */
-  box-shadow: 
-    0 25px 50px -12px rgba(0, 0, 0, 0.25),
-    0 0 0 1px rgba(59, 130, 246, 0.3),
-    0 0 20px rgba(59, 130, 246, 0.2);
-  z-index: 1000;
-  /* No transitions during drag to avoid conflicts with drag library */
-  /* Ensure the preview stays visible and prominent */
-  opacity: 1 !important;
-}
-
-.section-drag-placeholder {
-  /* More subtle placeholder effect */
-  opacity: 0.3;
-  transform: scale(0.98);
-  /* No transitions - instant feedback for immediate drop response */
-  /* Add a dashed border to show where the section will return */
-  border-style: dashed !important;
-  border-color: rgba(59, 130, 246, 0.5) !important;
-  background-color: rgba(59, 130, 246, 0.05) !important;
-}
-
-/* Drop zone feedback */
-.section-drop-zone-active {
-  /* Subtle background highlight when dragging over */
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.05), rgba(147, 51, 234, 0.05));
-  border-radius: 0.75rem;
-  /* No transition for instant feedback */
-  /* Add a subtle border to indicate drop zone */
-  outline: 2px dashed rgba(59, 130, 246, 0.3);
-  outline-offset: 4px;
-}
-
 /* Section item animations */
 .section-item-enter {
   animation: slideInFromLeft 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -60,24 +25,6 @@
 .section-container:hover {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   border-color: rgba(0, 0, 0, 0.2);
-}
-
-/* Drag handle improvements */
-.section-drag-handle {
-  /* Make drag handle more prominent and tactile */
-  background: rgba(0, 0, 0, 0.05);
-  border-radius: 6px;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.section-drag-handle:hover {
-  background: rgba(0, 0, 0, 0.1);
-  transform: scale(1.05);
-}
-
-.section-drag-handle:active {
-  background: rgba(59, 130, 246, 0.2);
-  transform: scale(0.95);
 }
 
 @keyframes slideInFromLeft {
@@ -220,9 +167,6 @@
 
 /* Reduced motion preferences */
 @media (prefers-reduced-motion: reduce) {
-  .section-drag-preview,
-  .section-drag-placeholder,
-  .section-drop-zone,
   .section-button,
   .section-focus-ring,
   .section-modal-backdrop,
@@ -253,15 +197,6 @@
 
 /* High contrast mode support */
 @media (prefers-contrast: high) {
-  .section-drop-zone {
-    border-color: currentColor;
-    background: transparent;
-  }
-  
-  .section-drop-zone-active {
-    background: rgba(0, 0, 0, 0.1);
-  }
-  
   .section-skeleton {
     background: rgba(0, 0, 0, 0.2);
   }
@@ -275,15 +210,5 @@
       rgba(255, 255, 255, 0.05) 50%, 
       rgba(255, 255, 255, 0.1) 75%
     );
-  }
-  
-  .section-drop-zone {
-    background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(147, 51, 234, 0.2));
-    border-color: rgba(59, 130, 246, 0.4);
-  }
-  
-  .section-drop-zone-active {
-    background: linear-gradient(135deg, rgba(59, 130, 246, 0.3), rgba(147, 51, 234, 0.3));
-    border-color: rgba(59, 130, 246, 0.6);
   }
 }

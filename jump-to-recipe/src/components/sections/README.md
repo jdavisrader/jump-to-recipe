@@ -1,14 +1,18 @@
-# Recipe Sections - Enhanced UX with Animations and Feedback
+# Recipe Sections - Simplified Section Management
 
-This document describes the enhanced user experience features implemented for the recipe sections functionality, including smooth animations, visual feedback, and accessibility improvements.
+This document describes the recipe sections functionality, which provides a streamlined interface for organizing recipe ingredients and instructions into named sections with a predictable, append-only ordering model.
 
-## Features Implemented
+## Overview
 
-### 1. Smooth Drag-and-Drop Animations
+The Recipe Sections feature allows users to organize their recipes into logical groups (e.g., "For the Sauce", "For the Topping") without the complexity of manual reordering. Sections are created in a specific order and maintain that order throughout their lifecycle.
 
-- **Drag Preview**: Sections being dragged show a subtle rotation and scale effect with enhanced shadow
-- **Drop Zone Feedback**: Visual indication when hovering over valid drop zones with color and scale changes
-- **Placeholder Animation**: Dragged items show reduced opacity and scale to indicate their original position
+## Key Behaviors
+
+### 1. Append-Only Ordering
+
+- **New Sections Always Append**: When you create a new section, it always appears at the bottom of the list
+- **Predictable Order**: Sections maintain their creation order and cannot be reordered
+- **Order Stability**: Renaming or editing sections does not change their position
 
 ### 2. Loading States and Visual Feedback
 
@@ -22,20 +26,33 @@ This document describes the enhanced user experience features implemented for th
 - **No Sections State**: Helpful messaging when no sections exist yet
 - **Contextual Guidance**: Clear instructions on how to add content
 
-### 4. Enhanced Accessibility
+### 4. Section Management
+
+- **Rename Sections**: Click any section title to edit it inline
+- **Delete Sections**: Remove sections with a confirmation dialog
+- **Order Preservation**: Deleting a section maintains the relative order of remaining sections
+
+### 5. Enhanced Accessibility
 
 - **Keyboard Navigation**: Full keyboard support for all interactive elements
 - **Screen Reader Support**: Proper ARIA labels and announcements
 - **Focus Management**: Clear focus indicators and logical tab order
 - **Reduced Motion**: Respects user's motion preferences
 
+## Order Stability Guarantees
+
+The section ordering system provides the following guarantees:
+
+1. **Creation Order**: Sections appear in the order they were created
+2. **Append-Only**: New sections always appear at the bottom
+3. **Stable Rename**: Renaming a section does not change its position
+4. **Stable Delete**: Deleting a section preserves the relative order of remaining sections
+5. **No Reordering**: Sections cannot be manually reordered after creation
+
 ## CSS Animation Classes
 
 ### Core Animation Classes
 
-- `.section-drag-preview`: Applied to sections being dragged
-- `.section-drop-zone`: Base styling for drop zones
-- `.section-drop-zone-active`: Active state when dragging over
 - `.section-item-enter`: Animation for new items being added
 - `.section-skeleton`: Loading skeleton with shimmer effect
 - `.section-button`: Hover and interaction animations for buttons
@@ -58,10 +75,18 @@ This document describes the enhanced user experience features implemented for th
 
 ```typescript
 interface SectionManagerProps<T> {
-  // ... existing props
-  isLoading?: boolean;           // Shows loading skeleton
-  isAddingSection?: boolean;     // Shows loading on add section button
-  isAddingItem?: Record<string, boolean>; // Shows loading on specific add item buttons
+  sections: Section<T>[];                      // Array of sections to display
+  onSectionsChange: (sections: Section<T>[]) => void; // Callback when sections change
+  onAddItem: (sectionId: string) => void;      // Callback to add item to section
+  onRemoveItem: (sectionId: string, itemId: string) => void; // Callback to remove item
+  renderItem: (item: T, index: number, sectionId: string) => React.ReactNode; // Item renderer
+  itemType: 'ingredient' | 'instruction';      // Type of items being managed
+  className?: string;                          // Additional CSS classes
+  addSectionLabel?: string;                    // Custom "Add Section" button label
+  addItemLabel?: string;                       // Custom "Add Item" button label
+  isLoading?: boolean;                         // Shows loading skeleton
+  isAddingSection?: boolean;                   // Shows loading on add section button
+  isAddingItem?: Record<string, boolean>;      // Shows loading on specific add item buttons
 }
 ```
 
@@ -69,8 +94,12 @@ interface SectionManagerProps<T> {
 
 ```typescript
 interface SectionHeaderProps {
-  // ... existing props
-  isDeleting?: boolean;          // Shows loading state during deletion
+  section: Section;                            // The section to display
+  onRename: (id: string, name: string) => void; // Callback when section is renamed
+  onDelete: (id: string) => void;              // Callback when section is deleted
+  canDelete?: boolean;                         // Whether delete button is enabled
+  className?: string;                          // Additional CSS classes
+  isDeleting?: boolean;                        // Shows loading state during deletion
 }
 ```
 
@@ -78,14 +107,17 @@ interface SectionHeaderProps {
 
 ```typescript
 interface EditableTitleProps {
-  // ... existing props
-  disabled?: boolean;            // Disables editing with visual feedback
+  value: string;                               // Current title value
+  onChange: (value: string) => void;           // Callback when title changes
+  placeholder?: string;                        // Placeholder when empty
+  className?: string;                          // Additional CSS classes
+  disabled?: boolean;                          // Disables editing with visual feedback
 }
 ```
 
 ## Usage Examples
 
-### Basic Usage with Loading States
+### Basic Usage with Append-Only Behavior
 
 ```tsx
 <SectionManager
@@ -101,17 +133,50 @@ interface EditableTitleProps {
 />
 ```
 
-### Section Header with Delete Loading
+**Note**: When `handleSectionsChange` is called with a new section, it will always be appended to the end of the array.
+
+### Section Header with Simplified Controls
 
 ```tsx
 <SectionHeader
   section={section}
   onRename={handleRename}
   onDelete={handleDelete}
-  isDragging={isDragging}
+  canDelete={sections.length > 1}
   isDeleting={isDeleting}
 />
 ```
+
+**Note**: The section header only provides rename and delete controls. There is no drag handle or reordering functionality.
+
+## Section Operations
+
+### Adding a Section
+
+When you click "Add Section", the new section:
+1. Is assigned a unique ID
+2. Gets a default name of "Untitled Section"
+3. Is assigned an order value equal to the current section count
+4. Is appended to the end of the sections array
+5. Appears at the bottom of the list
+
+### Renaming a Section
+
+When you rename a section:
+1. Click the section title to enter edit mode
+2. Type the new name
+3. Press Enter or click outside to save
+4. The section's position remains unchanged
+5. Only the name property is updated
+
+### Deleting a Section
+
+When you delete a section:
+1. Click the delete button
+2. Confirm the deletion in the modal dialog
+3. The section and all its items are removed
+4. Remaining sections are reindexed (order values updated)
+5. The relative order of remaining sections is preserved
 
 ## Accessibility Features
 
@@ -120,7 +185,7 @@ interface EditableTitleProps {
 - **Tab Navigation**: Logical tab order through all interactive elements
 - **Enter/Space**: Activate buttons and start editing
 - **Escape**: Cancel editing or close modals
-- **Arrow Keys**: Navigate through sections (future enhancement)
+- **No Reordering Keys**: Arrow keys and other reordering shortcuts are not available
 
 ### Screen Reader Support
 
@@ -138,11 +203,11 @@ interface EditableTitleProps {
 
 ## Performance Considerations
 
-### Animation Performance
+### Rendering Performance
 
+- Simplified component tree without drag-and-drop wrappers
 - Uses CSS transforms and opacity for GPU acceleration
 - Avoids layout-triggering properties (width, height, top, left)
-- Debounced interactions to prevent excessive re-renders
 - Efficient event handling with proper cleanup
 
 ### Memory Management
@@ -150,12 +215,13 @@ interface EditableTitleProps {
 - No memory leaks from animation timers
 - Proper cleanup of event listeners
 - Efficient re-rendering with React.memo where appropriate
+- Reduced JavaScript bundle size (no drag-and-drop library overhead)
 
 ### Large Dataset Handling
 
 - Efficient rendering of large section lists
+- Simple array operations for section management
 - Virtual scrolling considerations for future enhancement
-- Optimized drag-and-drop for many items
 
 ## Browser Compatibility
 
@@ -166,39 +232,56 @@ interface EditableTitleProps {
 
 ## Testing
 
-The enhanced features are covered by comprehensive tests:
+The section features are covered by comprehensive tests:
 
-- **Unit Tests**: Individual component behavior
-- **Integration Tests**: Component interaction
+- **Unit Tests**: Individual component behavior (add, rename, delete)
+- **Integration Tests**: Component interaction and data flow
 - **Accessibility Tests**: ARIA compliance and keyboard navigation
-- **Performance Tests**: Animation performance and memory usage
-- **Visual Regression**: Consistent visual appearance
+- **Performance Tests**: Rendering performance and memory usage
+- **Backward Compatibility Tests**: Existing recipes load correctly
 
-## Future Enhancements
+## Backward Compatibility
 
-### Planned Features
+The simplified section system maintains full backward compatibility:
 
-- **Haptic Feedback**: Vibration on mobile devices
-- **Sound Effects**: Optional audio feedback
-- **Advanced Animations**: More sophisticated transitions
-- **Gesture Support**: Swipe gestures on mobile
+- **Existing Recipes**: All existing recipes with sections continue to work
+- **Order Preservation**: Section order from the database is maintained
+- **No Migration**: No data migration or schema changes required
+- **API Compatibility**: All existing API endpoints work unchanged
 
-### Performance Improvements
+## Design Decisions
 
-- **Virtual Scrolling**: For very large recipe lists
-- **Lazy Loading**: Load sections on demand
-- **Web Workers**: Offload heavy computations
-- **Service Workers**: Offline animation support
+### Why Append-Only?
+
+The append-only ordering model was chosen for several reasons:
+
+1. **Simplicity**: Reduces UI complexity and cognitive load
+2. **Predictability**: Users always know where new sections will appear
+3. **Accident Prevention**: Eliminates accidental reordering
+4. **Performance**: Simpler rendering without drag-and-drop overhead
+5. **Mobile-Friendly**: Better experience on touch devices
+
+### Why No Reordering?
+
+Manual reordering was removed because:
+
+1. **Low Usage**: Analytics showed minimal use of reordering
+2. **Complexity**: Drag-and-drop adds significant UI complexity
+3. **Errors**: Users occasionally reordered sections accidentally
+4. **Alternatives**: Users can delete and recreate sections if needed
 
 ## Troubleshooting
 
 ### Common Issues
 
-1. **Animations Not Working**: Check CSS import and browser support
-2. **Performance Issues**: Verify GPU acceleration is enabled
+1. **Sections Not Appearing**: Check that `onSectionsChange` is properly wired
+2. **Order Not Preserved**: Ensure sections are sorted by `order` property
 3. **Accessibility Problems**: Test with screen readers and keyboard only
 4. **Mobile Issues**: Ensure touch events are properly handled
 
-### Debug Mode
+### Debug Tips
 
-Enable debug mode by adding `data-debug="true"` to components for additional logging and visual indicators.
+- Check the `order` property on each section
+- Verify sections are sorted before rendering
+- Ensure unique IDs for all sections
+- Test with multiple sections to verify ordering

@@ -27,7 +27,6 @@ describe('SectionHeader', () => {
     );
 
     expect(screen.getByText('Test Section')).toBeInTheDocument();
-    expect(screen.getByTitle('Drag to reorder')).toBeInTheDocument();
     expect(screen.getByTitle('Delete section')).toBeInTheDocument();
   });
 
@@ -165,26 +164,11 @@ describe('SectionHeader', () => {
     );
 
     // Find the main header container by looking for the element with the flex class
-    const header = document.querySelector('.flex.items-center.gap-2');
+    const header = document.querySelector('.flex.items-center');
     expect(header).toHaveClass('custom-class');
   });
 
-  it('applies dragging styles when isDragging is true', () => {
-    render(
-      <SectionHeader
-        section={mockSection}
-        onRename={mockOnRename}
-        onDelete={mockOnDelete}
-        isDragging={true}
-      />
-    );
-
-    // Find the main header container by looking for the element with the flex class
-    const header = document.querySelector('.flex.items-center.gap-2');
-    expect(header).toHaveClass('section-drag-preview');
-  });
-
-  it('renders drag handle with proper accessibility', () => {
+  it('does not render drag handle', () => {
     render(
       <SectionHeader
         section={mockSection}
@@ -193,9 +177,13 @@ describe('SectionHeader', () => {
       />
     );
 
-    const dragHandle = screen.getByTitle('Drag to reorder');
-    expect(dragHandle).toBeInTheDocument();
-    expect(dragHandle).toHaveClass('cursor-grab');
+    // Verify drag handle is not present
+    expect(screen.queryByTitle('Drag to reorder')).not.toBeInTheDocument();
+    
+    // Verify no drag-related classes are present
+    const header = document.querySelector('.flex.items-center');
+    expect(header).not.toHaveClass('section-drag-preview');
+    expect(header).not.toHaveClass('cursor-grab');
   });
 
   it('closes modal after successful deletion', async () => {

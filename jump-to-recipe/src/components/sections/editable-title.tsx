@@ -3,14 +3,41 @@
 import { useState, useRef, useEffect, KeyboardEvent } from 'react';
 import { cn } from '@/lib/utils';
 
+/**
+ * Props for the EditableTitle component.
+ */
 interface EditableTitleProps {
+  /** Current value of the title */
   value: string;
+  /** Callback when the title is changed */
   onChange: (value: string) => void;
+  /** Placeholder text when the title is empty */
   placeholder?: string;
+  /** Additional CSS classes for the title */
   className?: string;
+  /** Whether editing is disabled */
   disabled?: boolean;
 }
 
+/**
+ * EditableTitle - An inline editable text field for section titles.
+ * 
+ * This component provides a seamless inline editing experience:
+ * - Click to edit the title
+ * - Press Enter to save changes
+ * - Press Escape to cancel editing
+ * - Click outside to save changes
+ * - Falls back to placeholder if empty
+ * 
+ * @example
+ * ```tsx
+ * <EditableTitle
+ *   value={section.name}
+ *   onChange={(newName) => handleRename(section.id, newName)}
+ *   placeholder="Untitled Section"
+ * />
+ * ```
+ */
 export function EditableTitle({
   value,
   onChange,

@@ -2,21 +2,6 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { SectionManager, Section } from '../section-manager';
 import { SectionHeader } from '../section-header';
 
-// Mock drag and drop
-jest.mock('@hello-pangea/dnd', () => ({
-  DragDropContext: ({ children }: any) => children,
-  Droppable: ({ children }: any) => children({ 
-    innerRef: jest.fn(), 
-    droppableProps: {}, 
-    placeholder: null 
-  }, { isDraggingOver: false }),
-  Draggable: ({ children }: any) => children({ 
-    innerRef: jest.fn(), 
-    draggableProps: { style: {} }, 
-    dragHandleProps: {} 
-  }, { isDragging: false }),
-}));
-
 describe('Section Animation and Feedback', () => {
   const mockSections: Section[] = [
     {
@@ -106,26 +91,28 @@ describe('Section Animation and Feedback', () => {
     });
   });
 
-  describe('Drag and Drop Feedback', () => {
-    it('should apply drop zone classes', () => {
+  describe('Section Item Entry Animations', () => {
+    it('should render sections without drag wrappers', () => {
       render(<SectionManager {...mockProps} />);
       
+      // Verify sections are rendered directly without drag-and-drop wrappers
+      const sections = screen.getAllByText(/Ingredients|Instructions/);
+      expect(sections.length).toBeGreaterThan(0);
+      
+      // Verify no drag-related classes exist
+      const dragPreview = document.querySelector('.section-drag-preview');
+      expect(dragPreview).not.toBeInTheDocument();
+      
       const dropZone = document.querySelector('.section-drop-zone');
-      expect(dropZone).toBeInTheDocument();
+      expect(dropZone).not.toBeInTheDocument();
     });
 
-    it('should apply drag preview class when dragging', () => {
-      const headerProps = {
-        section: mockSections[0],
-        onRename: jest.fn(),
-        onDelete: jest.fn(),
-        isDragging: true
-      };
+    it('should apply entry animation classes to section items', () => {
+      render(<SectionManager {...mockProps} />);
       
-      render(<SectionHeader {...headerProps} />);
-      
-      const header = document.querySelector('.section-drag-preview');
-      expect(header).toBeInTheDocument();
+      // Check that items have animation classes
+      const items = document.querySelectorAll('.section-item-enter');
+      expect(items.length).toBeGreaterThan(0);
     });
   });
 
@@ -166,15 +153,12 @@ describe('Section Animation and Feedback', () => {
       expect(screen.getAllByRole('button', { name: /Add Ingredient/ }).length).toBeGreaterThan(0);
     });
 
-    it('should provide drag handle accessibility', () => {
+    it('should not render drag handles', () => {
       render(<SectionManager {...mockProps} />);
       
-      const dragHandles = screen.getAllByTitle('Drag to reorder');
-      expect(dragHandles.length).toBe(2);
-      
-      dragHandles.forEach(handle => {
-        expect(handle).toBeInTheDocument();
-      });
+      // Verify drag handles are not present
+      const dragHandles = screen.queryAllByTitle('Drag to reorder');
+      expect(dragHandles.length).toBe(0);
     });
 
     it('should disable buttons during loading states', () => {
@@ -216,7 +200,7 @@ describe('Section Animation and Feedback', () => {
   });
 
   describe('Performance Considerations', () => {
-    it('should handle large numbers of sections efficiently', () => {
+    it('should handle large numbers of sections efficiently with simplified rendering', () => {
       const largeSections = Array.from({ length: 20 }, (_, i) => ({
         id: `section-${i}`,
         name: `Section ${i + 1}`,
@@ -228,11 +212,12 @@ describe('Section Animation and Feedback', () => {
       render(<SectionManager {...mockProps} sections={largeSections} />);
       const endTime = performance.now();
       
-      // Should render within reasonable time
+      // Should render within reasonable time (faster without drag-and-drop)
       expect(endTime - startTime).toBeLessThan(1000);
       
       // Should render all sections
-      expect(screen.getAllByTitle('Drag to reorder')).toHaveLength(20);
+      const sectionElements = screen.getAllByText(/Section \d+/);
+      expect(sectionElements.length).toBe(20);
     });
 
     it('should use GPU-accelerated animation classes', () => {

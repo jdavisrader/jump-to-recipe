@@ -1,33 +1,59 @@
 'use client';
 
 import { useState } from 'react';
-import { GripVertical, Trash2, Loader2 } from 'lucide-react';
+import { Trash2, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { EditableTitle } from './editable-title';
 import { cn } from '@/lib/utils';
 
+/**
+ * Section data structure (minimal interface for header display).
+ */
 interface Section {
+  /** Unique identifier for the section */
   id: string;
+  /** Display name of the section */
   name: string;
+  /** Order index of the section (for reference only, not used for reordering) */
   order: number;
 }
 
+/**
+ * Props for the SectionHeader component.
+ */
 interface SectionHeaderProps {
+  /** The section to display */
   section: Section;
+  /** Callback when the section is renamed */
   onRename: (id: string, name: string) => void;
+  /** Callback when the section is deleted */
   onDelete: (id: string) => void;
+  /** Whether the delete button should be enabled */
   canDelete?: boolean;
+  /** Additional CSS classes for the container */
   className?: string;
-  isDragging?: boolean;
+  /** Whether the section is currently being deleted */
   isDeleting?: boolean;
 }
 
+/**
+ * Props for the delete confirmation modal.
+ */
 interface DeleteConfirmationModalProps {
+  /** Whether the modal is visible */
   isOpen: boolean;
+  /** Callback when deletion is confirmed */
   onConfirm: () => void;
+  /** Callback when deletion is cancelled */
   onCancel: () => void;
 }
 
+/**
+ * DeleteConfirmationModal - Modal dialog for confirming section deletion.
+ * 
+ * Displays a confirmation dialog to prevent accidental deletion of sections
+ * and their contents.
+ */
 function DeleteConfirmationModal({ isOpen, onConfirm, onCancel }: DeleteConfirmationModalProps) {
   if (!isOpen) return null;
 
@@ -67,13 +93,33 @@ function DeleteConfirmationModal({ isOpen, onConfirm, onCancel }: DeleteConfirma
   );
 }
 
+/**
+ * SectionHeader - Header component for a recipe section with rename and delete controls.
+ * 
+ * This component provides a simplified header interface with:
+ * - **Inline Editing**: Click the title to rename the section
+ * - **Delete Control**: Button to delete the section with confirmation
+ * - **No Reordering**: No drag handle or reordering controls
+ * 
+ * The section's position in the list cannot be changed through this component.
+ * Sections maintain their creation order and can only be renamed or deleted.
+ * 
+ * @example
+ * ```tsx
+ * <SectionHeader
+ *   section={section}
+ *   onRename={handleRename}
+ *   onDelete={handleDelete}
+ *   canDelete={sections.length > 1}
+ * />
+ * ```
+ */
 export function SectionHeader({
   section,
   onRename,
   onDelete,
   canDelete = true,
   className,
-  isDragging = false,
   isDeleting = false
 }: SectionHeaderProps) {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -100,27 +146,11 @@ export function SectionHeader({
       <div
         className={cn(
           'flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-600',
-          isDragging && 'bg-blue-50 dark:bg-blue-900/30 border-blue-200 dark:border-blue-700',
           isDeleting && 'animate-pulse opacity-50',
-          'hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200',
+          'hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200',
           className
         )}
       >
-        {/* Drag Handle */}
-        <div
-          className={cn(
-            "flex items-center justify-center w-8 h-8 rounded-md",
-            "cursor-grab active:cursor-grabbing",
-            "text-gray-400 hover:text-gray-600 dark:hover:text-gray-300",
-            "hover:bg-gray-200 dark:hover:bg-gray-600",
-            "transition-all duration-200",
-            isDragging && "text-blue-500 dark:text-blue-400 bg-blue-100 dark:bg-blue-800"
-          )}
-          title="Drag to reorder"
-        >
-          <GripVertical className="h-5 w-5" />
-        </div>
-
         {/* Editable Title */}
         <div className="flex-1">
           <EditableTitle

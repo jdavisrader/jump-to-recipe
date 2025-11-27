@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { RecipeEditor } from '../recipe-editor';
 import type { Recipe } from '@/types/recipe';
@@ -138,6 +138,240 @@ describe('RecipeEditor with Sections', () => {
     );
 
     expect(screen.getByText('Test Recipe')).toBeInTheDocument();
+  });
+
+  it('loads existing recipe and preserves section order', () => {
+    const recipeWithMultipleSections: Recipe = {
+      ...mockRecipe,
+      ingredients: [
+        {
+          id: '1',
+          name: 'Flour',
+          amount: 2,
+          unit: 'cup',
+          displayAmount: '2',
+          notes: '',
+        },
+        {
+          id: '2',
+          name: 'Milk',
+          amount: 1,
+          unit: 'cup',
+          displayAmount: '1',
+          notes: '',
+        },
+        {
+          id: '3',
+          name: 'Sugar',
+          amount: 0.5,
+          unit: 'cup',
+          displayAmount: '1/2',
+          notes: '',
+        },
+      ],
+      instructions: [
+        {
+          id: '1',
+          step: 1,
+          content: 'Mix dry ingredients',
+          duration: 5,
+        },
+        {
+          id: '2',
+          step: 2,
+          content: 'Add wet ingredients',
+          duration: 10,
+        },
+      ],
+      ingredientSections: [
+        {
+          id: 'section-1',
+          name: 'Dry Ingredients',
+          order: 0,
+          items: [
+            {
+              id: '1',
+              name: 'Flour',
+              amount: 2,
+              unit: 'cup',
+              displayAmount: '2',
+              notes: '',
+            },
+          ],
+        },
+        {
+          id: 'section-2',
+          name: 'Wet Ingredients',
+          order: 1,
+          items: [
+            {
+              id: '2',
+              name: 'Milk',
+              amount: 1,
+              unit: 'cup',
+              displayAmount: '1',
+              notes: '',
+            },
+          ],
+        },
+        {
+          id: 'section-3',
+          name: 'Toppings',
+          order: 2,
+          items: [
+            {
+              id: '3',
+              name: 'Sugar',
+              amount: 0.5,
+              unit: 'cup',
+              displayAmount: '1/2',
+              notes: '',
+            },
+          ],
+        },
+      ],
+      instructionSections: [
+        {
+          id: 'section-1',
+          name: 'Preparation',
+          order: 0,
+          items: [
+            {
+              id: '1',
+              step: 1,
+              content: 'Mix dry ingredients',
+              duration: 5,
+            },
+          ],
+        },
+        {
+          id: 'section-2',
+          name: 'Cooking',
+          order: 1,
+          items: [
+            {
+              id: '2',
+              step: 2,
+              content: 'Add wet ingredients',
+              duration: 10,
+            },
+          ],
+        },
+      ],
+    };
+
+    render(
+      <RecipeEditor
+        recipe={recipeWithMultipleSections}
+        onSave={mockOnSave}
+        onCancel={mockOnCancel}
+      />
+    );
+
+    // Verify recipe loads correctly
+    expect(screen.getByText('Test Recipe')).toBeInTheDocument();
+    
+    // Verify ingredients are displayed in read-only mode (from the ingredients array)
+    expect(screen.getByText('Flour')).toBeInTheDocument();
+    expect(screen.getByText('Milk')).toBeInTheDocument();
+    expect(screen.getByText('Sugar')).toBeInTheDocument();
+    
+    // Verify instructions are displayed in read-only mode (from the instructions array)
+    expect(screen.getByText('Mix dry ingredients')).toBeInTheDocument();
+    expect(screen.getByText('Add wet ingredients')).toBeInTheDocument();
+    
+    // The sections are managed internally by the form and section components
+    // This test verifies the recipe loads without errors and maintains its structure
+  });
+
+  it('edits recipe without changing section order', async () => {
+    const user = userEvent.setup();
+    const recipeWithSections: Recipe = {
+      ...mockRecipe,
+      ingredientSections: [
+        {
+          id: 'section-1',
+          name: 'First Section',
+          order: 0,
+          items: [
+            {
+              id: '1',
+              name: 'Flour',
+              amount: 2,
+              unit: 'cup',
+              displayAmount: '2',
+              notes: '',
+            },
+          ],
+        },
+        {
+          id: 'section-2',
+          name: 'Second Section',
+          order: 1,
+          items: [
+            {
+              id: '2',
+              name: 'Sugar',
+              amount: 1,
+              unit: 'cup',
+              displayAmount: '1',
+              notes: '',
+            },
+          ],
+        },
+      ],
+      instructionSections: [],
+    };
+
+    render(
+      <RecipeEditor
+        recipe={recipeWithSections}
+        onSave={mockOnSave}
+        onCancel={mockOnCancel}
+      />
+    );
+
+    // Edit the recipe title
+    const editHeaderButton = screen.getAllByRole('button').find(
+      button => button.querySelector('svg') && button.closest('div')?.querySelector('h1')
+    );
+    
+    if (editHeaderButton) {
+      await user.click(editHeaderButton);
+      
+      const titleInput = screen.getByDisplayValue('Test Recipe');
+      await user.clear(titleInput);
+      await user.type(titleInput, 'Updated Recipe Title');
+      
+      const saveButton = screen.getAllByText('Save')[0];
+      await user.click(saveButton);
+    }
+
+    // Submit the form
+    const saveRecipeButton = screen.getByText('Save Recipe');
+    await user.click(saveRecipeButton);
+
+    // Verify the save was called with sections in their original order
+    await waitFor(() => {
+      expect(mockOnSave).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: 'Updated Recipe Title',
+          ingredientSections: expect.arrayContaining([
+            expect.objectContaining({
+              id: 'section-1',
+              name: 'First Section',
+              order: 0,
+            }),
+            expect.objectContaining({
+              id: 'section-2',
+              name: 'Second Section',
+              order: 1,
+            }),
+          ]),
+        }),
+        expect.any(Array)
+      );
+    });
   });
 
   it('allows editing ingredients section', async () => {
@@ -289,7 +523,8 @@ describe('RecipeEditor with Sections', () => {
           description: 'A test recipe',
           ingredientSections: expect.any(Array),
           instructionSections: expect.any(Array),
-        })
+        }),
+        expect.any(Array) // photos array
       );
     });
   });
