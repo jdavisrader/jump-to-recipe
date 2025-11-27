@@ -37,7 +37,7 @@ export function ConfirmationModal({
     if (isOpen) {
       // Store the previously focused element
       previousActiveElementRef.current = document.activeElement as HTMLElement;
-      
+
       // Focus the confirm button when modal opens
       const timer = setTimeout(() => {
         if (confirmButtonRef.current) {
@@ -82,7 +82,7 @@ export function ConfirmationModal({
       };
 
       document.addEventListener('keydown', handleKeyDown);
-      
+
       return () => {
         clearTimeout(timer);
         document.removeEventListener('keydown', handleKeyDown);
@@ -111,7 +111,7 @@ export function ConfirmationModal({
   };
 
   return (
-    <div 
+    <div
       className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
       role="dialog"
       aria-modal="true"
@@ -124,7 +124,7 @@ export function ConfirmationModal({
         }
       }}
     >
-      <div 
+      <div
         ref={modalRef}
         className="bg-background rounded-lg shadow-lg w-full max-w-md"
         onClick={(e) => e.stopPropagation()}
