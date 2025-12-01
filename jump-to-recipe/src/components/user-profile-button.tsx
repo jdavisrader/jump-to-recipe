@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import { signOut, useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { LogOut, User, Settings, ChefHat } from 'lucide-react';
+import { LogOut, User, Settings, ChefHat, Shield } from 'lucide-react';
 import Image from 'next/image';
 
 export function UserProfileButton() {
@@ -110,6 +110,18 @@ export function UserProfileButton() {
               <ChefHat className="mr-2 h-4 w-4" />
               My Recipes
             </Link>
+            
+            {session?.user?.role === 'admin' && (
+              <Link
+                href="/admin"
+                className="flex items-center px-4 py-2 text-sm hover:bg-muted focus:bg-muted focus:outline-none"
+                onClick={() => setIsMenuOpen(false)}
+                role="menuitem"
+              >
+                <Shield className="mr-2 h-4 w-4" />
+                Admin
+              </Link>
+            )}
             
             <Link
               href="/settings"

@@ -126,3 +126,31 @@ export const hasRole = (userRole: string | undefined, requiredRole: 'admin' | 'e
 
   return false;
 };
+
+/**
+ * Check if user has admin role
+ * @param userRole - User's role from session
+ * @returns Boolean indicating if user is an admin
+ */
+export const isAdmin = (userRole: string | undefined): boolean => {
+  return userRole === 'admin';
+};
+
+/**
+ * Server-side helper to require admin role for page access
+ * Throws error if user is not authenticated or not an admin
+ * @param session - NextAuth session object
+ * @returns Session if user is admin
+ * @throws Error if user is not authenticated or not admin
+ */
+export const requireAdmin = async (session: { user?: { role?: string } } | null) => {
+  if (!session?.user) {
+    throw new Error('Unauthorized: No session');
+  }
+  
+  if (!isAdmin(session.user.role)) {
+    throw new Error('Unauthorized: Admin role required');
+  }
+  
+  return session;
+};
