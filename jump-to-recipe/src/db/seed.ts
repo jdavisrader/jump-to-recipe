@@ -2,23 +2,101 @@ import { db } from './index';
 import { users, recipes } from './schema';
 import { v4 as uuidv4 } from 'uuid';
 import bcrypt from 'bcrypt';
+import { sql } from 'drizzle-orm';
+
+// Helper function to generate recipe objects for a user
+function generateUserRecipes(authorId: string, recipeData: Array<{
+  title: string;
+  description: string;
+  tags: string[];
+  difficulty: 'easy' | 'medium' | 'hard';
+  prepTime: number;
+  cookTime: number;
+  servings: number;
+  imageUrl: string;
+}>) {
+  return recipeData.map(data => ({
+    id: uuidv4(),
+    title: data.title,
+    description: data.description,
+    ingredients: [
+      { id: uuidv4(), name: 'Ingredient 1', amount: 1, unit: 'cup', notes: '' },
+      { id: uuidv4(), name: 'Ingredient 2', amount: 2, unit: 'tbsp', notes: '' },
+      { id: uuidv4(), name: 'Ingredient 3', amount: 1, unit: 'tsp', notes: '' },
+    ],
+    instructions: [
+      { id: uuidv4(), step: 1, content: 'Prepare all ingredients.', duration: 5 },
+      { id: uuidv4(), step: 2, content: 'Follow the cooking process.', duration: data.cookTime - 5 },
+      { id: uuidv4(), step: 3, content: 'Serve and enjoy!', duration: 2 },
+    ],
+    prepTime: data.prepTime,
+    cookTime: data.cookTime,
+    servings: data.servings,
+    difficulty: data.difficulty,
+    tags: data.tags,
+    notes: 'This is a delicious recipe. Adjust seasoning to taste.',
+    imageUrl: data.imageUrl,
+    sourceUrl: '',
+    authorId,
+    visibility: 'public' as const,
+  }));
+}
 
 async function seed() {
   console.log('🌱 Starting database seeding...');
 
   try {
-    // Create a demo user first
+    // Create demo users
     const hashedPassword = await bcrypt.hash('demo123', 10);
 
-    const [demoUser] = await db.insert(users).values({
-      id: uuidv4(),
-      name: 'Demo User',
-      email: 'demo@jumptorecipe.com',
-      password: hashedPassword,
-      role: 'user',
-    }).returning();
+    // Check if demo user exists
+    const existingDemoUser = await db.select().from(users).where(sql`email = 'demo@jumptorecipe.com'`).limit(1);
+    let demoUser;
 
-    console.log('✅ Created demo user:', demoUser.email);
+    if (existingDemoUser.length > 0) {
+      demoUser = existingDemoUser[0];
+      console.log('ℹ️  Demo user already exists:', demoUser.email);
+    } else {
+      [demoUser] = await db.insert(users).values({
+        id: uuidv4(),
+        name: 'Demo User',
+        email: 'demo@jumptorecipe.com',
+        password: hashedPassword,
+        role: 'user',
+      }).returning();
+      console.log('✅ Created demo user:', demoUser.email);
+    }
+
+    // Create 5 additional users (check if they exist first)
+    const newUserData = [
+      { name: 'Sarah Chen', email: 'sarah.chen@example.com' },
+      { name: 'Marcus Johnson', email: 'marcus.j@example.com' },
+      { name: 'Elena Rodriguez', email: 'elena.r@example.com' },
+      { name: 'Raj Patel', email: 'raj.patel@example.com' },
+      { name: 'Olivia Thompson', email: 'olivia.t@example.com' },
+    ];
+
+    const additionalUsers = [];
+    for (const userData of newUserData) {
+      const existing = await db.select().from(users).where(sql`email = ${userData.email}`).limit(1);
+
+      if (existing.length > 0) {
+        additionalUsers.push(existing[0]);
+        console.log(`ℹ️  User already exists: ${userData.email}`);
+      } else {
+        const [newUser] = await db.insert(users).values({
+          id: uuidv4(),
+          name: userData.name,
+          email: userData.email,
+          password: hashedPassword,
+          role: 'user',
+        }).returning();
+        additionalUsers.push(newUser);
+        console.log(`✅ Created user: ${userData.email}`);
+      }
+    }
+
+    console.log(`📊 Total users ready: ${additionalUsers.length + 1}`);
 
     // Sample recipes data
     const sampleRecipes = [
@@ -246,14 +324,290 @@ async function seed() {
       },
     ];
 
-    // Insert recipes
+    // Insert recipes for demo user
     for (const recipe of sampleRecipes) {
       await db.insert(recipes).values(recipe);
       console.log(`✅ Created recipe: ${recipe.title}`);
     }
 
+    // Create recipes for additional users
+    const userRecipes = [
+      // Sarah Chen's recipes (Asian cuisine focus)
+      ...generateUserRecipes(additionalUsers[0].id, [
+        {
+          title: 'Homemade Ramen Bowl',
+          description: 'Rich and flavorful ramen with tender pork belly, soft-boiled eggs, and fresh toppings.',
+          tags: ['japanese', 'ramen', 'noodles', 'soup', 'comfort food'],
+          difficulty: 'hard',
+          prepTime: 30,
+          cookTime: 180,
+          servings: 4,
+          imageUrl: 'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?q=80&w=500&auto=format&fit=crop',
+        },
+        {
+          title: 'Korean Bibimbap',
+          description: 'Colorful rice bowl with seasoned vegetables, beef, and a fried egg topped with gochujang.',
+          tags: ['korean', 'rice', 'bowl', 'vegetables', 'healthy'],
+          difficulty: 'medium',
+          prepTime: 40,
+          cookTime: 20,
+          servings: 4,
+          imageUrl: 'https://images.unsplash.com/photo-1553163147-622ab57be1c7?q=80&w=500&auto=format&fit=crop',
+        },
+        {
+          title: 'Vietnamese Pho',
+          description: 'Aromatic beef noodle soup with fresh herbs and rice noodles in a fragrant broth.',
+          tags: ['vietnamese', 'soup', 'noodles', 'beef', 'herbs'],
+          difficulty: 'hard',
+          prepTime: 20,
+          cookTime: 240,
+          servings: 6,
+          imageUrl: 'https://images.unsplash.com/photo-1591814468924-caf88d1232e1?q=80&w=500&auto=format&fit=crop',
+        },
+        {
+          title: 'Pad Thai',
+          description: 'Classic Thai stir-fried noodles with shrimp, tofu, peanuts, and tamarind sauce.',
+          tags: ['thai', 'noodles', 'stir-fry', 'shrimp', 'street food'],
+          difficulty: 'medium',
+          prepTime: 25,
+          cookTime: 15,
+          servings: 4,
+          imageUrl: 'https://images.unsplash.com/photo-1559314809-0d155014e29e?q=80&w=500&auto=format&fit=crop',
+        },
+        {
+          title: 'Sushi Rolls',
+          description: 'Fresh homemade sushi rolls with salmon, avocado, and cucumber.',
+          tags: ['japanese', 'sushi', 'seafood', 'rice', 'healthy'],
+          difficulty: 'medium',
+          prepTime: 45,
+          cookTime: 20,
+          servings: 4,
+          imageUrl: 'https://images.unsplash.com/photo-1579584425555-c3ce17fd4351?q=80&w=500&auto=format&fit=crop',
+        },
+      ]),
+      // Marcus Johnson's recipes (BBQ and American classics)
+      ...generateUserRecipes(additionalUsers[1].id, [
+        {
+          title: 'Slow-Smoked Brisket',
+          description: 'Texas-style smoked brisket with a perfect bark and tender, juicy meat.',
+          tags: ['bbq', 'beef', 'smoked', 'texas', 'dinner'],
+          difficulty: 'hard',
+          prepTime: 30,
+          cookTime: 720,
+          servings: 12,
+          imageUrl: 'https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=500&auto=format&fit=crop',
+        },
+        {
+          title: 'Classic Cheeseburger',
+          description: 'Juicy beef patty with melted cheese, crispy lettuce, and special sauce on a toasted bun.',
+          tags: ['burger', 'beef', 'american', 'grill', 'casual'],
+          difficulty: 'easy',
+          prepTime: 15,
+          cookTime: 10,
+          servings: 4,
+          imageUrl: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?q=80&w=500&auto=format&fit=crop',
+        },
+        {
+          title: 'BBQ Pulled Pork',
+          description: 'Tender slow-cooked pork shoulder with tangy BBQ sauce, perfect for sandwiches.',
+          tags: ['bbq', 'pork', 'slow-cooked', 'sandwich', 'comfort food'],
+          difficulty: 'medium',
+          prepTime: 20,
+          cookTime: 480,
+          servings: 10,
+          imageUrl: 'https://images.unsplash.com/photo-1529193591184-b1d58069ecdd?q=80&w=500&auto=format&fit=crop',
+        },
+        {
+          title: 'Buffalo Wings',
+          description: 'Crispy chicken wings tossed in spicy buffalo sauce with blue cheese dip.',
+          tags: ['chicken', 'wings', 'spicy', 'appetizer', 'game day'],
+          difficulty: 'easy',
+          prepTime: 15,
+          cookTime: 45,
+          servings: 6,
+          imageUrl: 'https://images.unsplash.com/photo-1608039829572-78524f79c4c7?q=80&w=500&auto=format&fit=crop',
+        },
+        {
+          title: 'Mac and Cheese',
+          description: 'Creamy, cheesy macaroni with a crispy breadcrumb topping.',
+          tags: ['pasta', 'cheese', 'comfort food', 'side dish', 'baked'],
+          difficulty: 'easy',
+          prepTime: 15,
+          cookTime: 30,
+          servings: 8,
+          imageUrl: 'https://images.unsplash.com/photo-1543339494-b4cd4f7ba686?q=80&w=500&auto=format&fit=crop',
+        },
+      ]),
+      // Elena Rodriguez's recipes (Latin American cuisine)
+      ...generateUserRecipes(additionalUsers[2].id, [
+        {
+          title: 'Authentic Tacos al Pastor',
+          description: 'Marinated pork tacos with pineapple, cilantro, and onions on corn tortillas.',
+          tags: ['mexican', 'tacos', 'pork', 'street food', 'spicy'],
+          difficulty: 'medium',
+          prepTime: 240,
+          cookTime: 20,
+          servings: 6,
+          imageUrl: 'https://images.unsplash.com/photo-1565299585323-38d6b0865b47?q=80&w=500&auto=format&fit=crop',
+        },
+        {
+          title: 'Empanadas',
+          description: 'Flaky pastry pockets filled with seasoned beef, olives, and hard-boiled eggs.',
+          tags: ['argentinian', 'pastry', 'beef', 'appetizer', 'baked'],
+          difficulty: 'medium',
+          prepTime: 60,
+          cookTime: 25,
+          servings: 12,
+          imageUrl: 'https://images.unsplash.com/photo-1601050690597-df0568f70950?q=80&w=500&auto=format&fit=crop',
+        },
+        {
+          title: 'Ceviche',
+          description: 'Fresh fish marinated in citrus juice with onions, cilantro, and chili peppers.',
+          tags: ['peruvian', 'seafood', 'fresh', 'appetizer', 'healthy'],
+          difficulty: 'easy',
+          prepTime: 30,
+          cookTime: 0,
+          servings: 4,
+          imageUrl: 'https://images.unsplash.com/photo-1617093727343-374698b1b08d?q=80&w=500&auto=format&fit=crop',
+        },
+        {
+          title: 'Arroz con Pollo',
+          description: 'One-pot chicken and rice with saffron, vegetables, and Latin spices.',
+          tags: ['spanish', 'chicken', 'rice', 'one-pot', 'dinner'],
+          difficulty: 'medium',
+          prepTime: 20,
+          cookTime: 45,
+          servings: 6,
+          imageUrl: 'https://images.unsplash.com/photo-1633504581786-316c8002b1b9?q=80&w=500&auto=format&fit=crop',
+        },
+        {
+          title: 'Churros with Chocolate',
+          description: 'Crispy fried dough pastries dusted with cinnamon sugar, served with thick hot chocolate.',
+          tags: ['spanish', 'dessert', 'fried', 'chocolate', 'sweet'],
+          difficulty: 'medium',
+          prepTime: 20,
+          cookTime: 15,
+          servings: 6,
+          imageUrl: 'https://images.unsplash.com/photo-1543257580-7269da773bf5?q=80&w=500&auto=format&fit=crop',
+        },
+      ]),
+      // Raj Patel's recipes (Indian cuisine)
+      ...generateUserRecipes(additionalUsers[3].id, [
+        {
+          title: 'Butter Chicken',
+          description: 'Creamy tomato-based curry with tender chicken in a rich, aromatic sauce.',
+          tags: ['indian', 'curry', 'chicken', 'creamy', 'dinner'],
+          difficulty: 'medium',
+          prepTime: 30,
+          cookTime: 40,
+          servings: 6,
+          imageUrl: 'https://images.unsplash.com/photo-1603894584373-5ac82b2ae398?q=80&w=500&auto=format&fit=crop',
+        },
+        {
+          title: 'Vegetable Biryani',
+          description: 'Fragrant basmati rice layered with spiced vegetables and aromatic herbs.',
+          tags: ['indian', 'rice', 'vegetarian', 'spiced', 'one-pot'],
+          difficulty: 'hard',
+          prepTime: 40,
+          cookTime: 50,
+          servings: 8,
+          imageUrl: 'https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?q=80&w=500&auto=format&fit=crop',
+        },
+        {
+          title: 'Samosas',
+          description: 'Crispy fried pastries filled with spiced potatoes and peas.',
+          tags: ['indian', 'appetizer', 'fried', 'vegetarian', 'snack'],
+          difficulty: 'medium',
+          prepTime: 45,
+          cookTime: 20,
+          servings: 12,
+          imageUrl: 'https://images.unsplash.com/photo-1601050690597-df0568f70950?q=80&w=500&auto=format&fit=crop',
+        },
+        {
+          title: 'Palak Paneer',
+          description: 'Soft cheese cubes in a creamy spinach sauce with aromatic spices.',
+          tags: ['indian', 'vegetarian', 'curry', 'spinach', 'cheese'],
+          difficulty: 'medium',
+          prepTime: 20,
+          cookTime: 30,
+          servings: 4,
+          imageUrl: 'https://images.unsplash.com/photo-1601050690597-df0568f70950?q=80&w=500&auto=format&fit=crop',
+        },
+        {
+          title: 'Masala Dosa',
+          description: 'Crispy rice and lentil crepe filled with spiced potato filling.',
+          tags: ['indian', 'breakfast', 'vegetarian', 'crepe', 'south indian'],
+          difficulty: 'hard',
+          prepTime: 480,
+          cookTime: 30,
+          servings: 6,
+          imageUrl: 'https://images.unsplash.com/photo-1630383249896-424e482df921?q=80&w=500&auto=format&fit=crop',
+        },
+      ]),
+      // Olivia Thompson's recipes (Baking and desserts)
+      ...generateUserRecipes(additionalUsers[4].id, [
+        {
+          title: 'Sourdough Bread',
+          description: 'Artisan sourdough with a crispy crust and tangy, chewy interior.',
+          tags: ['bread', 'sourdough', 'baking', 'artisan', 'fermented'],
+          difficulty: 'hard',
+          prepTime: 1440,
+          cookTime: 45,
+          servings: 1,
+          imageUrl: 'https://images.unsplash.com/photo-1549931319-a545dcf3bc73?q=80&w=500&auto=format&fit=crop',
+        },
+        {
+          title: 'Lemon Meringue Pie',
+          description: 'Tangy lemon custard topped with fluffy meringue in a buttery crust.',
+          tags: ['dessert', 'pie', 'lemon', 'meringue', 'baking'],
+          difficulty: 'hard',
+          prepTime: 45,
+          cookTime: 35,
+          servings: 8,
+          imageUrl: 'https://images.unsplash.com/photo-1519915028121-7d3463d20b13?q=80&w=500&auto=format&fit=crop',
+        },
+        {
+          title: 'Red Velvet Cupcakes',
+          description: 'Moist red velvet cupcakes with cream cheese frosting.',
+          tags: ['dessert', 'cupcakes', 'baking', 'red velvet', 'frosting'],
+          difficulty: 'medium',
+          prepTime: 20,
+          cookTime: 20,
+          servings: 24,
+          imageUrl: 'https://images.unsplash.com/photo-1614707267537-b85aaf00c4b7?q=80&w=500&auto=format&fit=crop',
+        },
+        {
+          title: 'Cinnamon Rolls',
+          description: 'Soft, fluffy rolls with cinnamon sugar filling and cream cheese glaze.',
+          tags: ['breakfast', 'baking', 'cinnamon', 'sweet', 'rolls'],
+          difficulty: 'medium',
+          prepTime: 150,
+          cookTime: 25,
+          servings: 12,
+          imageUrl: 'https://images.unsplash.com/photo-1626094309830-abbb0c99da4a?q=80&w=500&auto=format&fit=crop',
+        },
+        {
+          title: 'Tiramisu',
+          description: 'Classic Italian dessert with coffee-soaked ladyfingers and mascarpone cream.',
+          tags: ['dessert', 'italian', 'coffee', 'no-bake', 'elegant'],
+          difficulty: 'medium',
+          prepTime: 30,
+          cookTime: 0,
+          servings: 12,
+          imageUrl: 'https://images.unsplash.com/photo-1571877227200-a0d98ea607e9?q=80&w=500&auto=format&fit=crop',
+        },
+      ]),
+    ];
+
+    // Insert all user recipes
+    for (const recipe of userRecipes) {
+      await db.insert(recipes).values(recipe);
+      console.log(`✅ Created recipe: ${recipe.title}`);
+    }
+
+    const totalRecipes = sampleRecipes.length + userRecipes.length;
     console.log('🎉 Database seeding completed successfully!');
-    console.log(`📊 Created ${sampleRecipes.length} recipes`);
+    console.log(`📊 Created ${totalRecipes} recipes across ${additionalUsers.length + 1} users`);
     console.log('👤 Demo user credentials:');
     console.log('   Email: demo@jumptorecipe.com');
     console.log('   Password: demo123');
