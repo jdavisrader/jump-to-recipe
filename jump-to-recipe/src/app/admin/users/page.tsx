@@ -1,25 +1,58 @@
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { redirect } from 'next/navigation';
+import { db } from '@/db';
+import { users } from '@/db/schema/users';
+import { recipes } from '@/db/schema/recipes';
+import { cookbooks } from '@/db/schema/cookbooks';
+import { eq, sql } from 'drizzle-orm';
+import { UserListClient } from './user-list-client';
+import type { UserWithCounts } from '@/types/admin';
 
-export default async function UserManagement() {
+export default async function UsersPage() {
   const session = await getServerSession(authOptions);
   
-  // Double-check authorization (defense in depth)
+  // Authorization check (defense in depth)
   if (!session?.user || session.user.role !== 'admin') {
     redirect('/?unauthorized=1');
   }
-  
-  return (
-    <div className="container mx-auto py-8">
-      <div className="flex flex-col items-center space-y-6">
-        <div className="text-center space-y-4">
-          <h1 className="text-3xl font-bold">User Management</h1>
-          <p className="text-muted-foreground">
-            User Management Coming Soon
-          </p>
+
+  try {
+    // Fetch users with counts using left joins and aggregations
+    const usersWithCounts = await db
+      .select({
+        id: users.id,
+        name: users.name,
+        email: users.email,
+        emailVerified: users.emailVerified,
+        password: users.password,
+        image: users.image,
+        role: users.role,
+        createdAt: users.createdAt,
+        updatedAt: users.updatedAt,
+        recipeCount: sql<number>`cast(count(distinct ${recipes.id}) as integer)`,
+        cookbookCount: sql<number>`cast(count(distinct ${cookbooks.id}) as integer)`,
+      })
+      .from(users)
+      .leftJoin(recipes, eq(recipes.authorId, users.id))
+      .leftJoin(cookbooks, eq(cookbooks.ownerId, users.id))
+      .groupBy(users.id);
+
+    return (
+      <div className="container mx-auto py-8">
+        <div className="space-y-6">
+          <div>
+            <h1 className="text-3xl font-bold">User Management</h1>
+            <p className="text-muted-foreground mt-2">
+              Manage user accounts, roles, and permissions
+            </p>
+          </div>
+          <UserListClient users={usersWithCounts as UserWithCounts[]} />
         </div>
       </div>
-    </div>
-  );
+    );
+  } catch (error) {
+    console.error('Error fetching users:', error);
+    throw new Error('Failed to fetch users. Please try again later.');
+  }
 }
