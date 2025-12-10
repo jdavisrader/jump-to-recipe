@@ -23,3 +23,4 @@ export { RecipePhotosManager } from './recipe-photos-manager';
 export { PhotoLightbox } from './photo-lightbox';
 export { RecipePhotosViewer } from './recipe-photos-viewer';
 export { DeleteRecipeSection } from './delete-recipe-section';
+export { AssignOwnerSection } from './assign-owner-section';

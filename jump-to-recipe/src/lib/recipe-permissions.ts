@@ -257,3 +257,67 @@ export async function canEditRecipe(
   const permission = await getRecipePermission(recipeId, userId);
   return hasMinimumRecipePermission(permission, 'edit');
 }
+
+/**
+ * Check if user can perform admin actions on recipes
+ * Admin actions include: ownership transfer, force delete, viewing all recipes
+ */
+export async function canPerformAdminAction(
+  userId: string,
+  userRole: string
+): Promise<boolean> {
+  return userRole === 'admin';
+}
+
+/**
+ * Update recipe with admin privileges
+ * Allows ownership transfer and other admin-only modifications
+ */
+export async function updateRecipeAsAdmin(
+  recipeId: string,
+  updates: Partial<typeof recipes.$inferInsert>,
+  adminUserId: string,
+  adminRole: string
+): Promise<typeof recipes.$inferSelect> {
+  // Verify admin status
+  if (adminRole !== 'admin') {
+    throw new Error('Unauthorized: Admin privileges required');
+  }
+
+  // Validate recipe exists
+  const existingRecipe = await db.query.recipes.findFirst({
+    where: eq(recipes.id, recipeId),
+  });
+
+  if (!existingRecipe) {
+    throw new Error('Recipe not found');
+  }
+
+  // If ownership is being changed, validate new owner exists
+  if (updates.authorId && updates.authorId !== existingRecipe.authorId) {
+    const { users } = await import('@/db/schema/users');
+    const newOwner = await db.query.users.findFirst({
+      where: eq(users.id, updates.authorId),
+    });
+
+    if (!newOwner) {
+      throw new Error('Invalid owner ID: User does not exist');
+    }
+  }
+
+  // Perform the update
+  const updatedRecipes = await db
+    .update(recipes)
+    .set({
+      ...updates,
+      updatedAt: new Date(),
+    })
+    .where(eq(recipes.id, recipeId))
+    .returning();
+
+  if (!updatedRecipes || updatedRecipes.length === 0) {
+    throw new Error('Failed to update recipe');
+  }
+
+  return updatedRecipes[0];
+}
