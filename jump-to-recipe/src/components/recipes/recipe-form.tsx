@@ -58,6 +58,7 @@ interface RecipeFormProps {
   isLoading?: boolean;
   submitLabel?: string;
   recipeId?: string; // For editing existing recipes with photos
+  beforeSubmit?: React.ReactNode; // Content to render before the submit button
 }
 
 export function RecipeForm({
@@ -66,6 +67,7 @@ export function RecipeForm({
   isLoading = false,
   submitLabel = "Save Recipe",
   recipeId,
+  beforeSubmit,
 }: RecipeFormProps) {
   const form = useForm({
     resolver: zodResolver(createRecipeSchema),
@@ -499,6 +501,9 @@ export function RecipeForm({
             )}
           </CardContent>
         </Card>
+
+        {/* Additional content before submit button */}
+        {beforeSubmit}
 
         <Button type="submit" disabled={isLoading} className="w-full">
           {isLoading ? "Saving..." : submitLabel}

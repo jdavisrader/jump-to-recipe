@@ -10,6 +10,22 @@ export interface UserWithCounts extends User {
 }
 
 /**
+ * Recipe with author information for admin display
+ */
+export interface RecipeWithAuthor {
+  id: string;
+  title: string;
+  authorId: string | null;
+  authorName: string | null;
+  authorEmail: string | null;
+  visibility: 'public' | 'private';
+  createdAt: Date;
+  updatedAt: Date;
+  viewCount: number;
+  tags: string[] | null;
+}
+
+/**
  * Validation schema for user profile updates
  */
 export const userEditSchema = z.object({

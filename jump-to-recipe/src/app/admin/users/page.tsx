@@ -8,6 +8,7 @@ import { cookbooks } from '@/db/schema/cookbooks';
 import { eq, sql } from 'drizzle-orm';
 import { UserListClient } from './user-list-client';
 import type { UserWithCounts } from '@/types/admin';
+import { AdminBreadcrumb } from '@/components/admin/admin-breadcrumb';
 
 export default async function UsersPage() {
   const session = await getServerSession(authOptions);
@@ -41,6 +42,7 @@ export default async function UsersPage() {
     return (
       <div className="container mx-auto py-8">
         <div className="space-y-6">
+          <AdminBreadcrumb />
           <div>
             <h1 className="text-3xl font-bold">User Management</h1>
             <p className="text-muted-foreground mt-2">
