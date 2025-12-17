@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { db } from '@/db';
 import { cookbooks, cookbookRecipes, recipes } from '@/db/schema';
 import { authOptions } from '@/lib/auth';
-import { hasMinimumPermission } from '@/lib/cookbook-permissions';
+import { hasMinimumPermission, hasAdminCookbookAccess } from '@/lib/cookbook-permissions';
 import { sanitizeImageUrl } from '@/lib/image-validation';
 import { eq, asc, inArray } from 'drizzle-orm';
 
@@ -44,6 +44,7 @@ export async function GET(
     }
     
     const userId = session.user.id;
+    const userRole = session.user.role;
     const { id: cookbookId } = await params;
     
     // Get the cookbook
@@ -55,8 +56,8 @@ export async function GET(
       return NextResponse.json({ error: 'Cookbook not found' }, { status: 404 });
     }
     
-    // Check if user has view access to the cookbook
-    const hasViewAccess = await hasMinimumPermission(cookbookId, userId, 'view');
+    // Check if user has view access to the cookbook (includes admin bypass)
+    const hasViewAccess = await hasMinimumPermission(cookbookId, userId, 'view', userRole);
     if (!hasViewAccess) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
@@ -117,6 +118,7 @@ export async function PUT(
     }
     
     const userId = session.user.id;
+    const userRole = session.user.role;
     const { id: cookbookId } = await params;
     
     // Check if cookbook exists and user has access
@@ -128,8 +130,8 @@ export async function PUT(
       return NextResponse.json({ error: 'Cookbook not found' }, { status: 404 });
     }
     
-    // Check if user has edit access to the cookbook
-    const hasEditAccess = await hasMinimumPermission(cookbookId, userId, 'edit');
+    // Check if user has edit access to the cookbook (includes admin bypass)
+    const hasEditAccess = await hasMinimumPermission(cookbookId, userId, 'edit', userRole);
     if (!hasEditAccess) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
@@ -213,6 +215,7 @@ export async function DELETE(
     }
     
     const userId = session.user.id;
+    const userRole = session.user.role;
     const { id: cookbookId } = await params;
     
     // Check if cookbook exists and user has access
@@ -224,8 +227,9 @@ export async function DELETE(
       return NextResponse.json({ error: 'Cookbook not found' }, { status: 404 });
     }
     
-    if (cookbook.ownerId !== userId) {
-      // Only the owner can delete a cookbook
+    // Check if user is owner or admin
+    const isAdmin = hasAdminCookbookAccess(userRole);
+    if (cookbook.ownerId !== userId && !isAdmin) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
     

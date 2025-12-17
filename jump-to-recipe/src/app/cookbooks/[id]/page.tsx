@@ -5,7 +5,7 @@ import { db } from '@/db';
 import { cookbooks, cookbookRecipes, cookbookCollaborators } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { CookbookDisplay } from '@/components/cookbooks/cookbook-display';
-import { getCookbookPermission } from '@/lib/cookbook-permissions';
+import { getCookbookPermission, hasAdminCookbookAccess } from '@/lib/cookbook-permissions';
 import type { Ingredient, Instruction } from '@/types/recipe';
 
 export default async function CookbookPage({ params }: { params: Promise<{ id: string }> | { id: string } }) {
@@ -18,6 +18,7 @@ export default async function CookbookPage({ params }: { params: Promise<{ id: s
   }
   
   const userId = session.user.id;
+  const userRole = session.user.role;
   const cookbookId = resolvedParams.id;
   
   // Get the cookbook with owner info
@@ -42,7 +43,7 @@ export default async function CookbookPage({ params }: { params: Promise<{ id: s
   }
   
   // Check user permission
-  const permission = await getCookbookPermission(cookbookId, userId);
+  const permission = await getCookbookPermission(cookbookId, userId, userRole);
   
   if (permission === 'none') {
     redirect('/cookbooks?error=forbidden');
@@ -97,6 +98,7 @@ export default async function CookbookPage({ params }: { params: Promise<{ id: s
   };
   
   const isOwner = cookbook.ownerId === userId;
+  const isAdmin = hasAdminCookbookAccess(userRole);
   const canEdit = permission === 'owner' || permission === 'edit';
 
   return (
@@ -105,6 +107,7 @@ export default async function CookbookPage({ params }: { params: Promise<{ id: s
         cookbook={cookbookFull}
         isOwner={isOwner}
         canEdit={canEdit}
+        isAdmin={isAdmin}
       />
     </div>
   );
