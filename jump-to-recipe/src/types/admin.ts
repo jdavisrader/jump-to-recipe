@@ -55,6 +55,23 @@ export const userDeleteSchema = z.object({
 
 export type UserDeleteRequest = z.infer<typeof userDeleteSchema>;
 
+
+
+// Re-export admin cookbook types for backward compatibility
+export type { 
+  CookbookWithMetadata,
+  AdminCookbooksResponse,
+  OwnershipTransferRequest,
+  OwnershipTransferResponse,
+  AddCollaboratorRequest,
+  AddCollaboratorResponse,
+  RemoveCollaboratorResponse,
+  CollaboratorWithUser,
+  UserSearchResult,
+  AdminCookbookErrorType,
+  AdminCookbookApiResponse
+} from './admin-cookbook';
+
 /**
  * API response types
  */
@@ -83,3 +100,5 @@ export interface TransferCandidatesResponse {
     email: string;
   }>;
 }
+
+

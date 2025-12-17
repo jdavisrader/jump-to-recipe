@@ -27,16 +27,17 @@ interface CookbookDisplayProps {
   cookbook: CookbookFull;
   isOwner: boolean;
   canEdit: boolean;
+  isAdmin?: boolean;
 }
 
-export function CookbookDisplay({ cookbook, isOwner, canEdit }: CookbookDisplayProps) {
+export function CookbookDisplay({ cookbook, isOwner, canEdit, isAdmin = false }: CookbookDisplayProps) {
   const router = useRouter();
   const { toast } = useToast();
   const [isDeleting, setIsDeleting] = useState(false);
   const [showConfirmDelete, setShowConfirmDelete] = useState(false);
 
   const handleDeleteCookbook = async () => {
-    if (!isOwner) return;
+    if (!isOwner && !isAdmin) return;
     
     setIsDeleting(true);
     
@@ -146,18 +147,18 @@ export function CookbookDisplay({ cookbook, isOwner, canEdit }: CookbookDisplayP
                 </Button>
               )}
               
-              {isOwner && !showConfirmDelete && (
+              {(isOwner || isAdmin) && !showConfirmDelete && (
                 <Button 
                   variant="outline" 
                   size="sm"
                   onClick={() => setShowConfirmDelete(true)}
                 >
                   <Trash2 className="h-4 w-4 mr-2 text-destructive" />
-                  Delete Cookbook
+                  {isAdmin && !isOwner ? 'Admin: Delete Cookbook' : 'Delete Cookbook'}
                 </Button>
               )}
               
-              {isOwner && showConfirmDelete && (
+              {(isOwner || isAdmin) && showConfirmDelete && (
                 <div className="flex items-center gap-2">
                   <Button 
                     variant="destructive" 
@@ -231,7 +232,7 @@ export function CookbookDisplay({ cookbook, isOwner, canEdit }: CookbookDisplayP
       </div>
       
       {/* Sharing and Visibility Section */}
-      {isOwner && (
+      {(isOwner || isAdmin) && (
         <div className="space-y-6">
           <h2 className="text-2xl font-semibold">Sharing & Visibility</h2>
           
@@ -239,14 +240,14 @@ export function CookbookDisplay({ cookbook, isOwner, canEdit }: CookbookDisplayP
             <CookbookVisibility
               cookbookId={cookbook.id}
               isPublic={cookbook.isPublic}
-              isOwner={isOwner}
+              isOwner={isOwner || isAdmin}
               onVisibilityChange={handleVisibilityChange}
             />
             
             <CookbookCollaborators
               cookbookId={cookbook.id}
               collaborators={cookbook.collaborators}
-              isOwner={isOwner}
+              isOwner={isOwner || isAdmin}
               onCollaboratorsChange={handleCollaboratorsChange}
             />
           </div>

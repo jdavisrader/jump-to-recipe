@@ -3,7 +3,7 @@ import { cookbooks, cookbookCollaborators } from '@/db/schema';
 import { eq, and, not, inArray } from 'drizzle-orm';
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { authOptions, isAdmin } from '@/lib/auth';
 
 // Define interfaces for the query results
 interface CollaboratorWithCookbook {
@@ -34,13 +34,47 @@ interface CollaboratorWithCookbook {
 export type CookbookPermission = 'none' | 'view' | 'edit' | 'owner';
 
 /**
+ * Check if a user has admin access to cookbooks
+ */
+export function hasAdminCookbookAccess(userRole?: string): boolean {
+  return isAdmin(userRole);
+}
+
+/**
+ * Check if a user has admin or owner access to a specific cookbook
+ */
+export async function hasAdminOrOwnerAccess(
+  cookbookId: string,
+  userId: string,
+  userRole?: string
+): Promise<boolean> {
+  // Admin users have universal access
+  if (isAdmin(userRole)) {
+    return true;
+  }
+
+  // Check if user is the owner
+  const cookbook = await db.query.cookbooks.findFirst({
+    where: eq(cookbooks.id, cookbookId),
+  });
+
+  return cookbook?.ownerId === userId;
+}
+
+/**
  * Check what level of access a user has to a cookbook
  */
 export async function getCookbookPermission(
   cookbookId: string,
-  userId: string
+  userId: string,
+  userRole?: string
 ): Promise<CookbookPermission> {
   try {
+    // Admin users have owner-level access to all cookbooks
+    if (isAdmin(userRole)) {
+      return 'owner';
+    }
+
     // Get the cookbook
     const cookbook = await db.query.cookbooks.findFirst({
       where: eq(cookbooks.id, cookbookId),
@@ -85,9 +119,15 @@ export async function getCookbookPermission(
 export async function hasMinimumPermission(
   cookbookId: string,
   userId: string,
-  requiredPermission: CookbookPermission
+  requiredPermission: CookbookPermission,
+  userRole?: string
 ): Promise<boolean> {
-  const userPermission = await getCookbookPermission(cookbookId, userId);
+  // Admin users bypass all permission checks
+  if (isAdmin(userRole)) {
+    return true;
+  }
+
+  const userPermission = await getCookbookPermission(cookbookId, userId, userRole);
 
   const permissionLevels: Record<CookbookPermission, number> = {
     none: 0,
@@ -220,6 +260,7 @@ export function withCookbookPermission(
       }
 
       const userId = session.user.id;
+      const userRole = session.user.role;
       const cookbookId = context.params.id;
 
       // Get the cookbook
@@ -232,14 +273,14 @@ export function withCookbookPermission(
       }
 
       // Check if user has required permission
-      const hasPermission = await hasMinimumPermission(cookbookId, userId, requiredPermission);
+      const hasPermission = await hasMinimumPermission(cookbookId, userId, requiredPermission, userRole);
 
       if (!hasPermission) {
         return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
       }
 
       // Get the user's actual permission level
-      const permission = await getCookbookPermission(cookbookId, userId);
+      const permission = await getCookbookPermission(cookbookId, userId, userRole);
 
       // Call the handler with the permission level
       return handler(req, context, permission);
