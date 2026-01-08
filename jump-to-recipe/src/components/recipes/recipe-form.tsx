@@ -90,7 +90,6 @@ export function RecipeForm({
       notes: initialData?.notes || "",
       imageUrl: initialData?.imageUrl || "",
       sourceUrl: initialData?.sourceUrl || "",
-      authorId: initialData?.authorId || "",
       visibility: initialData?.visibility || "private",
     },
   });
@@ -158,7 +157,6 @@ export function RecipeForm({
       notes: data.notes || null,
       imageUrl: data.imageUrl || null,
       sourceUrl: data.sourceUrl || null,
-      authorId: data.authorId || null,
     };
     
     await onSubmit(recipeData, photos);
