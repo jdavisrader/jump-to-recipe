@@ -60,11 +60,10 @@ export function RecipeDisplay({ recipe, onEdit, canEdit = false, showComments = 
   }, [recipe.id]);
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6">
-      {/* Header */}
-      <div className="border-b pb-6">
-        {/* Recipe Image */}
-        <div className="aspect-video w-full overflow-hidden rounded-lg mb-4">
+    <div className="max-w-4xl mx-auto space-y-6">
+      {/* Recipe Image */}
+      {recipe.imageUrl && (
+        <div className="aspect-video w-full overflow-hidden rounded-lg">
           <RecipeImage
             src={recipe.imageUrl}
             alt={recipe.title}
@@ -74,7 +73,10 @@ export function RecipeDisplay({ recipe, onEdit, canEdit = false, showComments = 
             priority
           />
         </div>
-        
+      )}
+
+      {/* Header */}
+      <div className="border-b pb-6">
         {/* Title with Star and Menu */}
         <div className="flex justify-between items-start mb-2">
           <h1 className="text-3xl font-bold tracking-tight flex-1">{recipe.title}</h1>
@@ -119,45 +121,67 @@ export function RecipeDisplay({ recipe, onEdit, canEdit = false, showComments = 
         
         {/* Description */}
         {recipe.description && (
-          <p className="text-lg text-muted-foreground mb-4">{recipe.description}</p>
+          <p className="text-lg text-muted-foreground mb-6">{recipe.description}</p>
         )}
         
-        {/* Time, Yield, Servings */}
-        <div className="flex flex-wrap gap-6 items-center text-sm">
-          {totalTime > 0 && (
-            <div className="flex items-center gap-2">
+        {/* Timing Information */}
+        <div className="grid grid-cols-4 gap-4 mb-6">
+          {/* Prep Time */}
+          <div className="text-center">
+            <div className="flex items-center justify-center gap-1 mb-1">
               <Clock className="h-4 w-4" />
-              <span>{totalTime} min</span>
+              <span className="text-sm font-medium">Prep Time</span>
             </div>
-          )}
-          <div className="flex items-center gap-2">
-            <ChefHat className="h-4 w-4" />
-            <span>Yield</span>
+            <div className="text-lg font-semibold">
+              {recipe.prepTime ? `${recipe.prepTime} min` : '—'}
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <Users className="h-4 w-4" />
-            <span>Servings</span>
-            <div className="flex items-center gap-1 ml-2">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="h-6 w-6 p-0"
-                onClick={() => setServings(Math.max(1, servings - 1))}
-              >
-                <Minus className="h-3 w-3" />
-              </Button>
-              <span className="w-8 text-center">{servings}</span>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="h-6 w-6 p-0"
-                onClick={() => setServings(servings + 1)}
-              >
-                <Plus className="h-3 w-3" />
-              </Button>
+          
+          {/* Cook Time */}
+          <div className="text-center">
+            <div className="flex items-center justify-center gap-1 mb-1">
+              <ChefHat className="h-4 w-4" />
+              <span className="text-sm font-medium">Cook Time</span>
             </div>
+            <div className="text-lg font-semibold">
+              {recipe.cookTime ? `${recipe.cookTime} min` : '—'}
+            </div>
+          </div>
+          
+          {/* Total Time */}
+          <div className="text-center">
+            <div className="flex items-center justify-center gap-1 mb-1">
+              <Clock className="h-4 w-4" />
+              <span className="text-sm font-medium">Total Time</span>
+            </div>
+            <div className="text-lg font-semibold">
+              {totalTime > 0 ? `${totalTime} min` : '—'}
+            </div>
+          </div>
+          
+          {/* Servings */}
+          <div className="text-center">
+            <div className="flex items-center justify-center gap-1 mb-1">
+              <Users className="h-4 w-4" />
+              <span className="text-sm font-medium">Servings</span>
+            </div>
+            <div className="text-lg font-semibold">{servings}</div>
           </div>
         </div>
+        
+        {/* Recipe Tags */}
+        {recipe.tags && recipe.tags.length > 0 && (
+          <div className="flex flex-wrap gap-2">
+            {recipe.tags.map((tag) => (
+              <span
+                key={tag}
+                className="inline-flex items-center px-3 py-1 bg-secondary text-secondary-foreground rounded-full text-sm font-medium"
+              >
+                {tag}
+              </span>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Main Content: Ingredients (sticky) and Instructions */}
