@@ -80,98 +80,104 @@ export function RecipeCard({ recipe, showAuthor = false, compact = false, showSt
   }
 
   return (
-    <Card className="overflow-hidden hover:shadow-lg transition-shadow focus-within:ring-2 focus-within:ring-ring">
-      <div className="aspect-video w-full overflow-hidden">
-        <RecipeImage
-          src={recipe.imageUrl}
-          alt=""
-          width={400}
-          height={225}
-          className="object-cover w-full h-full transition-transform hover:scale-105"
-        />
-      </div>
-      
-      <CardHeader className="pb-3">
-        <CardTitle className="line-clamp-2 text-base sm:text-lg">{recipe.title}</CardTitle>
-        {recipe.description && (
-          <CardDescription className="line-clamp-2 text-sm">
-            {recipe.description}
-          </CardDescription>
-        )}
-      </CardHeader>
+    <Card className="overflow-hidden hover:shadow-lg transition-shadow focus-within:ring-2 focus-within:ring-ring cursor-pointer">
+      <Link 
+        href={`/recipes/${recipe.id}`}
+        className="block focus:outline-none"
+        aria-label={`View recipe: ${recipe.title}`}
+      >
+        <div className="aspect-video w-full overflow-hidden">
+          <RecipeImage
+            src={recipe.imageUrl}
+            alt=""
+            width={400}
+            height={225}
+            className="object-cover w-full h-full transition-transform hover:scale-105"
+          />
+        </div>
+        
+        <CardHeader className="pb-3">
+          <CardTitle className="line-clamp-2 text-base sm:text-lg">{recipe.title}</CardTitle>
+          {recipe.description && (
+            <CardDescription className="line-clamp-2 text-sm">
+              {recipe.description}
+            </CardDescription>
+          )}
+        </CardHeader>
 
-      <CardContent className="pb-3">
-        <div className="space-y-3">
-          {/* Recipe Meta */}
-          <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-sm text-muted-foreground">
-            {totalTime > 0 && (
-              <div className="flex items-center gap-1" title={`Total time: ${totalTime} minutes`}>
-                <Clock className="h-4 w-4" aria-hidden="true" />
-                <span>{totalTime} min</span>
+        <CardContent className="pb-3">
+          <div className="space-y-3">
+            {/* Recipe Meta */}
+            <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-sm text-muted-foreground">
+              {totalTime > 0 && (
+                <div className="flex items-center gap-1" title={`Total time: ${totalTime} minutes`}>
+                  <Clock className="h-4 w-4" aria-hidden="true" />
+                  <span>{totalTime} min</span>
+                </div>
+              )}
+              {recipe.servings && (
+                <div className="flex items-center gap-1" title={`Serves ${recipe.servings} people`}>
+                  <Users className="h-4 w-4" aria-hidden="true" />
+                  <span>{recipe.servings} servings</span>
+                </div>
+              )}
+              {recipe.difficulty && (
+                <div className="flex items-center gap-1" title={`Difficulty level: ${recipe.difficulty}`}>
+                  <ChefHat className="h-4 w-4" aria-hidden="true" />
+                  <span className="capitalize">{recipe.difficulty}</span>
+                </div>
+              )}
+            </div>
+
+            {/* Tags */}
+            {recipe.tags.length > 0 && (
+              <div className="flex flex-wrap gap-1" role="list" aria-label="Recipe tags">
+                {recipe.tags.slice(0, 3).map((tag) => (
+                  <span
+                    key={tag}
+                    className="inline-flex items-center px-2 py-1 bg-secondary text-secondary-foreground rounded-sm text-xs"
+                    role="listitem"
+                  >
+                    {tag}
+                  </span>
+                ))}
+                {recipe.tags.length > 3 && (
+                  <span className="text-xs text-muted-foreground" role="listitem">
+                    +{recipe.tags.length - 3} more
+                  </span>
+                )}
               </div>
             )}
-            {recipe.servings && (
-              <div className="flex items-center gap-1" title={`Serves ${recipe.servings} people`}>
-                <Users className="h-4 w-4" aria-hidden="true" />
-                <span>{recipe.servings} servings</span>
+
+            {/* Stats */}
+            {showStats && (recipe.viewCount > 0 || recipe.likeCount > 0) && (
+              <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                {recipe.viewCount > 0 && (
+                  <div className="flex items-center gap-1" title={`${recipe.viewCount} views`}>
+                    <Eye className="h-4 w-4" aria-hidden="true" />
+                    <span>{recipe.viewCount}</span>
+                    <span className="sr-only">views</span>
+                  </div>
+                )}
+                {recipe.likeCount > 0 && (
+                  <div className="flex items-center gap-1" title={`${recipe.likeCount} likes`}>
+                    <Heart className="h-4 w-4" aria-hidden="true" />
+                    <span>{recipe.likeCount}</span>
+                    <span className="sr-only">likes</span>
+                  </div>
+                )}
               </div>
             )}
-            {recipe.difficulty && (
-              <div className="flex items-center gap-1" title={`Difficulty level: ${recipe.difficulty}`}>
-                <ChefHat className="h-4 w-4" aria-hidden="true" />
-                <span className="capitalize">{recipe.difficulty}</span>
+
+            {/* Author */}
+            {showAuthor && (
+              <div className="text-sm text-muted-foreground">
+                By {recipe.authorName || 'Anonymous'}
               </div>
             )}
           </div>
-
-          {/* Tags */}
-          {recipe.tags.length > 0 && (
-            <div className="flex flex-wrap gap-1" role="list" aria-label="Recipe tags">
-              {recipe.tags.slice(0, 3).map((tag) => (
-                <span
-                  key={tag}
-                  className="inline-flex items-center px-2 py-1 bg-secondary text-secondary-foreground rounded-sm text-xs"
-                  role="listitem"
-                >
-                  {tag}
-                </span>
-              ))}
-              {recipe.tags.length > 3 && (
-                <span className="text-xs text-muted-foreground" role="listitem">
-                  +{recipe.tags.length - 3} more
-                </span>
-              )}
-            </div>
-          )}
-
-          {/* Stats */}
-          {showStats && (recipe.viewCount > 0 || recipe.likeCount > 0) && (
-            <div className="flex items-center gap-4 text-sm text-muted-foreground">
-              {recipe.viewCount > 0 && (
-                <div className="flex items-center gap-1" title={`${recipe.viewCount} views`}>
-                  <Eye className="h-4 w-4" aria-hidden="true" />
-                  <span>{recipe.viewCount}</span>
-                  <span className="sr-only">views</span>
-                </div>
-              )}
-              {recipe.likeCount > 0 && (
-                <div className="flex items-center gap-1" title={`${recipe.likeCount} likes`}>
-                  <Heart className="h-4 w-4" aria-hidden="true" />
-                  <span>{recipe.likeCount}</span>
-                  <span className="sr-only">likes</span>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Author */}
-          {showAuthor && (
-            <div className="text-sm text-muted-foreground">
-              By {recipe.authorName || 'Anonymous'}
-            </div>
-          )}
-        </div>
-      </CardContent>
+        </CardContent>
+      </Link>
 
       <CardFooter className="pt-0">
         <Button asChild className="w-full">

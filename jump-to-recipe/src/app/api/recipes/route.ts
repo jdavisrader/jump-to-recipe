@@ -196,7 +196,12 @@ export async function POST(req: NextRequest) {
         const body = await req.json();
 
         // Log the incoming data for debugging
-        console.log('Received recipe data:', JSON.stringify(body, null, 2));
+        console.log('📝 Received recipe data for creation:');
+        console.log('- Title:', body.title);
+        console.log('- Ingredients count:', body.ingredients?.length || 0);
+        console.log('- Instructions count:', body.instructions?.length || 0);
+        console.log('- Ingredient sections:', body.ingredientSections ? `${body.ingredientSections.length} sections` : 'none');
+        console.log('- Instruction sections:', body.instructionSections ? `${body.instructionSections.length} sections` : 'none');
 
         // Validate recipe data
         const validationResult = createRecipeSchema.safeParse(body);
@@ -215,6 +220,12 @@ export async function POST(req: NextRequest) {
 
         // Create new recipe
         const newRecipe = await db.insert(recipes).values(validationResult.data).returning();
+
+        console.log('✅ Recipe created successfully:');
+        console.log('- ID:', newRecipe[0].id);
+        console.log('- Title:', newRecipe[0].title);
+        console.log('- Has ingredient sections:', !!newRecipe[0].ingredientSections);
+        console.log('- Has instruction sections:', !!newRecipe[0].instructionSections);
 
         return NextResponse.json(newRecipe[0], { status: 201 });
     } catch (error) {

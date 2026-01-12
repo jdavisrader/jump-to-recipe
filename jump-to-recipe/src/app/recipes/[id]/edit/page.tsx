@@ -199,9 +199,13 @@ export default function EditRecipePage({ params }: EditRecipePageProps) {
       // Prepare update data
       const updateData: any = { ...data };
       
-      // Include authorId if it has changed (admin only)
+      // Include authorId only if ownership is being changed (admin only)
       if (isOwnershipChange) {
         updateData.authorId = selectedOwnerId;
+      }
+      // Ensure authorId is not included for non-admin users
+      else if (!isAdmin) {
+        delete updateData.authorId;
       }
       
       // Use retry logic for the update

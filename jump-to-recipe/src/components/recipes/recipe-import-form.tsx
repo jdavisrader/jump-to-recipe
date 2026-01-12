@@ -122,7 +122,7 @@ export function RecipeImportForm({
           </CardContent>
         </Card>
 
-        <RecipeDisplay recipe={previewRecipe} />
+        <RecipeDisplay recipe={previewRecipe} showComments={false} />
       </div>
     );
   }

@@ -116,7 +116,7 @@ export function RichTextEditor({
     <div className={cn('border rounded-md', className)}>
       {/* Toolbar */}
       <div className="flex items-center justify-between p-2 border-b bg-muted/50">
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1 overflow-x-auto scrollbar-hide min-w-0 flex-1 mr-2">
           {formatButtons.map((button) => (
             <Button
               key={button.label}
@@ -125,13 +125,13 @@ export function RichTextEditor({
               onClick={button.action}
               disabled={disabled || isPreview}
               title={button.label}
-              className="h-8 w-8 p-0"
+              className="h-8 w-8 p-0 flex-shrink-0"
             >
               <button.icon className="h-4 w-4" />
             </Button>
           ))}
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-shrink-0">
           <Button
             variant="ghost"
             size="sm"

@@ -123,21 +123,10 @@ export async function PUT(
         // Parse request body
         const body = await req.json();
 
-        // Check if ownership is being changed
-        const isOwnershipChange = body.authorId !== undefined && body.authorId !== existingRecipe.authorId;
+        // Check if ownership is being changed (only relevant for admins)
+        const isOwnershipChange = isAdmin && body.authorId !== undefined && body.authorId !== existingRecipe.authorId;
 
         if (isOwnershipChange) {
-            // Only admins can change recipe ownership
-            if (!isAdmin) {
-                return NextResponse.json(
-                    { 
-                        error: 'Only admins can change recipe ownership',
-                        message: 'You do not have permission to transfer recipe ownership.'
-                    },
-                    { status: 403 }
-                );
-            }
-
             // Validate that the new owner ID is provided and not null
             if (!body.authorId) {
                 return NextResponse.json(
@@ -163,6 +152,15 @@ export async function PUT(
                     { status: 400 }
                 );
             }
+        } else if (!isAdmin && body.authorId !== undefined) {
+            // Non-admin users should not be sending authorId in the request
+            return NextResponse.json(
+                { 
+                    error: 'Only admins can change recipe ownership',
+                    message: 'You do not have permission to transfer recipe ownership.'
+                },
+                { status: 403 }
+            );
         }
 
         // Validate recipe data (excluding authorId which is handled separately)

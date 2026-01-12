@@ -55,6 +55,7 @@ export interface Recipe {
   imageUrl: string | null;
   sourceUrl: string | null;
   authorId: string | null;
+  authorName?: string;
   visibility: Visibility;
   commentsEnabled: boolean;
   viewCount: number;
@@ -64,7 +65,7 @@ export interface Recipe {
 }
 
 // Type for creating a new recipe (without id and timestamps)
-export type NewRecipeInput = Omit<Recipe, 'id' | 'createdAt' | 'updatedAt'> & {
+export type NewRecipeInput = Omit<Recipe, 'id' | 'createdAt' | 'updatedAt' | 'authorName'> & {
   difficulty?: Difficulty | null;
 };
 

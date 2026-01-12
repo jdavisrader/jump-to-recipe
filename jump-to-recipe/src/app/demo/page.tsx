@@ -146,6 +146,7 @@ export default function DemoPage() {
               recipe={recipe}
               onEdit={() => setCurrentView("edit")}
               canEdit={true}
+              showComments={false}
             />
           </CardContent>
         </Card>

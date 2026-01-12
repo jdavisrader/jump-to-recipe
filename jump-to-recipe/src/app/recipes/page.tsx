@@ -120,7 +120,7 @@ export default function RecipesPage() {
   };
 
   return (
-    <div className="container mx-auto py-8 space-y-8">
+    <div className="container mx-auto px-4 py-8 space-y-8">
       <div className="flex flex-col items-center space-y-6">
         <div className="text-center space-y-4">
           <h1 className="text-3xl font-bold">Recipe Collection</h1>

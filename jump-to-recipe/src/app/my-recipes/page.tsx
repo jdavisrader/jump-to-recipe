@@ -132,7 +132,7 @@ export default function MyRecipesPage() {
   }
 
   return (
-    <div className="container mx-auto py-4 sm:py-6 lg:py-8 space-y-6 sm:space-y-8">
+    <div className="container mx-auto px-4 py-4 sm:py-6 lg:py-8 space-y-6 sm:space-y-8">
       {/* Skip to main content link for screen readers */}
       <a 
         href="#main-content" 
@@ -142,7 +142,7 @@ export default function MyRecipesPage() {
       </a>
 
       <div className="flex flex-col items-center space-y-4 sm:space-y-6">
-        <div className="text-center space-y-2 sm:space-y-4 px-4">
+        <div className="text-center space-y-2 sm:space-y-4">
           <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold">My Recipes</h1>
           <p className="text-muted-foreground text-sm sm:text-base max-w-2xl">
             View and manage all the recipes you&apos;ve created
@@ -150,7 +150,7 @@ export default function MyRecipesPage() {
         </div>
 
         {/* Action Buttons */}
-        <div className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4 w-full max-w-md sm:max-w-none px-4">
+        <div className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4 w-full max-w-md sm:max-w-none">
           <Button asChild size="lg" className="w-full sm:w-auto">
             <Link href="/recipes/new">
               <Plus className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
@@ -176,7 +176,7 @@ export default function MyRecipesPage() {
       )}
 
       {/* Search Component */}
-      <div className="px-4">
+      <div>
         <ErrorBoundaryWrapper
           fallback={
             <div className="text-center py-4" role="alert">
@@ -195,7 +195,7 @@ export default function MyRecipesPage() {
       {/* Search Results Info */}
       {(searchInfo.hasQuery || pagination.total > 0) && (
         <div 
-          className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-sm text-muted-foreground px-4"
+          className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-sm text-muted-foreground"
           role="status"
           aria-live="polite"
         >
@@ -251,7 +251,7 @@ export default function MyRecipesPage() {
       {/* Loading State */}
       {loading && (
         <div 
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 px-4"
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6"
           role="status"
           aria-label="Loading recipes"
         >
@@ -269,7 +269,7 @@ export default function MyRecipesPage() {
       )}
 
       {/* Main Content */}
-      <main id="main-content" ref={mainContentRef} className="px-4" tabIndex={-1}>
+      <main id="main-content" ref={mainContentRef} className="" tabIndex={-1}>
         {!loading && !error && (
           <>
             {recipes.length === 0 ? (

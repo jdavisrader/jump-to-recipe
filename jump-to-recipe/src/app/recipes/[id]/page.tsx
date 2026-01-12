@@ -1,5 +1,5 @@
 import { db } from '@/db';
-import { recipes } from '@/db/schema';
+import { recipes, users } from '@/db/schema';
 import { RecipePageClient } from '@/components/recipes/recipe-page-client';
 import { eq } from 'drizzle-orm';
 import { notFound } from 'next/navigation';
@@ -14,16 +14,22 @@ interface RecipePageProps {
 export default async function RecipePage({ params }: RecipePageProps) {
   const { id } = await params;
   
-  // Fetch the specific recipe from the database
-  const [recipe] = await db
-    .select()
+  // Fetch the specific recipe from the database with author information
+  const [recipeWithAuthor] = await db
+    .select({
+      recipe: recipes,
+      authorName: users.name,
+    })
     .from(recipes)
+    .leftJoin(users, eq(recipes.authorId, users.id))
     .where(eq(recipes.id, id))
     .limit(1);
 
-  if (!recipe) {
+  if (!recipeWithAuthor) {
     notFound();
   }
+
+  const { recipe, authorName } = recipeWithAuthor;
 
   const recipeData = {
     ...recipe,
@@ -32,10 +38,11 @@ export default async function RecipePage({ params }: RecipePageProps) {
     tags: recipe.tags || [],
     createdAt: recipe.createdAt!,
     updatedAt: recipe.updatedAt!,
+    authorName: authorName || 'Unknown',
   };
 
   return (
-    <div className="container mx-auto py-8">
+    <div className="container mx-auto px-4 py-8">
       <RecipePageClient recipe={recipeData} />
     </div>
   );

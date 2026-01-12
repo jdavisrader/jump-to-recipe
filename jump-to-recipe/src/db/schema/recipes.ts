@@ -14,6 +14,8 @@ export const recipes = pgTable('recipes', {
   description: text('description'),
   ingredients: jsonb('ingredients').notNull(),
   instructions: jsonb('instructions').notNull(),
+  ingredientSections: jsonb('ingredient_sections'),
+  instructionSections: jsonb('instruction_sections'),
   prepTime: integer('prep_time'),
   cookTime: integer('cook_time'),
   servings: integer('servings'),

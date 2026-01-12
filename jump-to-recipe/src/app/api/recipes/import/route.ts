@@ -81,6 +81,8 @@ export async function POST(request: NextRequest) {
         description: null,
         ingredients: [],
         instructions: [],
+        ingredientSections: undefined,
+        instructionSections: undefined,
         prepTime: null,
         cookTime: null,
         servings: null,
@@ -122,6 +124,8 @@ export async function POST(request: NextRequest) {
       description: recipeData.description || null,
       ingredients,
       instructions,
+      ingredientSections: recipeData.ingredientSections,
+      instructionSections: recipeData.instructionSections,
       prepTime: recipeData.prepTime || null,
       cookTime: recipeData.cookTime || null,
       servings: recipeData.servings || null,
@@ -141,16 +145,19 @@ export async function POST(request: NextRequest) {
 
     // Validate the recipe data before returning it
     try {
-      // Log ingredients for debugging
-      console.log('Validating recipe ingredients:');
-      ingredients.forEach((ing: { name: string; amount: number; unit: Unit; notes?: string }, index: number) => {
-        console.log(`Ingredient ${index + 1}:`, {
-          name: ing.name,
-          amount: ing.amount,
-          unit: ing.unit,
-          notes: ing.notes
+      // Log recipe structure for debugging
+      console.log('🔍 Recipe structure before validation:');
+      console.log('- Title:', recipe.title);
+      console.log('- Ingredients count:', recipe.ingredients?.length || 0);
+      console.log('- Instructions count:', recipe.instructions?.length || 0);
+      console.log('- Ingredient sections:', recipe.ingredientSections ? `${recipe.ingredientSections.length} sections` : 'none');
+      console.log('- Instruction sections:', recipe.instructionSections ? `${recipe.instructionSections.length} sections` : 'none');
+      
+      if (recipe.instructionSections) {
+        recipe.instructionSections.forEach((section: any, index: number) => {
+          console.log(`  Section ${index + 1}: "${section.name}" with ${section.items?.length || 0} items`);
         });
-      });
+      }
 
       // Validate with schema
       const validationResult = createRecipeSchema.safeParse(recipe);
@@ -166,6 +173,11 @@ export async function POST(request: NextRequest) {
           { status: 400 }
         );
       }
+
+      // Log validated recipe structure
+      console.log('✅ Recipe structure after validation:');
+      console.log('- Ingredient sections:', validationResult.data.ingredientSections ? `${validationResult.data.ingredientSections.length} sections` : 'none');
+      console.log('- Instruction sections:', validationResult.data.instructionSections ? `${validationResult.data.instructionSections.length} sections` : 'none');
 
       // Return the validated recipe
       return NextResponse.json(validationResult.data);
@@ -216,6 +228,17 @@ function extractJsonLdRecipe($: cheerio.CheerioAPI) {
         for (const item of itemsToCheck) {
           if (item['@type'] === 'Recipe' || (Array.isArray(item['@type']) && item['@type'].includes('Recipe'))) {
             console.log('✅ Found Recipe in JSON-LD:', item.name);
+            
+            // Log if we detect sections
+            if (Array.isArray(item.recipeInstructions)) {
+              const hasSections = item.recipeInstructions.some((inst: any) => 
+                inst && typeof inst === 'object' && inst['@type'] === 'HowToSection'
+              );
+              if (hasSections) {
+                console.log('🔧 Detected HowToSection in instructions');
+              }
+            }
+            
             return parseJsonLdRecipe(item);
           }
         }
@@ -231,38 +254,19 @@ function extractJsonLdRecipe($: cheerio.CheerioAPI) {
 }
 
 function parseJsonLdRecipe(recipe: Record<string, unknown>) {
-  // Safely check if recipeIngredient exists and is an array
-  const recipeIngredients = Array.isArray(recipe.recipeIngredient) ? recipe.recipeIngredient : [];
-
-  const ingredients = recipeIngredients.map((ingredient: string) => {
-    const parsed = parseIngredientString(ingredient);
-    return {
-      id: uuidv4(),
-      name: parsed.name,
-      amount: parsed.amount,
-      unit: parsed.unit as Unit,
-      displayAmount: parsed.displayAmount,
-      notes: parsed.notes,
-    };
-  });
-
-  // Safely check if recipeInstructions exists and is an array
-  const recipeInstructions = Array.isArray(recipe.recipeInstructions) ? recipe.recipeInstructions : [];
-
-  const instructions = recipeInstructions.map((instruction: string | Record<string, unknown>, index: number) => ({
-    id: uuidv4(),
-    step: index + 1,
-    content: typeof instruction === 'string' ? instruction :
-      typeof instruction.text === 'string' ? instruction.text :
-        typeof instruction.name === 'string' ? instruction.name : '',
-    duration: undefined,
-  }));
+  // Parse ingredients with section support
+  const { ingredients, ingredientSections } = parseJsonLdIngredients(recipe);
+  
+  // Parse instructions with section support (HowToSection)
+  const { instructions, instructionSections } = parseJsonLdInstructions(recipe);
 
   return {
     title: typeof recipe.name === 'string' ? recipe.name : '',
     description: typeof recipe.description === 'string' ? recipe.description : null,
     ingredients,
     instructions,
+    ingredientSections,
+    instructionSections,
     prepTime: parseDuration(typeof recipe.prepTime === 'string' ? recipe.prepTime : undefined),
     cookTime: parseDuration(typeof recipe.cookTime === 'string' ? recipe.cookTime : undefined),
     servings: typeof recipe.recipeYield === 'string' ? parseInt(recipe.recipeYield) || null : null,
@@ -277,6 +281,239 @@ function parseJsonLdRecipe(recipe: Record<string, unknown>) {
           typeof recipe.image.url === 'string' ? recipe.image.url : '',
     notes: typeof recipe.description === 'string' ? recipe.description : null,
   };
+}
+
+function parseJsonLdIngredients(recipe: Record<string, unknown>) {
+  const recipeIngredients = Array.isArray(recipe.recipeIngredient) ? recipe.recipeIngredient : [];
+  
+  // Check if ingredients are grouped (some recipes use objects with itemListElement)
+  const hasGroupedIngredients = recipeIngredients.some((item: any) => 
+    item && typeof item === 'object' && (item['@type'] === 'HowToSection' || item.itemListElement)
+  );
+  
+  if (hasGroupedIngredients) {
+    console.log('🥕 Found', recipeIngredients.length, 'ingredient sections');
+  }
+
+  if (hasGroupedIngredients) {
+    console.log('🥕 Parsing sectioned ingredients');
+    // Parse sectioned ingredients
+    const sections: Array<{
+      id: string;
+      name: string;
+      order: number;
+      items: Array<{
+        id: string;
+        name: string;
+        amount: number;
+        unit: Unit;
+        displayAmount?: string;
+        notes: string;
+      }>;
+    }> = [];
+    
+    const allIngredients: Array<{
+      id: string;
+      name: string;
+      amount: number;
+      unit: Unit;
+      displayAmount?: string;
+      notes: string;
+      sectionId?: string;
+    }> = [];
+
+    let sectionOrder = 0;
+    
+    recipeIngredients.forEach((item: any) => {
+      if (item && typeof item === 'object' && (item['@type'] === 'HowToSection' || item.itemListElement)) {
+        const sectionId = uuidv4();
+        const sectionName = typeof item.name === 'string' ? item.name : `Section ${sectionOrder + 1}`;
+        const itemList = Array.isArray(item.itemListElement) ? item.itemListElement : [];
+        
+        const sectionItems = itemList.map((ingredient: any) => {
+          const ingredientText = typeof ingredient === 'string' ? ingredient :
+            typeof ingredient.text === 'string' ? ingredient.text :
+            typeof ingredient.name === 'string' ? ingredient.name : '';
+          
+          const parsed = parseIngredientString(ingredientText);
+          const ingredientId = uuidv4();
+          
+          const ingredientObj = {
+            id: ingredientId,
+            name: parsed.name,
+            amount: parsed.amount,
+            unit: parsed.unit as Unit,
+            displayAmount: parsed.displayAmount,
+            notes: parsed.notes,
+          };
+          
+          // Add to flat array with section reference
+          allIngredients.push({
+            ...ingredientObj,
+            sectionId,
+          });
+          
+          return ingredientObj;
+        });
+        
+        sections.push({
+          id: sectionId,
+          name: sectionName,
+          order: sectionOrder++,
+          items: sectionItems,
+        });
+        
+        console.log(`🥕 Created ingredient section: "${sectionName}" with ${sectionItems.length} items`);
+      } else {
+        // Regular ingredient without section
+        const ingredientText = typeof item === 'string' ? item : '';
+        const parsed = parseIngredientString(ingredientText);
+        
+        allIngredients.push({
+          id: uuidv4(),
+          name: parsed.name,
+          amount: parsed.amount,
+          unit: parsed.unit as Unit,
+          displayAmount: parsed.displayAmount,
+          notes: parsed.notes,
+        });
+      }
+    });
+
+    return {
+      ingredients: allIngredients,
+      ingredientSections: sections.length > 0 ? sections : undefined,
+    };
+  } else {
+    // Parse flat ingredients (backward compatible)
+    const ingredients = recipeIngredients.map((ingredient: string) => {
+      const parsed = parseIngredientString(ingredient);
+      return {
+        id: uuidv4(),
+        name: parsed.name,
+        amount: parsed.amount,
+        unit: parsed.unit as Unit,
+        displayAmount: parsed.displayAmount,
+        notes: parsed.notes,
+      };
+    });
+
+    return {
+      ingredients,
+      ingredientSections: undefined,
+    };
+  }
+}
+
+function parseJsonLdInstructions(recipe: Record<string, unknown>) {
+  const recipeInstructions = Array.isArray(recipe.recipeInstructions) ? recipe.recipeInstructions : [];
+  
+  // Check if instructions are grouped using HowToSection
+  const hasGroupedInstructions = recipeInstructions.some((item: any) => 
+    item && typeof item === 'object' && item['@type'] === 'HowToSection'
+  );
+  
+  if (hasGroupedInstructions) {
+    console.log('📝 Found', recipeInstructions.length, 'instruction sections');
+  }
+
+  if (hasGroupedInstructions) {
+    console.log('📝 Parsing sectioned instructions');
+    // Parse sectioned instructions
+    const sections: Array<{
+      id: string;
+      name: string;
+      order: number;
+      items: Array<{
+        id: string;
+        step: number;
+        content: string;
+        duration?: number;
+      }>;
+    }> = [];
+    
+    const allInstructions: Array<{
+      id: string;
+      step: number;
+      content: string;
+      duration?: number;
+      sectionId?: string;
+    }> = [];
+
+    let sectionOrder = 0;
+    let globalStep = 1;
+    
+    recipeInstructions.forEach((item: any) => {
+      if (item && typeof item === 'object' && item['@type'] === 'HowToSection') {
+        const sectionId = uuidv4();
+        const sectionName = typeof item.name === 'string' ? item.name : `Section ${sectionOrder + 1}`;
+        const itemList = Array.isArray(item.itemListElement) ? item.itemListElement : [];
+        
+        const sectionItems = itemList.map((instruction: any, localIndex: number) => {
+          const instructionText = typeof instruction === 'string' ? instruction :
+            typeof instruction.text === 'string' ? instruction.text :
+            typeof instruction.name === 'string' ? instruction.name : '';
+          
+          const instructionObj = {
+            id: uuidv4(),
+            step: localIndex + 1, // Local step within section
+            content: instructionText,
+            duration: undefined,
+          };
+          
+          // Add to flat array with section reference and global step
+          allInstructions.push({
+            ...instructionObj,
+            step: globalStep++, // Global step across all sections
+            sectionId,
+          });
+          
+          return instructionObj;
+        });
+        
+        sections.push({
+          id: sectionId,
+          name: sectionName,
+          order: sectionOrder++,
+          items: sectionItems,
+        });
+        
+        console.log(`📝 Created instruction section: "${sectionName}" with ${sectionItems.length} items`);
+      } else {
+        // Regular instruction without section
+        const instructionText = typeof item === 'string' ? item :
+          typeof item.text === 'string' ? item.text :
+          typeof item.name === 'string' ? item.name : '';
+        
+        allInstructions.push({
+          id: uuidv4(),
+          step: globalStep++,
+          content: instructionText,
+          duration: undefined,
+        });
+      }
+    });
+
+    return {
+      instructions: allInstructions,
+      instructionSections: sections.length > 0 ? sections : undefined,
+    };
+  } else {
+    // Parse flat instructions (backward compatible)
+    const instructions = recipeInstructions.map((instruction: string | Record<string, unknown>, index: number) => ({
+      id: uuidv4(),
+      step: index + 1,
+      content: typeof instruction === 'string' ? instruction :
+        typeof instruction.text === 'string' ? instruction.text :
+        typeof instruction.name === 'string' ? instruction.name : '',
+      duration: undefined,
+    }));
+
+    return {
+      instructions,
+      instructionSections: undefined,
+    };
+  }
 }
 
 function extractMicrodataRecipe($: cheerio.CheerioAPI) {
@@ -323,6 +560,8 @@ function extractMicrodataRecipe($: cheerio.CheerioAPI) {
       description: description || null,
       ingredients,
       instructions,
+      ingredientSections: undefined, // Microdata rarely has sections
+      instructionSections: undefined, // Microdata rarely has sections
       prepTime: parseDuration(prepTimeAttr),
       cookTime: parseDuration(cookTimeAttr),
       servings: servingsText ? parseInt(servingsText) || null : null,
@@ -404,6 +643,8 @@ function extractBasicRecipe($: cheerio.CheerioAPI) {
     description: description || null,
     ingredients: ingredients.slice(0, 20), // Limit to prevent spam
     instructions: instructions.slice(0, 20), // Limit to prevent spam
+    ingredientSections: undefined, // Basic scraping doesn't detect sections
+    instructionSections: undefined, // Basic scraping doesn't detect sections
     prepTime: null,
     cookTime: null,
     servings: null,

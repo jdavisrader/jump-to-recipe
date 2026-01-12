@@ -39,13 +39,19 @@ export function RecipeComments({
 
   // Fetch comments
   const fetchComments = useCallback(async () => {
+    // Don't fetch comments if recipeId is invalid or looks like a preview ID
+    if (!recipeId || recipeId === 'imported-recipe' || recipeId.length < 10) {
+      setLoading(false);
+      return;
+    }
+
     try {
       const response = await fetch(`/api/recipes/${recipeId}/comments`);
       if (response.ok) {
         const data = await response.json();
         setComments(data.comments);
       } else {
-        console.error('Failed to fetch comments');
+        console.error('Failed to fetch comments:', response.status, response.statusText);
       }
     } catch (error) {
       console.error('Error fetching comments:', error);
