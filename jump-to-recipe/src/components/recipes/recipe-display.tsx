@@ -121,51 +121,51 @@ export function RecipeDisplay({ recipe, onEdit, canEdit = false, showComments = 
         
         {/* Description */}
         {recipe.description && (
-          <p className="text-lg text-muted-foreground mb-6">{recipe.description}</p>
+          <p className="text-lg text-foreground mb-6">{recipe.description}</p>
         )}
         
         {/* Timing Information */}
-        <div className="grid grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-4 gap-2 sm:gap-4 mb-6">
           {/* Prep Time */}
           <div className="text-center">
-            <div className="flex items-center justify-center gap-1 mb-1">
-              <Clock className="h-4 w-4" />
-              <span className="text-sm font-medium">Prep Time</span>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1 mb-1">
+              <Clock className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="text-xs sm:text-sm font-medium">Prep Time</span>
             </div>
-            <div className="text-lg font-semibold">
+            <div className="text-sm sm:text-lg font-semibold">
               {recipe.prepTime ? `${recipe.prepTime} min` : '—'}
             </div>
           </div>
           
           {/* Cook Time */}
           <div className="text-center">
-            <div className="flex items-center justify-center gap-1 mb-1">
-              <ChefHat className="h-4 w-4" />
-              <span className="text-sm font-medium">Cook Time</span>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1 mb-1">
+              <ChefHat className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="text-xs sm:text-sm font-medium">Cook Time</span>
             </div>
-            <div className="text-lg font-semibold">
+            <div className="text-sm sm:text-lg font-semibold">
               {recipe.cookTime ? `${recipe.cookTime} min` : '—'}
             </div>
           </div>
           
           {/* Total Time */}
           <div className="text-center">
-            <div className="flex items-center justify-center gap-1 mb-1">
-              <Clock className="h-4 w-4" />
-              <span className="text-sm font-medium">Total Time</span>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1 mb-1">
+              <Clock className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="text-xs sm:text-sm font-medium">Total Time</span>
             </div>
-            <div className="text-lg font-semibold">
+            <div className="text-sm sm:text-lg font-semibold">
               {totalTime > 0 ? `${totalTime} min` : '—'}
             </div>
           </div>
           
           {/* Servings */}
           <div className="text-center">
-            <div className="flex items-center justify-center gap-1 mb-1">
-              <Users className="h-4 w-4" />
-              <span className="text-sm font-medium">Servings</span>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1 mb-1">
+              <Users className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="text-xs sm:text-sm font-medium">Servings</span>
             </div>
-            <div className="text-lg font-semibold">{servings}</div>
+            <div className="text-sm sm:text-lg font-semibold">{servings}</div>
           </div>
         </div>
         
@@ -376,20 +376,16 @@ export function RecipeDisplay({ recipe, onEdit, canEdit = false, showComments = 
 
       {/* Comments */}
       {showComments && (
-        <Card>
-          <CardHeader>
-            <CardTitle>COMMENTS ({commentsEnabled ? 'Enabled' : 'Disabled'})</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <RecipeComments
-              recipeId={recipe.id}
-              recipeAuthorId={recipe.authorId || ''}
-              commentsEnabled={commentsEnabled}
-              onCommentsEnabledChange={setCommentsEnabled}
-              isRecipeOwner={isRecipeOwner}
-            />
-          </CardContent>
-        </Card>
+        <div>
+          <h2 className="text-xl font-semibold mb-4">COMMENTS</h2>
+          <RecipeComments
+            recipeId={recipe.id}
+            recipeAuthorId={recipe.authorId || ''}
+            commentsEnabled={commentsEnabled}
+            onCommentsEnabledChange={setCommentsEnabled}
+            isRecipeOwner={isRecipeOwner}
+          />
+        </div>
       )}
       
       {/* Add to Cookbook Modal */}
