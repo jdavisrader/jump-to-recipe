@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # PostgreSQL Database
   db:
@@ -24,8 +22,8 @@ services:
   # Next.js Application
   app:
     build:
-      context: ./jump-to-recipe
-      dockerfile: ../Dockerfile
+      context: .
+      dockerfile: Dockerfile
     container_name: jump-to-recipe-app
     restart: unless-stopped
     depends_on:
