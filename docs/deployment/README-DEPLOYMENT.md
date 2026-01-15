@@ -1,224 +1,361 @@
-# Jump to Recipe - Raspberry Pi Deployment Guide
+# Jump to Recipe - Docker Deployment Guide
 
-This guide will help you deploy the Jump to Recipe application to your Raspberry Pi running Ubuntu Server.
+This guide will help you deploy the Jump to Recipe application using Docker and Docker Compose on Ubuntu Server.
 
 ## Prerequisites
 
-- Raspberry Pi with Ubuntu Server installed
-- PostgreSQL installed and running
-- SSH access to your Raspberry Pi
-- Your project files ready to transfer
+- Ubuntu Server (20.04 or later)
+- Docker and Docker Compose installed
+- SSH access to your server
+- At least 2GB RAM and 10GB disk space
 
 ## Quick Start
 
-1. **Transfer files to your Raspberry Pi**
-2. **Run the deployment scripts in order**
-3. **Configure your environment**
-4. **Start the application**
+```bash
+# 1. Install Docker and Docker Compose (if not already installed)
+curl -fsSL https://get.docker.com -o get-docker.sh
+sudo sh get-docker.sh
+sudo usermod -aG docker $USER
+newgrp docker
+
+# 2. Clone or transfer your project
+git clone <your-repo> jump-to-recipe
+cd jump-to-recipe
+
+# 3. Configure environment
+cp .env.example .env
+nano .env  # Edit with your settings
+
+# 4. Deploy
+chmod +x scripts/docker-deploy.sh
+./scripts/docker-deploy.sh
+```
+
+Your app will be running at `http://localhost:3000`
 
 ## Detailed Steps
 
-### 1. System Setup
+### 1. Install Docker and Docker Compose
 
-First, run the system setup script to install all required dependencies:
+If Docker isn't installed yet:
 
 ```bash
-chmod +x scripts/deploy-to-pi.sh
-./scripts/deploy-to-pi.sh
-```
+# Install Docker
+curl -fsSL https://get.docker.com -o get-docker.sh
+sudo sh get-docker.sh
 
-This script will:
-- Update system packages
-- Install Node.js (LTS version)
-- Install PM2 process manager
-- Install Git
-- Create application directory at `/home/$USER/jump-to-recipe`
+# Add your user to docker group (to run without sudo)
+sudo usermod -aG docker $USER
+newgrp docker
+
+# Verify installation
+docker --version
+docker compose version
+```
 
 ### 2. Transfer Your Project Files
 
-Copy your project files to the Raspberry Pi. You can use one of these methods:
-
-**Option A: Using SCP**
+**Option A: Using Git**
 ```bash
-# From your local machine
-scp -r ./jump-to-recipe/ user@raspberry-pi-ip:/home/user/
-```
-
-**Option B: Using Git**
-```bash
-# On the Raspberry Pi
-cd /home/$USER
 git clone <your-repository-url> jump-to-recipe
+cd jump-to-recipe
 ```
 
-**Option C: Using rsync**
+**Option B: Using rsync**
 ```bash
 # From your local machine
-rsync -avz --exclude node_modules ./jump-to-recipe/ user@raspberry-pi-ip:/home/user/jump-to-recipe/
+rsync -avz --exclude node_modules --exclude .git ./jump-to-recipe/ user@server-ip:/home/user/jump-to-recipe/
 ```
 
-### 3. Application Setup
+**Option C: Using SCP**
+```bash
+# From your local machine
+scp -r ./jump-to-recipe/ user@server-ip:/home/user/
+```
 
-Run the application setup script:
+### 3. Configure Environment
+
+Create your `.env` file from the example:
 
 ```bash
-chmod +x scripts/setup-app.sh
-./scripts/setup-app.sh
+cp .env.example .env
+nano .env
 ```
 
-This script will:
-- Install Node.js dependencies
-- Create environment configuration
-- Build the application
-- Create PM2 configuration
-- Set up systemd service for auto-start
+**Important settings to configure:**
+- `DB_PASSWORD`: Set a strong database password
+- `NEXTAUTH_SECRET`: Generate with `openssl rand -base64 32`
+- `NEXTAUTH_URL`: Your server's URL (e.g., `http://your-server-ip:3000`)
+- OAuth credentials (if using Google/GitHub login)
 
-### 4. Database Setup
+### 4. Deploy the Application
 
-Run the database setup script:
+Run the deployment script:
 
 ```bash
-chmod +x scripts/setup-database.sh
-./scripts/setup-database.sh
+chmod +x scripts/docker-deploy.sh
+./scripts/docker-deploy.sh
 ```
 
-This script will:
-- Create the database if it doesn't exist
-- Set up database user and permissions
+This will:
+- Build Docker images
+- Start PostgreSQL database
+- Start Next.js application
 - Run database migrations
-- Optionally seed with sample data
-
-### 5. Start the Application
-
-Start the application:
-
-```bash
-chmod +x scripts/start-app.sh
-./scripts/start-app.sh
-```
+- Set up health checks
 
 The application will be available at:
 - Local: `http://localhost:3000`
-- Network: `http://your-pi-ip:3000`
+- Network: `http://your-server-ip:3000`
 
-## Environment Configuration
+## Docker Architecture
 
-Edit the `.env` file in your application directory to configure:
+The deployment uses three containers:
 
+1. **PostgreSQL Database** (`db`)
+   - Persistent data storage
+   - Automatic health checks
+   - Port 5432 exposed for direct access
+
+2. **Next.js Application** (`app`)
+   - Multi-stage build for optimization
+   - Automatic restarts on failure
+   - Port 3000 exposed
+
+3. **Nginx Reverse Proxy** (`nginx`) - Optional
+   - SSL/TLS termination
+   - Rate limiting
+   - Only starts with `--profile production`
+
+## Management Commands
+
+### Basic Operations
 ```bash
-# Database connection
-DATABASE_URL="postgres://username:password@localhost:5432/jump_to_recipe"
+# View running containers
+docker compose ps
 
-# Environment
-NODE_ENV="production"
+# View logs
+docker compose logs -f app      # Application logs
+docker compose logs -f db       # Database logs
+docker compose logs -f          # All logs
 
-# File storage (set to false for local storage)
-USE_S3=false
+# Restart services
+docker compose restart app      # Restart app only
+docker compose restart          # Restart all
 
-# AWS S3 (only if USE_S3=true)
-AWS_ACCESS_KEY_ID="your_key"
-AWS_SECRET_ACCESS_KEY="your_secret"
-AWS_REGION="us-east-1"
-AWS_S3_BUCKET="your-bucket"
-```
+# Stop everything
+docker compose down
 
-## Management Scripts
-
-### Start/Stop Application
-```bash
-./scripts/start-app.sh    # Start the application
-./scripts/stop-app.sh     # Stop the application
+# Stop and remove volumes (⚠️ deletes data)
+docker compose down -v
 ```
 
 ### Update Application
 ```bash
-./scripts/update-app.sh   # Update with new code and restart
+# Pull latest code and update
+./scripts/docker-update.sh
+
+# Or manually:
+git pull
+docker compose build app
+docker compose up -d app
+docker compose exec app npm run db:push
 ```
 
-### PM2 Commands
+### Backup and Restore
 ```bash
-pm2 status                    # Check application status
-pm2 logs jump-to-recipe      # View logs
-pm2 restart jump-to-recipe   # Restart application
-pm2 monit                    # Monitor resources
+# Create backup
+./scripts/docker-backup.sh
+
+# Restore from backup
+./scripts/docker-restore.sh 20260114_120000
+
+# List available backups
+ls -lh backups/
+```
+
+## Production Setup with Nginx and SSL
+
+To enable the Nginx reverse proxy with SSL:
+
+### 1. Start with Nginx
+```bash
+docker compose --profile production up -d
+```
+
+### 2. Set up SSL with Let's Encrypt
+
+```bash
+# Install certbot
+sudo apt install certbot
+
+# Get SSL certificate
+sudo certbot certonly --standalone -d your-domain.com
+
+# Copy certificates
+sudo mkdir -p nginx/ssl
+sudo cp /etc/letsencrypt/live/your-domain.com/fullchain.pem nginx/ssl/cert.pem
+sudo cp /etc/letsencrypt/live/your-domain.com/privkey.pem nginx/ssl/key.pem
+sudo chown -R $USER:$USER nginx/ssl
+
+# Update nginx.conf to enable HTTPS (uncomment the SSL server block)
+nano nginx/nginx.conf
+
+# Restart nginx
+docker compose restart nginx
+```
+
+### 3. Auto-renew SSL certificates
+
+```bash
+# Add to crontab
+sudo crontab -e
+
+# Add this line:
+0 0 * * * certbot renew --quiet && docker compose restart nginx
 ```
 
 ## Firewall Configuration
 
-If you have a firewall enabled, allow port 3000:
-
 ```bash
+# Enable firewall
+sudo ufw enable
+
+# Allow SSH (important!)
+sudo ufw allow 22
+
+# Allow HTTP and HTTPS
+sudo ufw allow 80
+sudo ufw allow 443
+
+# Or just allow port 3000 if not using Nginx
 sudo ufw allow 3000
+
+# Check status
+sudo ufw status
 ```
 
 ## Auto-Start on Boot
 
-The setup script creates a systemd service that will automatically start the application on boot:
-
-```bash
-sudo systemctl status jump-to-recipe    # Check service status
-sudo systemctl start jump-to-recipe     # Start service
-sudo systemctl stop jump-to-recipe      # Stop service
-```
+Docker containers are configured with `restart: unless-stopped`, so they'll automatically start on system boot. No additional configuration needed!
 
 ## Troubleshooting
 
-### Check Application Logs
+### Check Container Status
 ```bash
-pm2 logs jump-to-recipe
-# or
-tail -f /home/$USER/jump-to-recipe/logs/combined.log
+docker compose ps                    # Container status
+docker compose logs -f app          # Application logs
+docker compose logs -f db           # Database logs
+docker stats                        # Resource usage
 ```
 
-### Check Database Connection
+### Access Database Directly
 ```bash
-cd /home/$USER/jump-to-recipe
-npm run db:studio  # Opens Drizzle Studio on port 4983
-```
+# Connect to PostgreSQL
+docker compose exec db psql -U jumptorecipe jump_to_recipe
 
-### Check System Resources
-```bash
-pm2 monit          # PM2 monitoring
-htop               # System resources
-df -h              # Disk usage
+# Run Drizzle Studio (from host)
+cd jump-to-recipe
+npm run db:studio
 ```
 
 ### Common Issues
 
-1. **Port 3000 already in use**
-   - Change the PORT in ecosystem.config.js
-   - Or kill the process using port 3000
+1. **Port already in use**
+   ```bash
+   # Check what's using the port
+   sudo lsof -i :3000
+   
+   # Change port in docker-compose.yml
+   # ports:
+   #   - "3001:3000"  # Use 3001 instead
+   ```
 
 2. **Database connection failed**
-   - Check PostgreSQL is running: `sudo systemctl status postgresql`
-   - Verify DATABASE_URL in .env file
-   - Check database user permissions
+   ```bash
+   # Check database is healthy
+   docker compose ps
+   
+   # Check database logs
+   docker compose logs db
+   
+   # Verify DATABASE_URL in .env matches docker-compose.yml
+   ```
 
 3. **Build failed**
-   - Check Node.js version: `node --version` (should be 18+)
-   - Clear node_modules and reinstall: `rm -rf node_modules && npm install`
+   ```bash
+   # Clear Docker cache and rebuild
+   docker compose build --no-cache app
+   
+   # Check Docker disk space
+   docker system df
+   
+   # Clean up unused images
+   docker system prune -a
+   ```
 
-4. **Permission errors**
-   - Ensure proper file permissions: `chmod +x scripts/*.sh`
-   - Check directory ownership: `chown -R $USER:$USER /home/$USER/jump-to-recipe`
+4. **Container keeps restarting**
+   ```bash
+   # Check logs for errors
+   docker compose logs --tail=100 app
+   
+   # Check health status
+   docker inspect jump-to-recipe-app | grep -A 10 Health
+   ```
+
+5. **Permission errors with volumes**
+   ```bash
+   # Fix volume permissions
+   docker compose down
+   sudo chown -R $USER:$USER ./uploads
+   docker compose up -d
+   ```
 
 ## Performance Optimization
 
-For better performance on Raspberry Pi:
+### Resource Limits
 
-1. **Increase swap space** (if you have limited RAM):
-```bash
-sudo fallocate -l 2G /swapfile
-sudo chmod 600 /swapfile
-sudo mkswap /swapfile
-sudo swapon /swapfile
+Add resource limits to `docker-compose.yml`:
+
+```yaml
+services:
+  app:
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+        reservations:
+          memory: 512M
 ```
 
-2. **Optimize PM2 settings** in ecosystem.config.js:
-   - Reduce max_memory_restart for Pi's limited RAM
-   - Set instances to 1 for single-core optimization
+### Docker Optimization
 
-3. **Use local file storage** instead of S3 to reduce network overhead
+```bash
+# Enable Docker BuildKit for faster builds
+export DOCKER_BUILDKIT=1
+
+# Use Docker layer caching
+docker compose build --build-arg BUILDKIT_INLINE_CACHE=1
+```
+
+### Database Tuning
+
+For better PostgreSQL performance, create `postgres.conf`:
+
+```bash
+# Adjust based on your server RAM
+shared_buffers = 256MB
+effective_cache_size = 1GB
+maintenance_work_mem = 64MB
+```
+
+Mount it in docker-compose.yml:
+```yaml
+db:
+  volumes:
+    - ./postgres.conf:/etc/postgresql/postgresql.conf
+```
 
 ## Security Considerations
 
@@ -230,20 +367,103 @@ sudo swapon /swapfile
 
 ## Backup Strategy
 
-Regular backups are created automatically during updates. Manual backup:
+### Automated Backups
+
+Set up a cron job for regular backups:
 
 ```bash
-# Backup application
-cp -r /home/$USER/jump-to-recipe /home/$USER/jump-to-recipe_backup_$(date +%Y%m%d)
+# Edit crontab
+crontab -e
 
-# Backup database
-pg_dump -h localhost -U your_user jump_to_recipe > backup_$(date +%Y%m%d).sql
+# Add daily backup at 2 AM
+0 2 * * * cd /home/$USER/jump-to-recipe && ./scripts/docker-backup.sh
+
+# Add weekly cleanup (keep last 30 days)
+0 3 * * 0 find /home/$USER/jump-to-recipe/backups -name "*.sql" -mtime +30 -delete
+```
+
+### Manual Backup
+
+```bash
+# Create backup
+./scripts/docker-backup.sh
+
+# Backups are saved to ./backups/ directory
+```
+
+### Restore from Backup
+
+```bash
+# List available backups
+ls -lh backups/
+
+# Restore specific backup
+./scripts/docker-restore.sh 20260114_120000
+```
+
+### Off-site Backup
+
+```bash
+# Sync backups to remote server
+rsync -avz backups/ user@backup-server:/backups/jump-to-recipe/
+
+# Or use cloud storage (example with AWS S3)
+aws s3 sync backups/ s3://your-bucket/jump-to-recipe-backups/
+```
+
+## Monitoring
+
+### Basic Monitoring
+
+```bash
+# Real-time container stats
+docker stats
+
+# Check container health
+docker compose ps
+
+# View resource usage
+docker system df
+```
+
+### Advanced Monitoring (Optional)
+
+For production, consider adding monitoring tools:
+
+- **Portainer**: Web UI for Docker management
+- **Prometheus + Grafana**: Metrics and dashboards
+- **Uptime Kuma**: Uptime monitoring
+
+## Useful Docker Commands
+
+```bash
+# View all containers (including stopped)
+docker ps -a
+
+# Remove stopped containers
+docker container prune
+
+# Remove unused images
+docker image prune -a
+
+# View Docker disk usage
+docker system df
+
+# Clean up everything (⚠️ careful!)
+docker system prune -a --volumes
+
+# Execute command in running container
+docker compose exec app sh
+
+# View container environment variables
+docker compose exec app env
 ```
 
 ## Support
 
 If you encounter issues:
-1. Check the logs first
-2. Verify all prerequisites are met
-3. Ensure proper file permissions
-4. Check system resources (RAM, disk space)
+1. Check container logs: `docker compose logs -f`
+2. Verify `.env` configuration
+3. Check container health: `docker compose ps`
+4. Review system resources: `docker stats`
+5. Check Docker disk space: `docker system df`
