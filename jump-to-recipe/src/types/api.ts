@@ -94,22 +94,16 @@ export type ApiHandler<TParams = unknown, TResponse = unknown> = (
 
 export type GetRecipeCookbooksHandler = ApiHandler<
   RecipeParamsType,
-  BaseRecipeCookbooksQuery,
-  never,
   BaseApiSuccessResponse<GetRecipeCookbooksResponseData> | BaseApiErrorResponse
 >;
 
 export type AddRecipeToCookbookHandler = ApiHandler<
   CookbookParamsType,
-  never,
-  AddRecipeRequestBody,
   BaseApiSuccessResponse<AddRecipeResponseData> | BaseApiErrorResponse
 >;
 
 export type RemoveRecipeFromCookbookHandler = ApiHandler<
   CookbookRecipeParamsType,
-  never,
-  never,
   BaseApiSuccessResponse<RemoveRecipeResponseData> | BaseApiErrorResponse
 >;
 

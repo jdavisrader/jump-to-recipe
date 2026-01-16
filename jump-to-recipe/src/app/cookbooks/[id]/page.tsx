@@ -81,6 +81,18 @@ export default async function CookbookPage({ params }: { params: Promise<{ id: s
         ingredients: entry.recipe.ingredients as Ingredient[], // Cast jsonb to array
         instructions: entry.recipe.instructions as Instruction[], // Cast jsonb to array
         tags: entry.recipe.tags || [], // Ensure tags is always an array
+        ingredientSections: entry.recipe.ingredientSections as Array<{
+          id: string;
+          name: string;
+          order: number;
+          items: Ingredient[];
+        }> | undefined,
+        instructionSections: entry.recipe.instructionSections as Array<{
+          id: string;
+          name: string;
+          order: number;
+          items: Instruction[];
+        }> | undefined,
       },
       position: entry.position,
     })),

@@ -129,9 +129,9 @@ describe('SectionManager Empty Section Indicators', () => {
     const indicator = screen.getByText('This section is empty. Add ingredients below.');
     const indicatorContainer = indicator.parentElement;
 
-    expect(indicatorContainer).toHaveClass('flex', 'items-center', 'gap-2', 'p-3');
-    expect(indicatorContainer).toHaveClass('border-2', 'border-dashed', 'border-amber-200');
-    expect(indicatorContainer).toHaveClass('bg-amber-50', 'rounded-lg', 'text-amber-700', 'text-sm');
+    expect(indicatorContainer).toHaveClass('flex items-center gap-2 p-3');
+    expect(indicatorContainer).toHaveClass('border-2 border-dashed border-amber-200');
+    expect(indicatorContainer).toHaveClass('bg-amber-50 rounded-lg text-amber-700 text-sm');
   });
 
   it('includes visual dot indicator in empty section message', () => {

@@ -73,10 +73,10 @@ describe('My Recipes Components Accessibility', () => {
       );
       
       const region = screen.getByRole('region');
-      expect(region).toHaveClass('py-8', 'sm:py-12', 'lg:py-16');
+      expect(region).toHaveClass('py-8 sm:py-12 lg:py-16');
       
       const button = screen.getByRole('link');
-      expect(button).toHaveClass('w-full', 'sm:w-auto');
+      expect(button).toHaveClass('w-full sm:w-auto');
     });
   });
 
@@ -132,10 +132,10 @@ describe('My Recipes Components Accessibility', () => {
       );
       
       const region = screen.getByRole('region');
-      expect(region).toHaveClass('py-8', 'sm:py-12', 'lg:py-16');
+      expect(region).toHaveClass('py-8 sm:py-12 lg:py-16');
       
       const title = screen.getByRole('heading');
-      expect(title).toHaveClass('text-lg', 'sm:text-xl', 'lg:text-2xl');
+      expect(title).toHaveClass('text-lg sm:text-xl lg:text-2xl');
     });
 
     it('should have responsive search layout', () => {
@@ -143,10 +143,10 @@ describe('My Recipes Components Accessibility', () => {
       render(<RecipeSearch onSearch={mockOnSearch} />);
       
       const searchContainer = screen.getByRole('search').firstChild;
-      expect(searchContainer).toHaveClass('flex-col', 'sm:flex-row');
+      expect(searchContainer).toHaveClass('flex-col sm:flex-row');
       
       const filterButton = screen.getByRole('button', { name: /filters/i });
-      expect(filterButton).toHaveClass('w-full', 'sm:w-auto');
+      expect(filterButton).toHaveClass('w-full sm:w-auto');
     });
   });
 });

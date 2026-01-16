@@ -223,7 +223,8 @@ describe('Recipe Schema Backward Compatibility', () => {
       
       if (result.success) {
         expect(result.data.title).toBe('Updated Recipe');
-        expect(result.data.authorId).toBeUndefined();
+        // authorId should be stripped out by the schema
+        expect((result.data as any).authorId).toBeUndefined();
       }
     });
   });

@@ -80,7 +80,7 @@ export function RecipeInstructionsWithSections({
           id: `section-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`,
           name: 'Instructions',
           order: 0,
-          items: instructions.map(instruction => ({ ...instruction })), // Create copies to avoid reference issues
+          items: instructions.map((instruction: Instruction) => ({ ...instruction })), // Create copies to avoid reference issues
         };
         appendSection(defaultSection);
       } else {
@@ -97,7 +97,7 @@ export function RecipeInstructionsWithSections({
     } else {
       // Convert sections back to flat instructions
       const allInstructions = instructionSections.flatMap((section: InstructionSection) => 
-        section.items.map(item => ({ ...item })) // Create copies to avoid reference issues
+        section.items.map((item: Instruction) => ({ ...item })) // Create copies to avoid reference issues
       );
       
       // Clear sections using replace method
@@ -130,7 +130,7 @@ export function RecipeInstructionsWithSections({
     const currentSections = instructionSections || [];
     const sectionsChanged = 
       currentSections.length !== newSections.length ||
-      currentSections.some((current, index) => 
+      currentSections.some((current: InstructionSection, index: number) => 
         !newSections[index] || 
         current.id !== newSections[index].id ||
         current.name !== newSections[index].name ||
