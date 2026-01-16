@@ -84,7 +84,7 @@ describe('RecipePhotosUpload', () => {
     render(<RecipePhotosUpload {...defaultProps} disabled />);
     
     const uploadZone = screen.getByText('Drag & drop photos here, or click to select').closest('div')?.parentElement;
-    expect(uploadZone).toHaveClass('cursor-not-allowed', 'opacity-50');
+    expect(uploadZone).toHaveClass('cursor-not-allowed opacity-50');
   });
 
   it('creates file preview when files are selected', async () => {

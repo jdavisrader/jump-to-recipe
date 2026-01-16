@@ -4,9 +4,10 @@
 
 import { recipeCache, fetchWithCache, warmCache } from '../recipe-cache';
 import type { SearchParams } from '@/components/recipes/recipe-search';
+import type { Recipe } from '@/types/recipe';
 
-// Mock data
-const mockRecipe = {
+// Mock data - create a complete Recipe object
+const mockRecipe: Recipe = {
   id: '1',
   title: 'Test Recipe',
   description: 'A test recipe',
@@ -17,6 +18,15 @@ const mockRecipe = {
   cookTime: 30,
   prepTime: 15,
   servings: 4,
+  ingredients: [],
+  instructions: [],
+  difficulty: 'easy',
+  notes: null,
+  sourceUrl: null,
+  visibility: 'public',
+  commentsEnabled: true,
+  viewCount: 0,
+  likeCount: 0,
   createdAt: new Date('2024-01-01'),
   updatedAt: new Date('2024-01-01'),
 };
@@ -172,7 +182,7 @@ describe('Recipe Cache', () => {
       jest.advanceTimersByTime(1500);
 
       // Trigger cleanup (normally done by setInterval)
-      (recipeCache as { cleanup: () => void }).cleanup();
+      (recipeCache as any).cleanup();
 
       expect(recipeCache.getSizeInfo().current).toBe(0);
     });

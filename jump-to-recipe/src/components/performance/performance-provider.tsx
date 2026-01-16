@@ -6,16 +6,32 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useCallback } from 'react';
-import { usePerformanceMonitor, trackWebVitals } from '@/lib/performance-monitor';
+import { usePerformanceMonitor, trackWebVitals, type LoadingMetrics, type UserInteractionMetrics } from '@/lib/performance-monitor';
 import { recipeCache } from '@/lib/recipe-cache';
 
 interface PerformanceContextValue {
   markStart: (name: string, context?: Record<string, unknown>) => void;
   markEnd: (name: string, context?: Record<string, unknown>) => number;
-  trackInteraction: (type: string, context?: Record<string, unknown>) => void;
-  getReport: () => Record<string, unknown>;
+  trackInteraction: (type: keyof UserInteractionMetrics, context?: Record<string, unknown>) => void;
+  getReport: () => {
+    loadingMetrics: LoadingMetrics;
+    userMetrics: UserInteractionMetrics;
+    performanceCheck: {
+      initialLoadOk: boolean;
+      searchOk: boolean;
+      paginationOk: boolean;
+      overall: boolean;
+    };
+    recommendations: string[];
+  };
   optimizeCache: () => void;
-  getCacheStats: () => Record<string, unknown>;
+  getCacheStats: () => {
+    hits: number;
+    misses: number;
+    totalSize: number;
+    memoryUsage: number;
+    hitRate: number;
+  };
 }
 
 const PerformanceContext = createContext<PerformanceContextValue | null>(null);
@@ -168,8 +184,8 @@ export function withPerformanceTracking<P extends object>(
 export function PerformanceDebugger() {
   const { getReport, getCacheStats } = usePerformanceContext();
   const [showDebugger, setShowDebugger] = React.useState(false);
-  const [report, setReport] = React.useState<Record<string, unknown> | null>(null);
-  const [cacheStats, setCacheStats] = React.useState<Record<string, unknown> | null>(null);
+  const [report, setReport] = React.useState<ReturnType<typeof getReport> | null>(null);
+  const [cacheStats, setCacheStats] = React.useState<ReturnType<typeof getCacheStats> | null>(null);
 
   const updateStats = useCallback(() => {
     setReport(getReport());

@@ -127,7 +127,7 @@ async function fetchRecipeData(userId: string, searchParams: SearchParams) {
   const context: ErrorContext = {
     operation: 'fetchRecipeData',
     userId,
-    searchParams,
+    searchParams: searchParams as unknown as Record<string, unknown>,
     timestamp: Date.now(),
   };
 
@@ -242,7 +242,19 @@ export function useMyRecipes(): UseMyRecipesState & UseMyRecipesActions {
       if (cached) {
         setRecipes(cached.recipes);
         setPagination(cached.pagination);
-        setSearchInfo(cached.searchInfo);
+        const cachedFilters = cached.searchInfo.appliedFilters as any;
+        setSearchInfo({
+          query: cached.searchInfo.query,
+          hasQuery: cached.searchInfo.hasQuery,
+          sortBy: cached.searchInfo.sortBy,
+          appliedFilters: {
+            tags: (typeof cachedFilters?.tags === 'number' ? cachedFilters.tags : 0),
+            difficulty: Boolean(cachedFilters?.difficulty),
+            cookTimeRange: Boolean(cachedFilters?.cookTimeRange),
+            prepTimeRange: Boolean(cachedFilters?.prepTimeRange),
+            author: Boolean(cachedFilters?.author),
+          },
+        });
         setLoading(false);
         markEnd(operationName, { success: true, cached: true });
         
@@ -277,7 +289,7 @@ export function useMyRecipes(): UseMyRecipesState & UseMyRecipesActions {
       const context: ErrorContext = {
         operation: append ? 'loadMore' : 'fetchRecipes',
         userId: session.user.id,
-        searchParams,
+        searchParams: searchParams as unknown as Record<string, unknown>,
         timestamp: Date.now(),
       };
 
@@ -327,7 +339,19 @@ export function useMyRecipes(): UseMyRecipesState & UseMyRecipesActions {
       }
       
       setPagination(data.pagination || initialPagination);
-      setSearchInfo(data.searchInfo || initialSearchInfo);
+      const dataFilters = data.searchInfo?.appliedFilters as any;
+      setSearchInfo({
+        query: data.searchInfo?.query || '',
+        hasQuery: data.searchInfo?.hasQuery || false,
+        sortBy: data.searchInfo?.sortBy || 'createdAt',
+        appliedFilters: {
+          tags: (typeof dataFilters?.tags === 'number' ? dataFilters.tags : 0),
+          difficulty: Boolean(dataFilters?.difficulty),
+          cookTimeRange: Boolean(dataFilters?.cookTimeRange),
+          prepTimeRange: Boolean(dataFilters?.prepTimeRange),
+          author: Boolean(dataFilters?.author),
+        },
+      });
       
       // Reset retry count on success
       setRetryCount(0);
@@ -343,7 +367,7 @@ export function useMyRecipes(): UseMyRecipesState & UseMyRecipesActions {
       const context: ErrorContext = {
         operation: append ? 'loadMore' : 'fetchRecipes',
         userId: session?.user?.id,
-        searchParams,
+        searchParams: searchParams as unknown as Record<string, unknown>,
         timestamp: Date.now(),
       };
 

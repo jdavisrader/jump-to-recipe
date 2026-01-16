@@ -38,7 +38,7 @@ class MockResponse {
 }
 
 // Replace global Response with mock
-(global as { Response: typeof MockResponse }).Response = MockResponse;
+(global as unknown as { Response: typeof MockResponse }).Response = MockResponse;
 
 // Mock AbortSignal.timeout for Node.js environment
 if (!AbortSignal.timeout) {

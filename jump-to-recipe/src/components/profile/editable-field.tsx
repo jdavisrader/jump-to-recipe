@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -39,14 +39,16 @@ export function EditableField({
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Debounced validation function
-  const debouncedValidation = useCallback(
-    () => debounce((value: string) => {
-      if (validation) {
-        const validationError = validation(value);
-        setError(validationError);
-      }
-    }, 300),
-    [validation]
+  const validateDebounced = useCallback((value: string): void => {
+    if (validation) {
+      const validationError = validation(value);
+      setError(validationError);
+    }
+  }, [validation]);
+
+  const debouncedValidation = useMemo(
+    () => debounce(validateDebounced as (...args: unknown[]) => unknown, 300),
+    [validateDebounced]
   );
 
   // Update edit value when prop value changes
@@ -117,7 +119,7 @@ export function EditableField({
     
     // Trigger debounced validation
     if (validation && newValue.trim()) {
-      debouncedValidation()(newValue);
+      debouncedValidation(newValue);
     }
   };
 

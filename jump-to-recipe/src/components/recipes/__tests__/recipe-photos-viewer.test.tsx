@@ -125,7 +125,7 @@ describe('RecipePhotosViewer', () => {
       render(<RecipePhotosViewer {...defaultProps} />);
       
       const grid = screen.getAllByRole('img')[0].closest('.grid');
-      expect(grid).toHaveClass('grid-cols-2', 'sm:grid-cols-3', 'md:grid-cols-4', 'lg:grid-cols-5');
+      expect(grid).toHaveClass('grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5');
     });
 
     it('renders photos with correct src paths', () => {
@@ -175,7 +175,7 @@ describe('RecipePhotosViewer', () => {
       
       const photoContainers = screen.getAllByRole('img').map(img => img.parentElement);
       photoContainers.forEach(container => {
-        expect(container).toHaveClass('cursor-pointer', 'group');
+        expect(container).toHaveClass('cursor-pointer group');
       });
     });
   });

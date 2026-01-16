@@ -230,7 +230,7 @@ describe('measureAsync utility', () => {
 
 describe('trackWebVitals', () => {
   test('should set up performance observers', () => {
-    jest.spyOn(MockPerformanceObserver.prototype, 'observe');
+    const observeSpy = jest.spyOn(MockPerformanceObserver.prototype, 'observe');
     
     trackWebVitals();
     

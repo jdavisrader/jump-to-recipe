@@ -326,7 +326,7 @@ describe('RecipePhotosManager', () => {
       render(<RecipePhotosManager {...defaultProps} />);
       
       const grid = screen.getByTestId('drag-drop-context').querySelector('.grid');
-      expect(grid).toHaveClass('grid-cols-2', 'sm:grid-cols-3', 'md:grid-cols-4', 'lg:grid-cols-5');
+      expect(grid).toHaveClass('grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5');
     });
   });
 

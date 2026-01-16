@@ -691,7 +691,7 @@ describe('PUT /api/admin/users/[id]', () => {
         })
         .mockResolvedValueOnce(null);
 
-      mockBcryptHash.mockRejectedValue(new Error('Hashing failed'));
+      mockBcryptHash.mockRejectedValue(new Error('Hashing failed') as never);
 
       mockRequest = createMockRequest({
         name: 'John Doe',

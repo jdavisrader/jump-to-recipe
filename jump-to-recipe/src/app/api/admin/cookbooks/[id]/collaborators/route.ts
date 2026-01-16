@@ -98,7 +98,10 @@ export async function POST(
 
     const response: AddCollaboratorResponse = {
       success: true,
-      collaborator: newCollaborator[0],
+      collaborator: {
+        ...newCollaborator[0],
+        permission: newCollaborator[0].permission as 'view' | 'edit',
+      },
       message: `Successfully added ${user[0].name} as a collaborator`
     };
 

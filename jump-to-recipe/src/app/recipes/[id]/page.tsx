@@ -35,6 +35,18 @@ export default async function RecipePage({ params }: RecipePageProps) {
     ...recipe,
     ingredients: recipe.ingredients as Ingredient[],
     instructions: recipe.instructions as Instruction[],
+    ingredientSections: recipe.ingredientSections as Array<{
+      id: string;
+      name: string;
+      order: number;
+      items: Ingredient[];
+    }> | undefined,
+    instructionSections: recipe.instructionSections as Array<{
+      id: string;
+      name: string;
+      order: number;
+      items: Instruction[];
+    }> | undefined,
     tags: recipe.tags || [],
     createdAt: recipe.createdAt!,
     updatedAt: recipe.updatedAt!,
