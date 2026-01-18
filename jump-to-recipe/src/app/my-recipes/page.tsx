@@ -19,6 +19,7 @@ function MyRecipesContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const mainContentRef = useRef<HTMLElement>(null);
+  const hasFetchedRef = useRef(false);
 
   const {
     recipes,
@@ -46,7 +47,9 @@ function MyRecipesContent() {
 
   // Parse initial URL parameters and fetch recipes when user is authenticated
   useEffect(() => {
-    if (session?.user?.id && status === 'authenticated') {
+    if (session?.user?.id && status === 'authenticated' && !hasFetchedRef.current) {
+      hasFetchedRef.current = true;
+
       // Parse URL parameters to restore search state
       const initialSearchParams: SearchParams = {};
 
@@ -99,7 +102,7 @@ function MyRecipesContent() {
       // Fetch recipes with initial parameters
       fetchRecipes(initialSearchParams);
     }
-  }, [session?.user?.id, status, fetchRecipes, searchParams]);
+  }, [session?.user?.id, status]); // Removed fetchRecipes and searchParams from dependencies
 
   // Keyboard navigation handler
   useEffect(() => {
@@ -177,21 +180,21 @@ function MyRecipesContent() {
 
       {/* Search Component */}
       <div>
-        <ErrorBoundaryWrapper
-          fallback={
-            <div className="text-center py-4" role="alert">
-              <p className="text-muted-foreground">Search is temporarily unavailable</p>
-            </div>
-          }
-        >
-          <Suspense fallback={<Skeleton className="h-24 w-full" />}>
+        <Suspense fallback={<Skeleton className="h-24 w-full" />}>
+          <ErrorBoundaryWrapper
+            fallback={
+              <div className="text-center py-4" role="alert">
+                <p className="text-muted-foreground">Search is temporarily unavailable</p>
+              </div>
+            }
+          >
             <RecipeSearch
               onSearch={handleSearch}
               isLoading={loading}
               disabled={gracefulDegradation.disableFeatures.includes('search')}
             />
-          </Suspense>
-        </ErrorBoundaryWrapper>
+          </ErrorBoundaryWrapper>
+        </Suspense>
       </div>
 
       {/* Search Results Info */}
