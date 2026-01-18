@@ -4,13 +4,13 @@ import 'dotenv/config';
 // Define environment variable schema
 const envSchema = z.object({
   // Database
-  DATABASE_URL: z.string().url(),
+  DATABASE_URL: z.string().min(1),
   
   // App
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   
   // Auth
-  NEXTAUTH_URL: z.string().url().optional(),
+  NEXTAUTH_URL: z.string().min(1).optional(),
   NEXTAUTH_SECRET: z.string().min(1),
   
   // OAuth Providers
@@ -18,8 +18,8 @@ const envSchema = z.object({
   GOOGLE_SECRET: z.string().min(1),
   
   // File Storage
-  MAX_RECIPE_PHOTO_SIZE_MB: z.string().regex(/^\d+$/).transform(Number).optional().default(() => 10),
-  MAX_RECIPE_PHOTO_COUNT: z.string().regex(/^\d+$/).transform(Number).optional().default(() => 10),
+  MAX_RECIPE_PHOTO_SIZE_MB: z.string().regex(/^\d+$/).default('10').transform(Number),
+  MAX_RECIPE_PHOTO_COUNT: z.string().regex(/^\d+$/).default('10').transform(Number),
 });
 
 // Parse and validate environment variables
