@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { Suspense, useState, useEffect } from 'react';
 import Link from 'next/link';
 import { RecipeCard, RecipeSearch } from '@/components/recipes';
 import { Button } from '@/components/ui/button';
@@ -13,7 +13,7 @@ interface RecipeWithAuthor extends Recipe {
   authorName?: string;
 }
 
-export default function RecipesPage() {
+function RecipesContent() {
   const [recipes, setRecipes] = useState<RecipeWithAuthor[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -153,7 +153,9 @@ export default function RecipesPage() {
       </div>
 
       {/* Search Component */}
-      <RecipeSearch onSearch={handleSearch} isLoading={loading} />
+      <Suspense fallback={<Skeleton className="h-24 w-full" />}>
+        <RecipeSearch onSearch={handleSearch} isLoading={loading} />
+      </Suspense>
 
       {/* Search Results Info */}
       {searchInfo.hasQuery && (
@@ -256,5 +258,18 @@ export default function RecipesPage() {
         </>
       )}
     </div>
+  );
+}
+
+
+export default function RecipesPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex min-h-screen items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    }>
+      <RecipesContent />
+    </Suspense>
   );
 }

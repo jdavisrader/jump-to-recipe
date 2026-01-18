@@ -184,11 +184,13 @@ function MyRecipesContent() {
             </div>
           }
         >
-          <RecipeSearch
-            onSearch={handleSearch}
-            isLoading={loading}
-            disabled={gracefulDegradation.disableFeatures.includes('search')}
-          />
+          <Suspense fallback={<Skeleton className="h-24 w-full" />}>
+            <RecipeSearch
+              onSearch={handleSearch}
+              isLoading={loading}
+              disabled={gracefulDegradation.disableFeatures.includes('search')}
+            />
+          </Suspense>
         </ErrorBoundaryWrapper>
       </div>
 
