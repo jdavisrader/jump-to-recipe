@@ -13,15 +13,33 @@ RUN npm ci --legacy-peer-deps || npm install --legacy-peer-deps
 # Rebuild the source code only when needed
 FROM base AS builder
 WORKDIR /app
+
+# Declare build arguments - these will be passed from docker-compose
+ARG DATABASE_URL
+ARG NEXTAUTH_SECRET
+ARG NEXTAUTH_URL
+ARG GOOGLE_ID
+ARG GOOGLE_SECRET
+ARG GITHUB_ID
+ARG GITHUB_SECRET
+
+# Promote ARGs to ENV so they're available during build
+ENV DATABASE_URL=${DATABASE_URL}
+ENV NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
+ENV NEXTAUTH_URL=${NEXTAUTH_URL}
+ENV GOOGLE_ID=${GOOGLE_ID}
+ENV GOOGLE_SECRET=${GOOGLE_SECRET}
+ENV GITHUB_ID=${GITHUB_ID}
+ENV GITHUB_SECRET=${GITHUB_SECRET}
+
+# Set standard build environment variables
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV NODE_ENV=production
+
 COPY --from=deps /app/node_modules ./node_modules
 COPY jump-to-recipe/ .
 
-# Set environment variables for build
-ENV NEXT_TELEMETRY_DISABLED=1
-ENV NODE_ENV=production
-ENV SKIP_ENV_VALIDATION=true
-
-# Build the application
+# Build the application with real environment variables
 RUN npm run build
 
 # Production image, copy all the files and run next
