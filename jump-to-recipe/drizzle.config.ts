@@ -13,9 +13,7 @@ export default {
   out: './src/db/migrations',
   dialect: 'postgresql',
   dbCredentials: {
-    host: 'localhost',
-    port: 5432,
-    database: 'kiroJumpToRecipe',
+    url: process.env.DATABASE_URL,
   },
   verbose: true,
   strict: true,

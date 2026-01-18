@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { RecipeCard, RecipeSearch } from '@/components/recipes';
 import { Button } from '@/components/ui/button';
@@ -153,7 +153,9 @@ export default function RecipesClient() {
       </div>
 
       {/* Search Component */}
-      <RecipeSearch onSearch={handleSearch} isLoading={loading} />
+      <Suspense fallback={<Skeleton className="h-24 w-full" />}>
+        <RecipeSearch onSearch={handleSearch} isLoading={loading} />
+      </Suspense>
 
       {/* Search Results Info */}
       {searchInfo.hasQuery && (
