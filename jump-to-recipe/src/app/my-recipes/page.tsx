@@ -19,7 +19,7 @@ function MyRecipesContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const mainContentRef = useRef<HTMLElement>(null);
-  
+
   const {
     recipes,
     loading,
@@ -49,10 +49,10 @@ function MyRecipesContent() {
     if (session?.user?.id && status === 'authenticated') {
       // Parse URL parameters to restore search state
       const initialSearchParams: SearchParams = {};
-      
+
       const query = searchParams.get('query');
       if (query) initialSearchParams.query = query;
-      
+
       const tags = searchParams.get('tags');
       if (tags) {
         try {
@@ -61,41 +61,41 @@ function MyRecipesContent() {
           // Ignore parsing errors
         }
       }
-      
+
       const difficulty = searchParams.get('difficulty');
       if (difficulty && ['easy', 'medium', 'hard'].includes(difficulty)) {
         initialSearchParams.difficulty = difficulty as 'easy' | 'medium' | 'hard';
       }
-      
+
       const maxCookTime = searchParams.get('maxCookTime');
       if (maxCookTime) {
         const parsed = parseInt(maxCookTime);
         if (!isNaN(parsed)) initialSearchParams.maxCookTime = parsed;
       }
-      
+
       const minCookTime = searchParams.get('minCookTime');
       if (minCookTime) {
         const parsed = parseInt(minCookTime);
         if (!isNaN(parsed)) initialSearchParams.minCookTime = parsed;
       }
-      
+
       const maxPrepTime = searchParams.get('maxPrepTime');
       if (maxPrepTime) {
         const parsed = parseInt(maxPrepTime);
         if (!isNaN(parsed)) initialSearchParams.maxPrepTime = parsed;
       }
-      
+
       const minPrepTime = searchParams.get('minPrepTime');
       if (minPrepTime) {
         const parsed = parseInt(minPrepTime);
         if (!isNaN(parsed)) initialSearchParams.minPrepTime = parsed;
       }
-      
+
       const sortBy = searchParams.get('sortBy');
       if (sortBy && ['newest', 'oldest', 'popular', 'title', 'cookTime', 'prepTime'].includes(sortBy)) {
         initialSearchParams.sortBy = sortBy as SearchParams['sortBy'];
       }
-      
+
       // Fetch recipes with initial parameters
       fetchRecipes(initialSearchParams);
     }
@@ -134,8 +134,8 @@ function MyRecipesContent() {
   return (
     <div className="container mx-auto px-4 py-4 sm:py-6 lg:py-8 space-y-6 sm:space-y-8">
       {/* Skip to main content link for screen readers */}
-      <a 
-        href="#main-content" 
+      <a
+        href="#main-content"
         className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-primary text-primary-foreground px-4 py-2 rounded-md z-50"
       >
         Skip to main content
@@ -184,8 +184,8 @@ function MyRecipesContent() {
             </div>
           }
         >
-          <RecipeSearch 
-            onSearch={handleSearch} 
+          <RecipeSearch
+            onSearch={handleSearch}
             isLoading={loading}
             disabled={gracefulDegradation.disableFeatures.includes('search')}
           />
@@ -194,7 +194,7 @@ function MyRecipesContent() {
 
       {/* Search Results Info */}
       {(searchInfo.hasQuery || pagination.total > 0) && (
-        <div 
+        <div
           className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-sm text-muted-foreground"
           role="status"
           aria-live="polite"
@@ -250,7 +250,7 @@ function MyRecipesContent() {
 
       {/* Loading State */}
       {loading && (
-        <div 
+        <div
           className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6"
           role="status"
           aria-label="Loading recipes"
@@ -276,7 +276,7 @@ function MyRecipesContent() {
               <EmptyState
                 title={searchInfo.hasQuery ? "No recipes found" : "You haven't added any recipes yet"}
                 description={
-                  searchInfo.hasQuery 
+                  searchInfo.hasQuery
                     ? `No recipes match your search "${searchInfo.query}". Try adjusting your search terms or create a new recipe.`
                     : "Start building your personal recipe collection by creating your first recipe or importing one from a URL."
                 }
@@ -296,7 +296,7 @@ function MyRecipesContent() {
                     </div>
                   }
                 >
-                  <div 
+                  <div
                     className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6"
                     role="grid"
                     aria-label="Recipe collection"
@@ -347,7 +347,7 @@ function MyRecipesContent() {
                     </div>
                   </div>
                 )}
-                
+
                 {/* End of results indicator */}
                 {!pagination.hasNextPage && recipes.length > 0 && (
                   <div className="text-center mt-6 sm:mt-8" role="status">
@@ -375,4 +375,4 @@ export default function MyRecipesPage() {
       <MyRecipesContent />
     </Suspense>
   );
-}}
+}
