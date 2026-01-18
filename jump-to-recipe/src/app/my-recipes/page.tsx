@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { Suspense, useEffect, useRef } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
@@ -14,7 +14,7 @@ import { Plus, Upload, ChefHat, Loader2 } from 'lucide-react';
 import { useMyRecipes } from '@/hooks/useMyRecipes';
 import type { SearchParams } from '@/components/recipes/recipe-search';
 
-export default function MyRecipesPage() {
+function MyRecipesContent() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -364,3 +364,15 @@ export default function MyRecipesPage() {
     </div>
   );
 }
+
+export default function MyRecipesPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex min-h-screen items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    }>
+      <MyRecipesContent />
+    </Suspense>
+  );
+}}

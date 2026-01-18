@@ -1,14 +1,10 @@
 'use client';
 
-import { useEffect } from 'react';
+import { Suspense, useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useToast } from '@/components/ui/use-toast';
 
-export default function AdminLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+function AdminLayoutContent({ children }: { children: React.ReactNode }) {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { toast } = useToast();
@@ -27,4 +23,16 @@ export default function AdminLayout({
   }, [searchParams, router, toast]);
 
   return <>{children}</>;
+}
+
+export default function AdminLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <Suspense fallback={<div>{children}</div>}>
+      <AdminLayoutContent>{children}</AdminLayoutContent>
+    </Suspense>
+  );
 }
