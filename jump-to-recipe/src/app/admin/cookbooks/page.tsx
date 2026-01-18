@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { redirect } from 'next/navigation';
@@ -22,7 +23,9 @@ export default async function AdminCookbooksPage() {
             Manage cookbooks, ownership, and collaborators across the platform
           </p>
         </div>
-        <CookbookListClient />
+        <Suspense fallback={<div className="text-center py-8">Loading cookbooks...</div>}>
+          <CookbookListClient />
+        </Suspense>
       </div>
     </div>
   );
