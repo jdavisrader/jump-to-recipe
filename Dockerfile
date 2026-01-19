@@ -63,6 +63,12 @@ COPY --from=builder /app/.next/static ./.next/static
 # Copy package.json for npm scripts
 COPY --from=builder /app/package.json ./package.json
 
+# Copy drizzle config for database operations
+COPY --from=builder /app/drizzle.config.js ./drizzle.config.js
+
+# Copy database schema and migrations for drizzle-kit
+COPY --from=builder /app/src/db ./src/db
+
 # Set correct permissions
 RUN chown -R nextjs:nodejs /app
 
