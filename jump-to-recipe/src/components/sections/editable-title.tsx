@@ -17,6 +17,12 @@ interface EditableTitleProps {
   className?: string;
   /** Whether editing is disabled */
   disabled?: boolean;
+  /** ID for the element (for aria-labelledby) */
+  id?: string;
+  /** Whether the field has a validation error */
+  'aria-invalid'?: boolean;
+  /** ID of the element describing this field */
+  'aria-describedby'?: string;
 }
 
 /**
@@ -43,7 +49,10 @@ export function EditableTitle({
   onChange,
   placeholder = 'Untitled Section',
   className,
-  disabled = false
+  disabled = false,
+  id,
+  'aria-invalid': ariaInvalid,
+  'aria-describedby': ariaDescribedby
 }: EditableTitleProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(value);
@@ -100,11 +109,15 @@ export function EditableTitle({
         onKeyDown={handleKeyDown}
         onBlur={handleBlur}
         disabled={disabled}
+        id={id}
+        aria-invalid={ariaInvalid}
+        aria-describedby={ariaDescribedby}
         className={cn(
           'bg-transparent border-none outline-none rounded px-1 py-0.5 transition-all duration-200',
           'animate-in fade-in-0 duration-200',
           'focus:section-focus-ring',
           disabled && 'opacity-50 cursor-not-allowed',
+          ariaInvalid && 'border-red-500 focus:ring-red-500',
           className
         )}
         placeholder={placeholder}
@@ -117,13 +130,18 @@ export function EditableTitle({
       type="button"
       onClick={() => !disabled && setIsEditing(true)}
       disabled={disabled}
+      id={id}
+      aria-invalid={ariaInvalid}
+      aria-describedby={ariaDescribedby}
       className={cn(
         'text-left hover:bg-gray-100 dark:hover:bg-gray-800 rounded px-1 py-0.5 section-button',
         'focus:outline-none focus:section-focus-ring',
         disabled && 'opacity-50 cursor-not-allowed hover:bg-transparent hover:scale-100',
+        ariaInvalid && 'border border-red-500',
         className
       )}
       title={disabled ? 'Editing disabled' : 'Click to edit'}
+      aria-label={`Section name: ${displayValue}. Click to edit.`}
     >
       {displayValue}
     </button>

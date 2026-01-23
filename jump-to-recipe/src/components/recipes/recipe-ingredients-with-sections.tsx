@@ -34,6 +34,9 @@ interface RecipeIngredientsWithSectionsProps {
   setError?: UseFormSetError<any>;
   clearErrors?: UseFormClearErrors<any>;
   isLoading?: boolean;
+  validationErrors?: Map<string, string>;
+  onValidate?: () => void;
+  onFieldChange?: () => void;
 }
 
 export function RecipeIngredientsWithSections({
@@ -43,6 +46,9 @@ export function RecipeIngredientsWithSections({
   setError,
   clearErrors,
   isLoading = false,
+  validationErrors,
+  onValidate,
+  onFieldChange,
 }: RecipeIngredientsWithSectionsProps) {
   const [useSections, setUseSections] = useState(false);
 
@@ -83,7 +89,7 @@ export function RecipeIngredientsWithSections({
       // Convert flat ingredients to sections
       if (ingredients.length > 0) {
         const defaultSection: IngredientSection = {
-          id: `section-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`,
+          id: uuidv4(),
           name: 'Ingredients',
           order: 0,
           items: ingredients.map((ingredient: Ingredient) => ({ ...ingredient })), // Create copies to avoid reference issues
@@ -92,7 +98,7 @@ export function RecipeIngredientsWithSections({
       } else {
         // Create an empty section if no ingredients exist
         const emptySection: IngredientSection = {
-          id: `section-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`,
+          id: uuidv4(),
           name: 'Ingredients',
           order: 0,
           items: [],
@@ -161,6 +167,11 @@ export function RecipeIngredientsWithSections({
 
     // Validate sections after update
     validateSections(newSections);
+    
+    // Trigger validation callback if provided
+    if (onValidate) {
+      onValidate();
+    }
   };
 
   // Validation function for sections
@@ -270,6 +281,17 @@ export function RecipeIngredientsWithSections({
                       // Clear error if field becomes valid
                       if (e.target.value.trim() && clearErrors) {
                         clearErrors(`${fieldBaseName}.name`);
+                      }
+                      // Trigger validation on blur
+                      if (onValidate) {
+                        onValidate();
+                      }
+                    }}
+                    onChange={(e) => {
+                      field.onChange(e);
+                      // Trigger field change callback
+                      if (onFieldChange) {
+                        onFieldChange();
                       }
                     }}
                   />
@@ -522,6 +544,8 @@ export function RecipeIngredientsWithSections({
               addSectionLabel="Add Ingredient Section"
               addItemLabel="Add Ingredient"
               isLoading={isLoading}
+              validationErrors={validationErrors}
+              onValidate={onValidate}
             />
           </div>
         ) : (

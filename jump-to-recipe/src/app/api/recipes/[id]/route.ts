@@ -2,7 +2,16 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/db';
 import { recipes } from '@/db/schema/recipes';
 import { users } from '@/db/schema/users';
-import { updateRecipeSchema } from '@/lib/validations/recipe';
+import { 
+  strictRecipeWithSectionsSchema,
+  validateUniqueSectionIds,
+  validateUniqueItemIds
+} from '@/lib/validations/recipe-sections';
+import { normalizeExistingRecipe, createNormalizationSummary } from '@/lib/recipe-import-normalizer';
+import { 
+  validateAndFixRecipePositions,
+  resolveSectionConflicts
+} from '@/lib/section-position-utils';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { hasRole } from '@/lib/auth';
@@ -163,25 +172,105 @@ export async function PUT(
             );
         }
 
-        // Validate recipe data (excluding authorId which is handled separately)
-        const validationResult = updateRecipeSchema.safeParse(body);
+        // Apply normalization for existing recipes on first edit (Requirement 11.2, 11.3)
+        const normalizationSummary = createNormalizationSummary();
+        const normalizedData = normalizeExistingRecipe(body, normalizationSummary);
 
-        if (!validationResult.success) {
+        // Validate unique section IDs (Requirement 12.4)
+        if (!validateUniqueSectionIds(normalizedData)) {
+            console.error('❌ Duplicate section IDs detected');
             return NextResponse.json(
                 { 
-                    error: 'Invalid recipe data',
-                    message: 'The recipe data provided is invalid. Please check your input.',
-                    details: validationResult.error.flatten()
+                    error: 'Validation failed',
+                    message: 'Duplicate section IDs detected. Each section must have a unique ID.',
+                    details: [{
+                        path: 'sections',
+                        message: 'Duplicate section IDs detected. Each section must have a unique ID.',
+                    }],
                 },
                 { status: 400 }
             );
         }
 
-        // Prepare update data
+        // Validate unique item IDs (Requirement 12.4)
+        if (!validateUniqueItemIds(normalizedData)) {
+            console.error('❌ Duplicate item IDs detected');
+            return NextResponse.json(
+                { 
+                    error: 'Validation failed',
+                    message: 'Duplicate item IDs detected. Each ingredient and instruction must have a unique ID.',
+                    details: [{
+                        path: 'items',
+                        message: 'Duplicate item IDs detected. Each ingredient and instruction must have a unique ID.',
+                    }],
+                },
+                { status: 400 }
+            );
+        }
+
+        // Resolve position conflicts for concurrent edits (Requirement 12.2, 12.3)
+        let processedData = { ...normalizedData };
+        
+        if (normalizedData.ingredientSections && normalizedData.ingredientSections.length > 0) {
+            // Resolve conflicts with existing data (last-write-wins)
+            const existingIngredientSections = existingRecipe.ingredientSections as any[] || [];
+            const resolvedSections = resolveSectionConflicts(
+                existingIngredientSections,
+                normalizedData.ingredientSections
+            );
+            
+            // Validate and fix positions
+            const ingredientResult = validateAndFixRecipePositions(resolvedSections);
+            if (!ingredientResult.isValid) {
+                console.warn('⚠️ Position conflicts detected in ingredient sections, auto-fixing:', ingredientResult.errors);
+            }
+            processedData.ingredientSections = ingredientResult.fixedSections;
+        }
+
+        if (normalizedData.instructionSections && normalizedData.instructionSections.length > 0) {
+            // Resolve conflicts with existing data (last-write-wins)
+            const existingInstructionSections = existingRecipe.instructionSections as any[] || [];
+            const resolvedSections = resolveSectionConflicts(
+                existingInstructionSections,
+                normalizedData.instructionSections
+            );
+            
+            // Validate and fix positions
+            const instructionResult = validateAndFixRecipePositions(resolvedSections);
+            if (!instructionResult.isValid) {
+                console.warn('⚠️ Position conflicts detected in instruction sections, auto-fixing:', instructionResult.errors);
+            }
+            processedData.instructionSections = instructionResult.fixedSections;
+        }
+
+        // Strict validation with detailed error reporting (Requirement 7.1, 7.2, 7.3)
+        const strictValidationResult = strictRecipeWithSectionsSchema.safeParse(processedData);
+
+        if (!strictValidationResult.success) {
+            // Return 400 Bad Request with structured error details (Requirement 7.4)
+            const errors = strictValidationResult.error.issues.map(issue => ({
+                path: issue.path.join('.'),
+                message: issue.message,
+            }));
+
+            return NextResponse.json(
+                { 
+                    error: 'Validation failed',
+                    message: 'The recipe data does not meet validation requirements. Please fix the errors and try again.',
+                    details: errors
+                },
+                { status: 400 }
+            );
+        }
+
+        // Prepare update data with validated and normalized data
         const updateData: any = {
-            ...validationResult.data,
+            ...strictValidationResult.data,
             updatedAt: new Date(),
         };
+
+        // Remove authorId from update data (handled separately)
+        delete updateData.authorId;
 
         // Include authorId in update if ownership is being changed
         if (isOwnershipChange) {

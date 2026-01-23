@@ -28,6 +28,9 @@ interface RecipeInstructionsWithSectionsProps {
   setError?: UseFormSetError<any>;
   clearErrors?: UseFormClearErrors<any>;
   isLoading?: boolean;
+  validationErrors?: Map<string, string>;
+  onValidate?: () => void;
+  onFieldChange?: () => void;
 }
 
 export function RecipeInstructionsWithSections({
@@ -37,6 +40,9 @@ export function RecipeInstructionsWithSections({
   setError,
   clearErrors,
   isLoading = false,
+  validationErrors,
+  onValidate,
+  onFieldChange,
 }: RecipeInstructionsWithSectionsProps) {
   const [useSections, setUseSections] = useState(false);
 
@@ -77,7 +83,7 @@ export function RecipeInstructionsWithSections({
       // Convert flat instructions to sections
       if (instructions.length > 0) {
         const defaultSection: InstructionSection = {
-          id: `section-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`,
+          id: uuidv4(),
           name: 'Instructions',
           order: 0,
           items: instructions.map((instruction: Instruction) => ({ ...instruction })), // Create copies to avoid reference issues
@@ -86,7 +92,7 @@ export function RecipeInstructionsWithSections({
       } else {
         // Create an empty section if no instructions exist
         const emptySection: InstructionSection = {
-          id: `section-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`,
+          id: uuidv4(),
           name: 'Instructions',
           order: 0,
           items: [],
@@ -153,6 +159,11 @@ export function RecipeInstructionsWithSections({
 
     // Validate sections after update
     validateSections(newSections);
+    
+    // Trigger validation callback if provided
+    if (onValidate) {
+      onValidate();
+    }
   };
 
   // Validation function for sections
@@ -302,6 +313,17 @@ export function RecipeInstructionsWithSections({
                       if (e.target.value.trim() && clearErrors) {
                         clearErrors(`${fieldBaseName}.content`);
                       }
+                      // Trigger validation on blur
+                      if (onValidate) {
+                        onValidate();
+                      }
+                    }}
+                    onChange={(e) => {
+                      field.onChange(e);
+                      // Trigger field change callback
+                      if (onFieldChange) {
+                        onFieldChange();
+                      }
                     }}
                   />
                 </FormControl>
@@ -441,6 +463,8 @@ export function RecipeInstructionsWithSections({
               addSectionLabel="Add Instruction Section"
               addItemLabel="Add Step"
               isLoading={isLoading}
+              validationErrors={validationErrors}
+              onValidate={onValidate}
             />
           </div>
         ) : (
