@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Clock, Users, ChefHat, X } from "lucide-react";
+import { Clock, Users, ChefHat, X, AlertCircle } from "lucide-react";
 import { v4 as uuidv4 } from "uuid";
 
 import { Button } from "@/components/ui/button";
@@ -27,6 +27,8 @@ import {
 } from "@/components/ui/form";
 
 import { createRecipeSchema, validateRecipeWithSections } from "@/lib/validations/recipe";
+import { normalizeExistingRecipe } from "@/lib/recipe-import-normalizer";
+import { useRecipeValidation } from "@/hooks/useRecipeValidation";
 import type { NewRecipeInput } from "@/types/recipe";
 import type { IngredientSection, InstructionSection } from "@/types/sections";
 import type { RecipePhoto } from "@/types/recipe-photos";
@@ -52,15 +54,223 @@ interface ExtendedRecipeInput extends NewRecipeInput {
   photos?: RecipePhoto[];
 }
 
+/**
+ * Props for the RecipeForm component.
+ */
 interface RecipeFormProps {
+  /** 
+   * Initial data to populate the form.
+   * When editing an existing recipe, this data is automatically normalized
+   * to fix any legacy data issues (see Requirement 11.1-11.5).
+   */
   initialData?: Partial<ExtendedRecipeInput>;
+  
+  /** 
+   * Callback when the form is submitted.
+   * Called after all validation passes and user confirms any warnings.
+   * 
+   * @param data - The validated recipe data
+   * @param photos - Optional array of recipe photos (for new recipes or edits)
+   */
   onSubmit: (data: NewRecipeInput, photos?: RecipePhoto[]) => Promise<void>;
+  
+  /** 
+   * Whether the form is in a loading/submitting state.
+   * When true, disables form inputs and shows loading indicators.
+   */
   isLoading?: boolean;
+  
+  /** 
+   * Custom label for the submit button.
+   * Defaults to "Save Recipe".
+   */
   submitLabel?: string;
-  recipeId?: string; // For editing existing recipes with photos
-  beforeSubmit?: React.ReactNode; // Content to render before the submit button
+  
+  /** 
+   * ID of the recipe being edited (for existing recipes).
+   * When provided, enables photo management for the existing recipe.
+   * Also triggers normalization of initial data for backward compatibility.
+   */
+  recipeId?: string;
+  
+  /** 
+   * Content to render before the submit button.
+   * Useful for adding custom actions or information at the bottom of the form.
+   */
+  beforeSubmit?: React.ReactNode;
 }
 
+/**
+ * RecipeForm - Comprehensive form component for creating and editing recipes with section support.
+ * 
+ * This component provides a full-featured recipe editing experience with:
+ * - Basic recipe information (title, description, times, servings, difficulty)
+ * - Sectioned ingredients and instructions
+ * - Recipe photos (main image and original recipe photos)
+ * - Tags management
+ * - Real-time validation with inline error display
+ * - Backward compatibility with existing recipes
+ * 
+ * ## Validation Features
+ * 
+ * The form integrates with the validation system to provide comprehensive feedback:
+ * 
+ * ### Client-Side Validation
+ * - **Real-time**: Validates on blur and before submission
+ * - **Inline Errors**: Shows errors next to invalid fields
+ * - **Error Summary**: Displays banner with error count and types
+ * - **Save Button**: Disabled when validation fails with tooltip explanation
+ * - **Focus Management**: Moves focus to first invalid field on submit
+ * 
+ * ### Validation Flow
+ * 1. User fills out form
+ * 2. Validation runs on blur (optional) or submit (required)
+ * 3. If invalid: Show errors, disable save, focus first error
+ * 4. If valid: Check for empty section warnings
+ * 5. If warnings: Show confirmation modal
+ * 6. If confirmed or no warnings: Submit to server
+ * 
+ * ### Error Display Levels
+ * - **Form Level**: Error summary banner at top
+ * - **Section Level**: Errors in section headers and containers
+ * - **Field Level**: Inline errors below individual fields
+ * 
+ * ## Backward Compatibility
+ * 
+ * The form automatically normalizes existing recipe data (Requirement 11.1-11.5):
+ * 
+ * - **On Load**: Applies normalization when `recipeId` is provided
+ * - **Silent Fixes**: Corrects invalid data without user intervention
+ * - **Display**: Shows normalized data in form fields
+ * - **On Save**: Persists corrected data to database
+ * 
+ * ### Normalization Process
+ * - Assigns missing section names
+ * - Flattens empty sections
+ * - Auto-assigns missing positions
+ * - Drops empty items
+ * - Generates missing UUIDs
+ * 
+ * ## Empty Section Warnings
+ * 
+ * The form warns users about empty sections before saving:
+ * 
+ * - **Detection**: Identifies sections with no items
+ * - **Modal**: Shows confirmation dialog listing empty sections
+ * - **Options**: User can cancel to fix or confirm to save anyway
+ * - **Bypass**: Validation errors must be fixed first
+ * 
+ * ## Accessibility
+ * 
+ * The form follows WCAG 2.1 AA guidelines:
+ * 
+ * - **ARIA Live Regions**: Announces validation state changes
+ * - **Field Association**: Links errors to fields with aria-describedby
+ * - **Invalid State**: Marks invalid fields with aria-invalid
+ * - **Focus Management**: Moves focus to first error on submit
+ * - **Screen Reader Support**: All errors are announced
+ * - **Keyboard Navigation**: Full keyboard support
+ * 
+ * ## Usage Examples
+ * 
+ * ### Creating a New Recipe
+ * 
+ * @example
+ * ```tsx
+ * function NewRecipePage() {
+ *   const handleSubmit = async (data: NewRecipeInput, photos?: RecipePhoto[]) => {
+ *     const recipe = await createRecipe(data);
+ *     if (photos) {
+ *       await uploadPhotos(recipe.id, photos);
+ *     }
+ *     router.push(`/recipes/${recipe.id}`);
+ *   };
+ *   
+ *   return (
+ *     <RecipeForm
+ *       onSubmit={handleSubmit}
+ *       submitLabel="Create Recipe"
+ *     />
+ *   );
+ * }
+ * ```
+ * 
+ * ### Editing an Existing Recipe
+ * 
+ * @example
+ * ```tsx
+ * function EditRecipePage({ recipeId }: { recipeId: string }) {
+ *   const recipe = await loadRecipe(recipeId);
+ *   
+ *   const handleSubmit = async (data: NewRecipeInput, photos?: RecipePhoto[]) => {
+ *     await updateRecipe(recipeId, data);
+ *     if (photos) {
+ *       await updatePhotos(recipeId, photos);
+ *     }
+ *     router.push(`/recipes/${recipeId}`);
+ *   };
+ *   
+ *   return (
+ *     <RecipeForm
+ *       recipeId={recipeId}
+ *       initialData={recipe}
+ *       onSubmit={handleSubmit}
+ *       submitLabel="Update Recipe"
+ *     />
+ *   );
+ * }
+ * ```
+ * 
+ * ### With Custom Actions
+ * 
+ * @example
+ * ```tsx
+ * <RecipeForm
+ *   initialData={recipe}
+ *   onSubmit={handleSubmit}
+ *   beforeSubmit={
+ *     <div className="flex gap-2">
+ *       <Button variant="outline" onClick={handlePreview}>
+ *         Preview
+ *       </Button>
+ *       <Button variant="destructive" onClick={handleDelete}>
+ *         Delete Recipe
+ *       </Button>
+ *     </div>
+ *   }
+ * />
+ * ```
+ * 
+ * ## Form Structure
+ * 
+ * The form is organized into the following sections:
+ * 
+ * 1. **Basic Information**: Title, description, times, servings, difficulty
+ * 2. **Ingredients**: Sectioned ingredient list with validation
+ * 3. **Instructions**: Sectioned instruction list with validation
+ * 4. **Tags**: Keyword tags for categorization
+ * 5. **Additional Information**: Notes, source URL, main image, visibility
+ * 6. **Original Photos**: Photo gallery for recipe documentation
+ * 
+ * ## Validation Requirements
+ * 
+ * The form enforces the following validation rules:
+ * 
+ * - **Section Names**: Required, non-empty, no whitespace-only (Req 1.1-1.5)
+ * - **Section Items**: Minimum 1 item per section (Req 2.1-2.5)
+ * - **Recipe Ingredients**: At least one ingredient required (Req 3.1-3.5)
+ * - **Item Text**: Required, non-empty, no whitespace-only (Req 4.1-4.5)
+ * - **IDs**: Valid UUID v4 format
+ * - **Positions**: Non-negative integers
+ * 
+ * ## Related Components
+ * 
+ * @see {@link RecipeIngredientsWithSections} for ingredient section management
+ * @see {@link RecipeInstructionsWithSections} for instruction section management
+ * @see {@link useRecipeValidation} for the validation hook
+ * @see {@link EmptySectionWarningModal} for empty section warnings
+ * @see {@link RecipePhotosManager} for photo management
+ */
 export function RecipeForm({
   initialData,
   onSubmit,
@@ -69,28 +279,42 @@ export function RecipeForm({
   recipeId,
   beforeSubmit,
 }: RecipeFormProps) {
+  // Normalize initial data for backward compatibility (Requirement 11.1, 11.2, 11.3)
+  // This silently fixes invalid data when editing existing recipes
+  const normalizedInitialData = useMemo(() => {
+    if (!initialData) return undefined;
+    
+    // Only normalize if we have recipe data (editing mode)
+    // For new recipes, use the data as-is
+    if (recipeId) {
+      return normalizeExistingRecipe(initialData);
+    }
+    
+    return initialData;
+  }, [initialData, recipeId]);
+
   const form = useForm({
     resolver: zodResolver(createRecipeSchema),
     defaultValues: {
-      title: initialData?.title || "",
-      description: initialData?.description || "",
-      ingredients: initialData?.ingredients || [
+      title: normalizedInitialData?.title || "",
+      description: normalizedInitialData?.description || "",
+      ingredients: normalizedInitialData?.ingredients || [
         { id: uuidv4(), name: "", amount: 0, unit: "", notes: "" },
       ],
-      instructions: initialData?.instructions || [
+      instructions: normalizedInitialData?.instructions || [
         { id: uuidv4(), step: 1, content: "", duration: undefined },
       ],
-      ingredientSections: initialData?.ingredientSections || [],
-      instructionSections: initialData?.instructionSections || [],
-      prepTime: initialData?.prepTime || undefined,
-      cookTime: initialData?.cookTime || undefined,
-      servings: initialData?.servings || undefined,
-      difficulty: initialData?.difficulty || undefined,
-      tags: initialData?.tags || [],
-      notes: initialData?.notes || "",
-      imageUrl: initialData?.imageUrl || "",
-      sourceUrl: initialData?.sourceUrl || "",
-      visibility: initialData?.visibility || "private",
+      ingredientSections: normalizedInitialData?.ingredientSections || [],
+      instructionSections: normalizedInitialData?.instructionSections || [],
+      prepTime: normalizedInitialData?.prepTime || undefined,
+      cookTime: normalizedInitialData?.cookTime || undefined,
+      servings: normalizedInitialData?.servings || undefined,
+      difficulty: normalizedInitialData?.difficulty || undefined,
+      tags: normalizedInitialData?.tags || [],
+      notes: normalizedInitialData?.notes || "",
+      imageUrl: normalizedInitialData?.imageUrl || "",
+      sourceUrl: normalizedInitialData?.sourceUrl || "",
+      visibility: normalizedInitialData?.visibility || "private",
     },
   });
 
@@ -106,6 +330,13 @@ export function RecipeForm({
   }>>([]);
   const [pendingSubmitData, setPendingSubmitData] = useState<any>(null);
   const [photos, setPhotos] = useState<TempRecipePhoto[]>(initialData?.photos || []);
+
+  // Initialize validation hook
+  const { validate, getFieldError, isValid, errors, errorSummary } = useRecipeValidation();
+  const [validationErrors, setValidationErrors] = useState<Map<string, string>>(new Map());
+  
+  // Ref for the first invalid field to manage focus
+  const firstInvalidFieldRef = useState<HTMLElement | null>(null);
 
   const handleAddTag = () => {
     if (tagInput.trim()) {
@@ -125,9 +356,49 @@ export function RecipeForm({
     );
   };
 
+  // Validation handler that can be called on blur or manually
+  const handleValidation = useCallback(() => {
+    const formData = form.getValues();
+    const isFormValid = validate(formData);
+    
+    // Update validation errors map for section components
+    const errorsMap = new Map<string, string>();
+    errors.forEach(error => {
+      const key = error.path.join('.');
+      errorsMap.set(key, error.message);
+    });
+    setValidationErrors(errorsMap);
+    
+    return isFormValid;
+  }, [form, validate, errors]);
+
+  // Clear validation errors when user fixes fields
+  const handleFieldChange = useCallback(() => {
+    // Re-validate on change to clear errors
+    if (validationErrors.size > 0) {
+      handleValidation();
+    }
+  }, [validationErrors, handleValidation]);
+
   const handleSubmit = async (data: any) => {
     try {
-      // Validate the recipe with sections
+      // Run strict validation before submission
+      const isFormValid = handleValidation();
+      
+      if (!isFormValid) {
+        // Validation failed, errors are already displayed
+        // Move focus to the first invalid field
+        setTimeout(() => {
+          const firstInvalidField = document.querySelector('[aria-invalid="true"]') as HTMLElement;
+          if (firstInvalidField) {
+            firstInvalidField.focus();
+            firstInvalidField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        }, 100);
+        return;
+      }
+
+      // Validate the recipe with sections (for empty section warnings)
       const validationResult = validateRecipeWithSections(data);
       
       // Show warning for empty sections if any exist
@@ -180,6 +451,44 @@ export function RecipeForm({
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-8">
+        {/* ARIA Live Region for Validation Announcements */}
+        <div 
+          role="status" 
+          aria-live="polite" 
+          aria-atomic="true"
+          className="sr-only"
+        >
+          {errorSummary && errorSummary.count > 0 && (
+            `${errorSummary.count} validation ${errorSummary.count === 1 ? 'error' : 'errors'} found. Please review and fix the errors before saving.`
+          )}
+          {isValid && validationErrors.size === 0 && (
+            'All validation errors have been resolved.'
+          )}
+        </div>
+
+        {/* Validation Error Summary Banner */}
+        {errorSummary && errorSummary.count > 0 && (
+          <div 
+            className="error-summary bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 rounded-lg p-4 mb-4"
+            role="alert"
+            aria-labelledby="error-summary-title"
+          >
+            <div className="flex items-start gap-3">
+              <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" aria-hidden="true" />
+              <div className="flex-1">
+                <h3 id="error-summary-title" className="text-sm font-semibold text-red-800 dark:text-red-300 mb-2">
+                  {errorSummary.count} validation {errorSummary.count === 1 ? 'error' : 'errors'} must be fixed before saving
+                </h3>
+                <ul className="text-sm text-red-700 dark:text-red-400 space-y-1 list-disc list-inside">
+                  {errorSummary.types.map((errorType, index) => (
+                    <li key={index}>{errorType}</li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Basic Information */}
         <Card>
           <CardHeader>
@@ -337,6 +646,9 @@ export function RecipeForm({
           setError={form.setError as any}
           clearErrors={form.clearErrors as any}
           isLoading={isLoading}
+          validationErrors={validationErrors}
+          onValidate={handleValidation}
+          onFieldChange={handleFieldChange}
         />
 
         {/* Instructions with Sections */}
@@ -347,6 +659,9 @@ export function RecipeForm({
           setError={form.setError as any}
           clearErrors={form.clearErrors as any}
           isLoading={isLoading}
+          validationErrors={validationErrors}
+          onValidate={handleValidation}
+          onFieldChange={handleFieldChange}
         />
 
         {/* Tags */}
@@ -503,9 +818,22 @@ export function RecipeForm({
         {/* Additional content before submit button */}
         {beforeSubmit}
 
-        <Button type="submit" disabled={isLoading} className="w-full">
-          {isLoading ? "Saving..." : submitLabel}
-        </Button>
+        {/* Submit Button with Validation State */}
+        <div className="relative">
+          <Button 
+            type="submit" 
+            disabled={isLoading || !isValid} 
+            className="w-full"
+            title={!isValid ? `Cannot save: ${errorSummary?.count || 0} validation ${errorSummary?.count === 1 ? 'error' : 'errors'}` : undefined}
+          >
+            {isLoading ? "Saving..." : submitLabel}
+          </Button>
+          {!isValid && !isLoading && (
+            <p className="text-sm text-red-600 dark:text-red-400 mt-2 text-center">
+              Please fix validation errors before saving
+            </p>
+          )}
+        </div>
       </form>
 
       <EmptySectionWarningModal

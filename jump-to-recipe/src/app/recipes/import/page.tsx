@@ -39,7 +39,7 @@ export default function ImportRecipePage() {
       }
 
       const recipe = await response.json();
-      
+
       // Redirect to the new recipe page
       router.push(`/recipes/${recipe.id}`);
     } catch (error) {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { 
@@ -34,6 +34,7 @@ import {
 } from "@/components/ui/form";
 
 import { updateRecipeSchema, validateRecipeWithSections } from "@/lib/validations/recipe";
+import { normalizeExistingRecipe } from "@/lib/recipe-import-normalizer";
 import { RecipeImage } from "./recipe-image";
 import { RecipeIngredientsWithSections } from "./recipe-ingredients-with-sections";
 import { RecipeInstructionsWithSections } from "./recipe-instructions-with-sections";
@@ -55,6 +56,12 @@ export function RecipeEditor({
   onCancel, 
   isLoading = false 
 }: RecipeEditorProps) {
+  // Normalize existing recipe data for backward compatibility (Requirement 11.1, 11.2, 11.3)
+  // This silently fixes invalid data without user intervention
+  const normalizedRecipe = useMemo(() => {
+    return normalizeExistingRecipe(recipe);
+  }, [recipe]);
+
   const [editingSection, setEditingSection] = useState<string | null>(null);
   const [tagInput, setTagInput] = useState("");
   const [showEmptySectionWarning, setShowEmptySectionWarning] = useState(false);
@@ -69,21 +76,21 @@ export function RecipeEditor({
   const form = useForm({
     resolver: zodResolver(updateRecipeSchema),
     defaultValues: {
-      title: recipe.title,
-      description: recipe.description || "",
-      ingredients: recipe.ingredients,
-      instructions: recipe.instructions,
-      ingredientSections: recipe.ingredientSections || [],
-      instructionSections: recipe.instructionSections || [],
-      prepTime: recipe.prepTime,
-      cookTime: recipe.cookTime,
-      servings: recipe.servings,
-      difficulty: recipe.difficulty,
-      tags: recipe.tags,
-      notes: recipe.notes || "",
-      imageUrl: recipe.imageUrl || "",
-      sourceUrl: recipe.sourceUrl || "",
-      visibility: recipe.visibility,
+      title: normalizedRecipe.title,
+      description: normalizedRecipe.description || "",
+      ingredients: normalizedRecipe.ingredients,
+      instructions: normalizedRecipe.instructions,
+      ingredientSections: normalizedRecipe.ingredientSections || [],
+      instructionSections: normalizedRecipe.instructionSections || [],
+      prepTime: normalizedRecipe.prepTime,
+      cookTime: normalizedRecipe.cookTime,
+      servings: normalizedRecipe.servings,
+      difficulty: normalizedRecipe.difficulty,
+      tags: normalizedRecipe.tags,
+      notes: normalizedRecipe.notes || "",
+      imageUrl: normalizedRecipe.imageUrl || "",
+      sourceUrl: normalizedRecipe.sourceUrl || "",
+      visibility: normalizedRecipe.visibility,
     },
   });
 

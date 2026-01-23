@@ -1,7 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/db';
 import { recipes } from '@/db/schema/recipes';
-import { recipeFilterSchema, createRecipeSchema } from '@/lib/validations/recipe';
+import { recipeFilterSchema } from '@/lib/validations/recipe';
+import { 
+  validateRecipeStrict, 
+  validateUniqueSectionIds, 
+  validateUniqueItemIds 
+} from '@/lib/validations/recipe-sections';
+import { validateAndFixRecipePositions } from '@/lib/section-position-utils';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { and, desc, asc, eq, lte, gte, sql } from 'drizzle-orm';
@@ -187,8 +193,9 @@ export async function GET(req: NextRequest) {
 /**
  * POST /api/recipes
  * 
- * Creates a new recipe
+ * Creates a new recipe with strict validation
  * Requires authentication (handled on client side)
+ * Enforces unique IDs and resolves position conflicts
  */
 export async function POST(req: NextRequest) {
     try {
@@ -203,22 +210,72 @@ export async function POST(req: NextRequest) {
         console.log('- Ingredient sections:', body.ingredientSections ? `${body.ingredientSections.length} sections` : 'none');
         console.log('- Instruction sections:', body.instructionSections ? `${body.instructionSections.length} sections` : 'none');
 
-        // Validate recipe data
-        const validationResult = createRecipeSchema.safeParse(body);
-
-        if (!validationResult.success) {
-            console.log('Validation failed:', validationResult.error.issues);
+        // Validate unique section IDs (Requirement 12.4)
+        if (!validateUniqueSectionIds(body)) {
+            console.error('❌ Duplicate section IDs detected');
             return NextResponse.json(
                 { 
-                    error: 'Invalid recipe data', 
-                    details: validationResult.error.issues,
-                    receivedData: body 
+                    error: 'Validation failed',
+                    details: [{
+                        path: 'sections',
+                        message: 'Duplicate section IDs detected. Each section must have a unique ID.',
+                    }],
                 },
                 { status: 400 }
             );
         }
 
-        // Create new recipe
+        // Validate unique item IDs (Requirement 12.4)
+        if (!validateUniqueItemIds(body)) {
+            console.error('❌ Duplicate item IDs detected');
+            return NextResponse.json(
+                { 
+                    error: 'Validation failed',
+                    details: [{
+                        path: 'items',
+                        message: 'Duplicate item IDs detected. Each ingredient and instruction must have a unique ID.',
+                    }],
+                },
+                { status: 400 }
+            );
+        }
+
+        // Validate and fix positions (Requirement 12.3)
+        let processedBody = { ...body };
+        
+        if (body.ingredientSections && body.ingredientSections.length > 0) {
+            const ingredientResult = validateAndFixRecipePositions(body.ingredientSections);
+            if (!ingredientResult.isValid) {
+                console.warn('⚠️ Position conflicts detected in ingredient sections, auto-fixing:', ingredientResult.errors);
+            }
+            processedBody.ingredientSections = ingredientResult.fixedSections;
+        }
+
+        if (body.instructionSections && body.instructionSections.length > 0) {
+            const instructionResult = validateAndFixRecipePositions(body.instructionSections);
+            if (!instructionResult.isValid) {
+                console.warn('⚠️ Position conflicts detected in instruction sections, auto-fixing:', instructionResult.errors);
+            }
+            processedBody.instructionSections = instructionResult.fixedSections;
+        }
+
+        // Perform strict validation using the hardened schema
+        const validationResult = validateRecipeStrict(processedBody);
+
+        if (!validationResult.success) {
+            console.error('❌ Recipe validation failed:', validationResult.errors);
+            
+            // Return 400 Bad Request with structured error details
+            return NextResponse.json(
+                { 
+                    error: 'Validation failed',
+                    details: validationResult.errors,
+                },
+                { status: 400 }
+            );
+        }
+
+        // Validation passed - create new recipe with validated data
         const newRecipe = await db.insert(recipes).values(validationResult.data).returning();
 
         console.log('✅ Recipe created successfully:');
@@ -229,7 +286,16 @@ export async function POST(req: NextRequest) {
 
         return NextResponse.json(newRecipe[0], { status: 201 });
     } catch (error) {
-        console.error('Error creating recipe:', error);
+        console.error('❌ Error creating recipe:', error);
+        
+        // Log the full error for debugging
+        if (error instanceof Error) {
+            console.error('Error details:', {
+                message: error.message,
+                stack: error.stack,
+            });
+        }
+        
         return NextResponse.json(
             { error: 'Failed to create recipe' },
             { status: 500 }

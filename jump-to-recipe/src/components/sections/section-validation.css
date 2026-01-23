@@ -1,0 +1,245 @@
+/* Validation Error Styling for Recipe Sections */
+
+/* Base validation error text styling */
+.validation-error {
+  @apply text-red-600 dark:text-red-400 text-sm mt-1;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+/* Invalid field border styling */
+.field-invalid {
+  @apply border-red-500 dark:border-red-400;
+  @apply focus:ring-red-500 dark:focus:ring-red-400;
+  @apply focus:border-red-500 dark:focus:border-red-400;
+  box-shadow: 0 0 0 1px rgba(239, 68, 68, 0.1);
+}
+
+.dark .field-invalid {
+  box-shadow: 0 0 0 1px rgba(248, 113, 113, 0.1);
+}
+
+/* Invalid field background styling */
+.field-invalid-bg {
+  @apply bg-red-50 dark:bg-red-950/20;
+  @apply border-red-300 dark:border-red-800;
+}
+
+/* Error summary banner at top of form */
+.error-summary {
+  @apply bg-red-50 dark:bg-red-950/20;
+  @apply border border-red-200 dark:border-red-800;
+  @apply rounded-lg p-4 mb-4;
+  @apply text-red-800 dark:text-red-200;
+}
+
+.error-summary-title {
+  @apply font-semibold text-red-900 dark:text-red-100 mb-2;
+  font-size: 0.9375rem;
+}
+
+.error-summary-list {
+  @apply list-disc list-inside space-y-1;
+  @apply text-red-700 dark:text-red-300;
+  font-size: 0.875rem;
+}
+
+/* Empty section warning box */
+.section-empty-error {
+  @apply border-2 border-red-200 dark:border-red-800;
+  @apply bg-red-50 dark:bg-red-950/20;
+  @apply rounded-lg p-3;
+  @apply text-red-700 dark:text-red-300;
+  @apply text-sm;
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.section-empty-error-icon {
+  @apply inline-block mr-2;
+  color: inherit;
+}
+
+/* Error fade-in animation */
+@keyframes error-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.validation-error,
+.error-summary,
+.section-empty-error {
+  animation: error-fade-in 200ms ease-out;
+}
+
+/* Hover states for better UX */
+.field-invalid:hover {
+  @apply border-red-600 dark:border-red-300;
+}
+
+/* Focus states for accessibility */
+.field-invalid:focus {
+  outline: 2px solid rgba(239, 68, 68, 0.2);
+  outline-offset: 2px;
+}
+
+.dark .field-invalid:focus {
+  outline: 2px solid rgba(248, 113, 113, 0.2);
+}
+
+/* Section header error state */
+.section-header-invalid {
+  @apply border-red-500 dark:border-red-400;
+  @apply bg-red-50 dark:bg-red-950/20;
+}
+
+/* Input field error state combination */
+.field-invalid.field-invalid-bg {
+  @apply border-red-400 dark:border-red-700;
+}
+
+/* Error text with icon support */
+.validation-error-with-icon {
+  @apply flex items-start gap-2;
+}
+
+.validation-error-with-icon svg {
+  @apply flex-shrink-0 mt-0.5;
+  width: 1rem;
+  height: 1rem;
+}
+
+/* Inline error for form fields */
+.inline-field-error {
+  @apply text-red-600 dark:text-red-400;
+  @apply text-xs mt-1;
+  display: block;
+  animation: error-fade-in 200ms ease-out;
+}
+
+/* Error badge for counts */
+.error-badge {
+  @apply inline-flex items-center justify-center;
+  @apply bg-red-100 dark:bg-red-900/30;
+  @apply text-red-800 dark:text-red-200;
+  @apply text-xs font-semibold;
+  @apply rounded-full px-2 py-0.5;
+  min-width: 1.25rem;
+}
+
+/* Disabled save button with error state */
+.save-button-disabled-error {
+  @apply opacity-60 cursor-not-allowed;
+  @apply bg-gray-300 dark:bg-gray-700;
+  @apply text-gray-500 dark:text-gray-400;
+}
+
+/* Tooltip for disabled save button */
+.save-button-error-tooltip {
+  @apply absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2;
+  @apply bg-gray-900 dark:bg-gray-100;
+  @apply text-white dark:text-gray-900;
+  @apply text-xs rounded px-3 py-2;
+  @apply whitespace-nowrap;
+  @apply pointer-events-none;
+  opacity: 0;
+  transition: opacity 200ms ease-in-out;
+  z-index: 50;
+}
+
+.save-button-disabled-error:hover .save-button-error-tooltip {
+  opacity: 1;
+}
+
+/* Arrow for tooltip */
+.save-button-error-tooltip::after {
+  content: '';
+  @apply absolute top-full left-1/2 transform -translate-x-1/2;
+  border: 4px solid transparent;
+  border-top-color: theme('colors.gray.900');
+}
+
+.dark .save-button-error-tooltip::after {
+  border-top-color: theme('colors.gray.100');
+}
+
+/* Section container with validation error */
+.section-container-invalid {
+  @apply border-l-4 border-red-500 dark:border-red-400;
+  @apply pl-3;
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .error-summary {
+    @apply p-3;
+  }
+  
+  .section-empty-error {
+    @apply p-2 text-xs;
+  }
+  
+  .validation-error {
+    @apply text-xs;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .field-invalid {
+    @apply border-2 border-red-600 dark:border-red-300;
+  }
+  
+  .validation-error {
+    @apply font-semibold;
+  }
+  
+  .error-summary {
+    @apply border-2;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .validation-error,
+  .error-summary,
+  .section-empty-error {
+    animation: none;
+  }
+  
+  .save-button-error-tooltip {
+    transition: none;
+  }
+}
+
+/* Print styles - hide validation errors in print */
+@media print {
+  .validation-error,
+  .error-summary,
+  .section-empty-error,
+  .field-invalid,
+  .field-invalid-bg {
+    display: none !important;
+    border: none !important;
+    background: none !important;
+  }
+}
+
+/* Screen reader only utility class for accessibility */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}

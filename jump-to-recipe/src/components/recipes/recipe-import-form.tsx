@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Link2, Upload, Eye, Save, Loader2 } from "lucide-react";
+import { Link2, Upload, Eye, Save, Loader2, AlertCircle, CheckCircle2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,6 +18,13 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { RecipeDisplay } from "./recipe-display";
+import { 
+  normalizeImportedRecipe, 
+  createNormalizationSummary, 
+  formatNormalizationSummary,
+  type NormalizationSummary 
+} from "@/lib/recipe-import-normalizer";
+import { useRecipeValidation } from "@/hooks/useRecipeValidation";
 
 import type { Recipe, NewRecipeInput } from "@/types/recipe";
 
@@ -39,8 +46,11 @@ export function RecipeImportForm({
   isLoading = false,
 }: RecipeImportFormProps) {
   const [previewRecipe, setPreviewRecipe] = useState<Recipe | null>(null);
+  const [normalizedRecipe, setNormalizedRecipe] = useState<NewRecipeInput | null>(null);
+  const [normalizationSummary, setNormalizationSummary] = useState<NormalizationSummary | null>(null);
   const [isPreviewLoading, setIsPreviewLoading] = useState(false);
   const [importStep, setImportStep] = useState<"url" | "preview" | "image">("url");
+  const { validate, isValid, errorSummary } = useRecipeValidation();
 
   const form = useForm<ImportFormData>({
     resolver: zodResolver(importSchema),
@@ -54,7 +64,24 @@ export function RecipeImportForm({
     try {
       const recipe = await onPreview(data.url);
       if (recipe) {
+        // Create normalization summary to track changes
+        const summary = createNormalizationSummary();
+        
+        // Apply normalization to imported recipe data
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { id, createdAt, updatedAt, ...recipeData } = recipe;
+        const normalized = normalizeImportedRecipe(recipeData, summary);
+        
+        // Validate normalized data
+        const validationResult = validate(normalized);
+        
+        // Store both preview and normalized versions
         setPreviewRecipe(recipe);
+        setNormalizedRecipe(normalized);
+        setNormalizationSummary(summary);
+        
+        // Only proceed to preview if validation passes or has minor issues
+        // Major validation errors will be shown in the preview step
         setImportStep("preview");
       }
     } catch (error) {
@@ -65,16 +92,25 @@ export function RecipeImportForm({
   };
 
   const handleImport = async () => {
-    if (!previewRecipe) return;
+    if (!normalizedRecipe) return;
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { id, createdAt, updatedAt, ...recipeData } = previewRecipe;
-    await onImport(recipeData);
+    // Final validation check before import
+    const validationResult = validate(normalizedRecipe);
+    
+    if (!validationResult) {
+      // Validation failed - errors are already displayed
+      return;
+    }
+
+    // Import the normalized recipe
+    await onImport(normalizedRecipe);
   };
 
   const handleBack = () => {
     setImportStep("url");
     setPreviewRecipe(null);
+    setNormalizedRecipe(null);
+    setNormalizationSummary(null);
     form.reset();
   };
 
@@ -88,6 +124,18 @@ export function RecipeImportForm({
   };
 
   if (importStep === "preview" && previewRecipe) {
+    // Check if there are any normalization changes
+    const hasNormalizationChanges = normalizationSummary && (
+      normalizationSummary.sectionsRenamed > 0 ||
+      normalizationSummary.sectionsFlattened > 0 ||
+      normalizationSummary.itemsDropped > 0 ||
+      normalizationSummary.idsGenerated > 0 ||
+      normalizationSummary.positionsAssigned > 0
+    );
+
+    // Check for validation errors
+    const hasValidationErrors = !isValid && errorSummary && errorSummary.count > 0;
+
     return (
       <div className="space-y-6">
         <Card>
@@ -97,15 +145,82 @@ export function RecipeImportForm({
               Recipe Preview
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground mb-4">
+          <CardContent className="space-y-4">
+            <p className="text-sm text-muted-foreground">
               Review the imported recipe details below. You can edit the recipe after importing.
             </p>
+
+            {/* Normalization Summary */}
+            {hasNormalizationChanges && normalizationSummary && (
+              <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                <div className="flex items-start gap-3">
+                  <CheckCircle2 className="h-5 w-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
+                  <div className="flex-1">
+                    <h4 className="font-medium text-blue-900 dark:text-blue-100 mb-1">
+                      Recipe Data Normalized
+                    </h4>
+                    <p className="text-sm text-blue-700 dark:text-blue-300">
+                      {formatNormalizationSummary(normalizationSummary)}
+                    </p>
+                    <p className="text-xs text-blue-600 dark:text-blue-400 mt-2">
+                      These changes ensure the recipe meets our data quality standards.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Validation Errors */}
+            {hasValidationErrors && errorSummary && (
+              <div className="bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+                <div className="flex items-start gap-3">
+                  <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
+                  <div className="flex-1">
+                    <h4 className="font-medium text-red-900 dark:text-red-100 mb-1">
+                      Validation Issues Found
+                    </h4>
+                    <p className="text-sm text-red-700 dark:text-red-300 mb-2">
+                      {errorSummary.count} validation error{errorSummary.count > 1 ? 's' : ''} must be fixed before importing:
+                    </p>
+                    <ul className="text-sm text-red-700 dark:text-red-300 list-disc list-inside space-y-1">
+                      {errorSummary.types.map((errorType, index) => (
+                        <li key={index}>{errorType}</li>
+                      ))}
+                    </ul>
+                    <p className="text-xs text-red-600 dark:text-red-400 mt-2">
+                      Please go back and try a different recipe URL, or contact support if this issue persists.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* No Issues */}
+            {!hasNormalizationChanges && !hasValidationErrors && (
+              <div className="bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
+                <div className="flex items-start gap-3">
+                  <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400 flex-shrink-0 mt-0.5" />
+                  <div className="flex-1">
+                    <h4 className="font-medium text-green-900 dark:text-green-100 mb-1">
+                      Recipe Ready to Import
+                    </h4>
+                    <p className="text-sm text-green-700 dark:text-green-300">
+                      No changes needed. The recipe data is valid and ready to be imported.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div className="flex gap-2">
               <Button onClick={handleBack} variant="outline">
                 Back
               </Button>
-              <Button onClick={handleImport} disabled={isLoading}>
+              <Button 
+                onClick={handleImport} 
+                disabled={isLoading || hasValidationErrors}
+                title={hasValidationErrors ? "Fix validation errors before importing" : "Import this recipe"}
+              >
                 {isLoading ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />

@@ -52,7 +52,7 @@ describe('SectionHeader', () => {
     expect(mockOnRename).toHaveBeenCalledWith('section-1', 'New Section Name');
   });
 
-  it('shows delete confirmation modal when delete button is clicked', async () => {
+  it('shows delete confirmation modal when delete button is clicked for section with items', async () => {
     const user = userEvent.setup();
     
     render(
@@ -60,6 +60,7 @@ describe('SectionHeader', () => {
         section={mockSection}
         onRename={mockOnRename}
         onDelete={mockOnDelete}
+        hasItems={true}
       />
     );
 
@@ -71,7 +72,7 @@ describe('SectionHeader', () => {
     expect(screen.getByRole('button', { name: 'Delete' })).toBeInTheDocument();
   });
 
-  it('calls onDelete when delete is confirmed', async () => {
+  it('deletes empty section immediately without confirmation', async () => {
     const user = userEvent.setup();
     
     render(
@@ -79,6 +80,45 @@ describe('SectionHeader', () => {
         section={mockSection}
         onRename={mockOnRename}
         onDelete={mockOnDelete}
+        hasItems={false}
+      />
+    );
+
+    await user.click(screen.getByTitle('Delete section'));
+
+    // Should delete immediately without showing modal
+    expect(mockOnDelete).toHaveBeenCalledWith('section-1');
+    expect(screen.queryByText('Delete Section')).not.toBeInTheDocument();
+  });
+
+  it('shows special message when deleting last section', async () => {
+    const user = userEvent.setup();
+    
+    render(
+      <SectionHeader
+        section={mockSection}
+        onRename={mockOnRename}
+        onDelete={mockOnDelete}
+        hasItems={true}
+        isLastSection={true}
+      />
+    );
+
+    await user.click(screen.getByTitle('Delete section'));
+
+    expect(screen.getByText('Delete Last Section')).toBeInTheDocument();
+    expect(screen.getByText(/convert your recipe to unsectioned mode/)).toBeInTheDocument();
+  });
+
+  it('calls onDelete when delete is confirmed for section with items', async () => {
+    const user = userEvent.setup();
+    
+    render(
+      <SectionHeader
+        section={mockSection}
+        onRename={mockOnRename}
+        onDelete={mockOnDelete}
+        hasItems={true}
       />
     );
 
@@ -99,6 +139,7 @@ describe('SectionHeader', () => {
         section={mockSection}
         onRename={mockOnRename}
         onDelete={mockOnDelete}
+        hasItems={true}
       />
     );
 
@@ -121,6 +162,7 @@ describe('SectionHeader', () => {
         section={mockSection}
         onRename={mockOnRename}
         onDelete={mockOnDelete}
+        hasItems={true}
       />
     );
 
@@ -128,8 +170,8 @@ describe('SectionHeader', () => {
     await user.click(screen.getByTitle('Delete section'));
     expect(screen.getByText('Delete Section')).toBeInTheDocument();
     
-    // Click backdrop - need to find it by class
-    const backdrop = document.querySelector('.absolute.inset-0');
+    // Click backdrop - the ConfirmationModal uses a different structure
+    const backdrop = document.querySelector('[role="dialog"]');
     if (backdrop) {
       fireEvent.click(backdrop);
     }
@@ -194,6 +236,7 @@ describe('SectionHeader', () => {
         section={mockSection}
         onRename={mockOnRename}
         onDelete={mockOnDelete}
+        hasItems={true}
       />
     );
 
