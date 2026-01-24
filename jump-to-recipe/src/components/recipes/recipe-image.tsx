@@ -3,7 +3,6 @@
 import { useState } from "react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
-import { ImageIcon } from "lucide-react";
 
 interface RecipeImageProps {
   src?: string | null;
@@ -19,27 +18,23 @@ export function RecipeImage({
   src, 
   alt, 
   className,
-  fallback
+  fallback,
+  width = 400,
+  height = 300,
+  priority = false
 }: RecipeImageProps) {
   const [hasError, setHasError] = useState(false);
 
-  if (!src || hasError) {
-    return (
-      <div className={cn(
-        "flex items-center justify-center bg-gray-100 text-gray-400",
-        className
-      )}>
-        {fallback || <ImageIcon className="h-8 w-8" />}
-      </div>
-    );
-  }
+  // Use placeholder image if no src or error
+  const imageSrc = (!src || hasError) ? '/recipe-placeholder.jpg' : src;
 
   return (
     <Image
-      src={src}
+      src={imageSrc}
       alt={alt}
-      width={400}
-      height={300}
+      width={width}
+      height={height}
+      priority={priority}
       className={cn("object-cover", className)}
       onError={() => setHasError(true)}
     />
