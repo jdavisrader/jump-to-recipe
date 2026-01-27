@@ -42,3 +42,7 @@ next-env.d.ts
 
 # uploaded files
 /public/uploads/
+
+# migration data (contains sensitive information)
+/migration-data/
+.env.migration
