@@ -43,8 +43,8 @@ export interface TransformedRecipe {
   difficulty: null; // Not in legacy
   tags: string[]; // From recipe_tags join
   notes: null;
-  imageUrl: string | null; // From Active Storage 'image' attachment
-  originalRecipePhotoUrl: string | null; // From Active Storage 'original_recipe_photo' attachment
+  imageUrl: string | null; // Will be set during import after download
+  originalRecipePhotoUrls: string[]; // Will be set during import after download
   sourceUrl: string | null; // From original_url
   authorId: string; // Mapped from user_id
   visibility: 'public'; // Default for migrated recipes
@@ -54,6 +54,8 @@ export interface TransformedRecipe {
   createdAt: Date;
   updatedAt: Date;
   legacyId: number; // For tracking
+  // Image metadata for download during import
+  _imageMetadata?: RecipeImages;
 }
 
 /**
@@ -75,8 +77,8 @@ export interface CleanedInstruction extends Instruction {
  * Recipe image information
  */
 export interface RecipeImages {
-  imageUrl: string | null;
-  originalRecipePhotoUrl: string | null;
+  headerImage: { blobKey: string; filename: string } | null;
+  originalPhotos: Array<{ blobKey: string; filename: string }>;
 }
 
 /**
@@ -171,7 +173,7 @@ export async function transformRecipes(
       const recipeIngredients = ingredientsByRecipe.get(legacyRecipe.id) || [];
       const recipeInstructions = instructionsByRecipe.get(legacyRecipe.id) || [];
       const recipeTags = tagsByRecipe.get(legacyRecipe.id) || [];
-      const recipeImages = imagesByRecipe.get(legacyRecipe.id) || { imageUrl: null, originalRecipePhotoUrl: null };
+      const recipeImages = imagesByRecipe.get(legacyRecipe.id) || { headerImage: null, originalPhotos: [] };
 
       const transformed = await transformSingleRecipe(
         legacyRecipe,
@@ -294,8 +296,8 @@ async function transformSingleRecipe(
     difficulty: null, // Not in legacy
     tags,
     notes: null,
-    imageUrl: images.imageUrl,
-    originalRecipePhotoUrl: images.originalRecipePhotoUrl,
+    imageUrl: null, // Will be set during import after download
+    originalRecipePhotoUrls: [], // Will be set during import after download
     sourceUrl: legacyRecipe.original_url,
     authorId,
     visibility: 'public', // Default for migrated recipes
@@ -305,6 +307,8 @@ async function transformSingleRecipe(
     createdAt: new Date(legacyRecipe.created_at),
     updatedAt: new Date(legacyRecipe.updated_at),
     legacyId: legacyRecipe.id,
+    // Store image metadata for download during import
+    _imageMetadata: images,
   };
 
   return transformed;
@@ -431,7 +435,7 @@ function buildUserMappingLookup(userMapping: UserMapping[]): Map<number, string>
 
 /**
  * Build images by recipe map from Active Storage attachments and blobs
- * Maps recipe images from Rails Active Storage to URLs
+ * Stores blob keys and filenames for download during import
  */
 function buildImagesByRecipeMap(
   attachments: LegacyActiveStorageAttachment[],
@@ -462,24 +466,25 @@ function buildImagesByRecipeMap(
     let recipeImages = imagesByRecipe.get(attachment.record_id);
     if (!recipeImages) {
       recipeImages = {
-        imageUrl: null,
-        originalRecipePhotoUrl: null,
+        headerImage: null,
+        originalPhotos: [],
       };
       imagesByRecipe.set(attachment.record_id, recipeImages);
     }
 
-    // Build URL from blob key
-    // Active Storage typically stores files at: /rails/active_storage/blobs/:signed_id/:filename
-    // For migration, we'll store the blob key and filename for reference
-    // The actual file migration would need to be handled separately
-    const imageReference = `[LEGACY_IMAGE:${blob.key}:${blob.filename}]`;
-
     // Map attachment name to appropriate field
-    if (attachment.name === 'image') {
-      recipeImages.imageUrl = imageReference;
+    // 'header' or 'image' = main recipe image
+    if (attachment.name === 'header' || attachment.name === 'image') {
+      recipeImages.headerImage = {
+        blobKey: blob.key,
+        filename: blob.filename,
+      };
       stats.imagesFound++;
-    } else if (attachment.name === 'original_recipe_photo') {
-      recipeImages.originalRecipePhotoUrl = imageReference;
+    } else if (attachment.name === 'original_recipe_photos' || attachment.name === 'original_recipe_photo') {
+      recipeImages.originalPhotos.push({
+        blobKey: blob.key,
+        filename: blob.filename,
+      });
       stats.originalPhotosFound++;
     }
   }

@@ -13,6 +13,12 @@ import type {
   BatchImportResult,
 } from '../types/import';
 import type { TransformedRecipe, TransformedUser } from '../types/transformation';
+import {
+  downloadRecipeImages,
+  type ImageDownloadConfig,
+  type BatchDownloadStats,
+} from './image-downloader';
+import * as path from 'path';
 
 // ============================================================================
 // API Client
@@ -175,10 +181,73 @@ function sleep(ms: number): Promise<void> {
 export class BatchImporter {
   private client: ApiClient;
   private config: ImportConfig;
+  private imageConfig: ImageDownloadConfig;
+  private imageStats: BatchDownloadStats;
+  private imageErrors: Array<{ recipeTitle: string; errors: string[] }>;
 
   constructor(config: ImportConfig) {
     this.config = config;
     this.client = new ApiClient(config.apiBaseUrl, config.authToken);
+    
+    // Initialize image download configuration
+    // Use __dirname to get path relative to this file, then navigate to project root
+    // This file is at: src/migration/import/batch-importer.ts
+    // We need to go up 3 levels to reach project root, then into public/
+    const projectRoot = path.resolve(__dirname, '../../..');
+    const publicDir = path.join(projectRoot, 'public');
+    
+    this.imageConfig = {
+      legacyBaseUrl: process.env.LEGACY_IMAGE_BASE_URL || 'http://happeacook.com',
+      outputDir: publicDir,
+      timeout: 30000, // 30 seconds
+      retries: 3,
+    };
+    
+    console.log('[BatchImporter] Image download config:');
+    console.log('  legacyBaseUrl:', this.imageConfig.legacyBaseUrl);
+    console.log('  outputDir:', this.imageConfig.outputDir);
+    console.log('  __dirname:', __dirname);
+    console.log('  projectRoot:', projectRoot);
+    console.log('  cwd:', process.cwd());
+    
+    // Verify directories exist
+    const fs = require('fs');
+    const recipesDir = path.join(publicDir, 'uploads', 'recipes');
+    const photosDir = path.join(publicDir, 'uploads', 'recipe-photos');
+    
+    console.log('  Checking directories:');
+    console.log('    recipes dir exists:', fs.existsSync(recipesDir));
+    console.log('    photos dir exists:', fs.existsSync(photosDir));
+    
+    if (!fs.existsSync(recipesDir)) {
+      console.warn('  ⚠️  WARNING: recipes directory does not exist!');
+    }
+    if (!fs.existsSync(photosDir)) {
+      console.warn('  ⚠️  WARNING: recipe-photos directory does not exist!');
+    }
+    
+    this.imageStats = {
+      total: 0,
+      successful: 0,
+      failed: 0,
+      skipped: 0,
+    };
+    
+    this.imageErrors = [];
+  }
+
+  /**
+   * Get image download statistics
+   */
+  getImageStats(): BatchDownloadStats {
+    return { ...this.imageStats };
+  }
+
+  /**
+   * Get image download errors
+   */
+  getImageErrors(): Array<{ recipeTitle: string; errors: string[] }> {
+    return [...this.imageErrors];
   }
 
   /**
@@ -231,6 +300,22 @@ export class BatchImporter {
       if (this.config.stopOnError && failureCount > 0) {
         console.log(`\n⚠️  Stopping import due to errors (stopOnError=true)`);
         break;
+      }
+    }
+
+    // Print image download statistics
+    console.log(`\n📸 Image Download Statistics:`);
+    console.log(`  Total images: ${this.imageStats.total}`);
+    console.log(`  Successful: ${this.imageStats.successful}`);
+    console.log(`  Failed: ${this.imageStats.failed}`);
+    
+    if (this.imageErrors.length > 0) {
+      console.log(`\n⚠️  Recipes with image download failures:`);
+      for (const error of this.imageErrors) {
+        console.log(`  - ${error.recipeTitle}:`);
+        for (const err of error.errors) {
+          console.log(`    • ${err}`);
+        }
       }
     }
 
@@ -331,7 +416,33 @@ export class BatchImporter {
     }
 
     try {
-      const payload = this.prepareRecipePayload(recipe);
+      // Download images by scraping the recipe page
+      let imageUrl: string | null = null;
+      let originalRecipePhotoUrls: string[] = [];
+      
+      // Always try to scrape images using the legacy recipe ID
+      const imageResult = await downloadRecipeImages(
+        recipe.id,
+        recipe.title,
+        recipe.legacyId,
+        this.imageConfig,
+        this.imageStats
+      );
+      
+      imageUrl = imageResult.imageUrl;
+      originalRecipePhotoUrls = imageResult.originalRecipePhotoUrls;
+      
+      // Log errors if any
+      if (imageResult.errors.length > 0) {
+        this.imageErrors.push({
+          recipeTitle: recipe.title,
+          errors: imageResult.errors,
+        });
+      }
+
+      // Prepare payload with downloaded image URLs
+      const payload = this.prepareRecipePayload(recipe, imageUrl, originalRecipePhotoUrls);
+      
       console.log(`[Batch Importer] Importing recipe ${recipe.legacyId}: ${recipe.title}`);
       console.log(`[Batch Importer] Payload summary:`, {
         id: payload.id,
@@ -339,6 +450,8 @@ export class BatchImporter {
         authorId: payload.authorId,
         ingredientCount: payload.ingredients?.length,
         instructionCount: payload.instructions?.length,
+        hasImage: !!payload.imageUrl,
+        originalPhotosCount: payload.originalRecipePhotoUrls?.length || 0,
       });
 
       const { result, retryCount } = await withRetry(
@@ -412,7 +525,11 @@ export class BatchImporter {
   /**
    * Prepare recipe payload for API
    */
-  private prepareRecipePayload(recipe: TransformedRecipe): any {
+  private prepareRecipePayload(
+    recipe: TransformedRecipe,
+    imageUrl: string | null = null,
+    originalRecipePhotoUrls: string[] = []
+  ): any {
     // Clean up ingredients - remove migration-specific fields
     const cleanIngredients = recipe.ingredients.map(ing => ({
       id: ing.id,
@@ -446,8 +563,8 @@ export class BatchImporter {
       difficulty: recipe.difficulty,
       tags: recipe.tags,
       notes: recipe.notes,
-      imageUrl: recipe.imageUrl,
-      originalRecipePhotoUrl: (recipe as any).originalRecipePhotoUrl || null,
+      imageUrl: imageUrl || recipe.imageUrl,
+      originalRecipePhotoUrls: originalRecipePhotoUrls.length > 0 ? originalRecipePhotoUrls : undefined,
       sourceUrl: recipe.sourceUrl,
       authorId: recipe.authorId,
       visibility: recipe.visibility,

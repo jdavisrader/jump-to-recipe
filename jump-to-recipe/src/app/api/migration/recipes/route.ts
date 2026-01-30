@@ -8,7 +8,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/db';
-import { recipes } from '@/db/schema';
+import { recipes, recipePhotos } from '@/db/schema';
 
 export async function POST(request: NextRequest) {
   try {
@@ -94,6 +94,28 @@ export async function POST(request: NextRequest) {
     }).returning();
 
     console.log('[Migration API] Recipe inserted successfully:', newRecipe.id);
+
+    // Insert original recipe photos if provided
+    if (body.originalRecipePhotoUrls && Array.isArray(body.originalRecipePhotoUrls) && body.originalRecipePhotoUrls.length > 0) {
+      console.log('[Migration API] Inserting original recipe photos:', body.originalRecipePhotoUrls.length);
+      
+      const photoInserts = body.originalRecipePhotoUrls.map((photoUrl: string, index: number) => {
+        // Extract filename from URL path
+        const urlPath = photoUrl.split('/').pop() || 'photo.jpg';
+        
+        return {
+          recipeId: newRecipe.id,
+          filePath: photoUrl,
+          fileName: urlPath,
+          fileSize: 0, // Unknown during migration
+          mimeType: 'image/jpeg', // Assume JPEG for migration
+          position: index,
+        };
+      });
+
+      await db.insert(recipePhotos).values(photoInserts);
+      console.log('[Migration API] Original recipe photos inserted successfully');
+    }
 
     return NextResponse.json({
       id: newRecipe.id,
