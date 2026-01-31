@@ -1,0 +1,156 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Legacy Recipe Migration Configuration",
+  "description": "Configuration file for the legacy recipe migration system. Copy this file to migration-config.json and customize for your environment.",
+  
+  "ssh": {
+    "description": "SSH tunnel configuration for secure connection to remote database",
+    "host": "remote-server.example.com",
+    "port": 22,
+    "username": "migration_user",
+    "privateKeyPath": "~/.ssh/id_rsa",
+    "_notes": [
+      "The SSH tunnel provides secure access to the legacy database",
+      "Ensure SSH key-based authentication is configured (see SETUP-GUIDE.md)",
+      "privateKeyPath must be an absolute path with restrictive permissions (chmod 600)"
+    ]
+  },
+  
+  "legacyDb": {
+    "description": "Legacy PostgreSQL database connection settings (accessed through SSH tunnel)",
+    "host": "localhost",
+    "port": 5432,
+    "database": "legacy_recipes",
+    "username": "readonly_user",
+    "password": "secure_password",
+    "_notes": [
+      "Use 'localhost' as host when connecting through SSH tunnel",
+      "Username should have read-only permissions for safety",
+      "Never commit this file with real credentials to version control"
+    ]
+  },
+  
+  "transform": {
+    "description": "Data transformation settings",
+    "defaultVisibility": "private",
+    "preserveTimestamps": true,
+    "_options": {
+      "defaultVisibility": ["private", "public"],
+      "preserveTimestamps": [true, false]
+    },
+    "_notes": [
+      "defaultVisibility: Set visibility for all migrated recipes",
+      "preserveTimestamps: Keep original created_at/updated_at from legacy system"
+    ]
+  },
+  
+  "validation": {
+    "description": "Data validation and quality control settings",
+    "strictMode": false,
+    "duplicateStrategy": "keep-first",
+    "_options": {
+      "strictMode": [true, false],
+      "duplicateStrategy": ["keep-first", "keep-all", "manual-review"]
+    },
+    "_notes": [
+      "strictMode: If true, treat warnings as failures (more conservative)",
+      "duplicateStrategy options:",
+      "  - keep-first: Import only the oldest duplicate by created_at",
+      "  - keep-all: Import all duplicates with a note indicating potential duplicate",
+      "  - manual-review: Generate report but don't import any duplicates"
+    ]
+  },
+  
+  "import": {
+    "description": "Import phase configuration for API-based data insertion",
+    "apiBaseUrl": "http://localhost:3000",
+    "batchSize": 50,
+    "delayBetweenBatches": 100,
+    "dryRun": true,
+    "stopOnError": false,
+    "authToken": "",
+    "maxRetries": 3,
+    "retryBackoff": 2,
+    "_notes": [
+      "apiBaseUrl: Base URL of the Jump to Recipe application",
+      "batchSize: Number of recipes to import per batch (25-100 recommended)",
+      "delayBetweenBatches: Milliseconds to wait between batches (prevents rate limiting)",
+      "dryRun: ALWAYS test with true first! Set to false only for production import",
+      "stopOnError: Stop immediately on error (true) or continue (false)",
+      "authToken: Admin authentication token (generate from your admin account)",
+      "maxRetries: Maximum retry attempts for failed API calls",
+      "retryBackoff: Exponential backoff multiplier (2 = double delay each retry)"
+    ]
+  },
+  
+  "logging": {
+    "description": "Logging and output configuration",
+    "level": "INFO",
+    "verbose": false,
+    "outputDir": "./migration-data",
+    "_options": {
+      "level": ["DEBUG", "INFO", "WARN", "ERROR"]
+    },
+    "_notes": [
+      "level: Minimum log level to output",
+      "  - DEBUG: Very detailed logs (use for troubleshooting)",
+      "  - INFO: Standard operational logs (recommended)",
+      "  - WARN: Only warnings and errors",
+      "  - ERROR: Only errors",
+      "verbose: Enable detailed progress information",
+      "outputDir: Base directory for all migration data and logs"
+    ]
+  },
+  
+  "migrationUser": {
+    "description": "User account for orphaned recipes (recipes with no matching user)",
+    "email": "migration@example.com",
+    "name": "Migration User",
+    "role": "admin",
+    "_notes": [
+      "This user will be created if it doesn't exist",
+      "Orphaned recipes will be assigned to this user",
+      "Role should be 'admin' to ensure proper permissions"
+    ]
+  },
+  
+  "_usage": {
+    "description": "How to use this configuration file",
+    "steps": [
+      "1. Copy this file to migration-config.json",
+      "2. Update all values with your actual configuration",
+      "3. Remove all '_notes', '_options', and '_usage' fields (they're for documentation only)",
+      "4. Never commit migration-config.json to version control",
+      "5. Run migration with: npm run migration:all -- --config migration-config.json"
+    ]
+  },
+  
+  "_examples": {
+    "production": {
+      "description": "Example production configuration",
+      "import": {
+        "apiBaseUrl": "https://jumptoreceipe.com",
+        "dryRun": false,
+        "stopOnError": true,
+        "batchSize": 25
+      },
+      "logging": {
+        "level": "INFO",
+        "verbose": true
+      }
+    },
+    "development": {
+      "description": "Example development/testing configuration",
+      "import": {
+        "apiBaseUrl": "http://localhost:3000",
+        "dryRun": true,
+        "stopOnError": false,
+        "batchSize": 10
+      },
+      "logging": {
+        "level": "DEBUG",
+        "verbose": true
+      }
+    }
+  }
+}
