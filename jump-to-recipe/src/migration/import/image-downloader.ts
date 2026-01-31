@@ -119,6 +119,7 @@ export async function scrapeRecipeImages(
         
         return false; // break after finding the section
       }
+      return; // Continue iteration
     });
 
     return result;

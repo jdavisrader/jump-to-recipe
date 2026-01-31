@@ -75,7 +75,7 @@ export class SSHTunnelManager {
                   stream.end();
                 });
 
-                stream.on('error', (err) => {
+                stream.on('error', (err: Error) => {
                   console.error('SSH stream error:', err.message);
                   localSocket.end();
                 });
