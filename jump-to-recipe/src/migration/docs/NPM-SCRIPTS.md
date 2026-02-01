@@ -223,6 +223,16 @@ npm run migration:validate -- --strict
 
 Imports validated data into the new database through API routes.
 
+**PREREQUISITE**: The Next.js development server MUST be running before starting the import:
+
+```bash
+# In a separate terminal, start the dev server first
+npm run dev
+
+# Then in your migration terminal, run the import
+npm run migration:import -- --dry-run
+```
+
 **Usage**:
 ```bash
 # Import with dry-run (ALWAYS TEST FIRST!)
