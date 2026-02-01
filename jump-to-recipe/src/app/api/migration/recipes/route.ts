@@ -68,8 +68,8 @@ export async function POST(request: NextRequest) {
     console.log('[Migration API] Inserting recipe into database...');
     
     // Create recipe with ingredients and instructions as JSONB
-    const [newRecipe] = await db.insert(recipes).values({
-      id: body.id, // Use the UUID from migration
+    // Note: We explicitly provide the id to preserve legacy IDs during migration
+    const recipeData: any = {
       title: body.title,
       description: body.description || null,
       ingredients: body.ingredients, // Store as JSONB array
@@ -91,7 +91,14 @@ export async function POST(request: NextRequest) {
       likeCount: body.likeCount || 0,
       createdAt: body.createdAt ? new Date(body.createdAt) : new Date(),
       updatedAt: body.updatedAt ? new Date(body.updatedAt) : new Date(),
-    }).returning();
+    };
+
+    // Only set id if provided (for migration to preserve legacy IDs)
+    if (body.id) {
+      recipeData.id = body.id;
+    }
+
+    const [newRecipe] = await db.insert(recipes).values(recipeData).returning();
 
     console.log('[Migration API] Recipe inserted successfully:', newRecipe.id);
 
