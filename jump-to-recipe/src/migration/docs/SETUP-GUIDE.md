@@ -283,10 +283,10 @@ Manually create an SSH tunnel to verify it works:
 
 ```bash
 # Open tunnel (keep this terminal open)
-ssh -L 5433:localhost:5432 -i ~/.ssh/migration_key user@remote-server.example.com
+ssh -L 5433:localhost:5432 -i ~/.ssh/migration_key jordanpi@192.168.86.248
 
 # In another terminal, test the connection
-psql -h localhost -p 5433 -U readonly_user -d legacy_recipes_production -c "SELECT COUNT(*) FROM recipes;"
+psql -h localhost -p 5433 -U happeacookprod -d happeacookprod -c "SELECT COUNT(*) FROM recipes;"
 ```
 
 If successful, you should see a count of recipes.
@@ -452,14 +452,57 @@ If you encounter issues not covered in this guide:
 4. **Review Documentation**: Check other migration docs in `src/migration/`
 5. **Contact Support**: Reach out to the development team with log files
 
+## Starting the Next.js Development Server
+
+**CRITICAL**: The migration import phase requires the Next.js development server to be running, as it imports data through API routes at `http://localhost:3000`.
+
+### Start the Dev Server
+
+In a **separate terminal window**, start the Next.js dev server:
+
+```bash
+cd jump-to-recipe
+npm run dev
+```
+
+Keep this terminal open during the entire import process. You should see:
+
+```
+▲ Next.js 15.4.1
+- Local:        http://localhost:3000
+- Ready in 2.5s
+```
+
+### Verify API Routes Are Available
+
+Test that the migration API endpoints are accessible:
+
+```bash
+# Test the recipes endpoint (should return 401 without auth token)
+curl http://localhost:3000/api/migration/recipes
+
+# Test the users endpoint
+curl http://localhost:3000/api/migration/users
+```
+
+If you get a 404 error, the dev server isn't running or the API routes aren't properly configured.
+
+### Important Notes
+
+- The dev server must remain running during `npm run migration:import`
+- If the server crashes or restarts during import, the migration will fail with 404 errors
+- The import phase uses the `NEXT_PUBLIC_API_URL` environment variable (defaults to `http://localhost:3000`)
+- For production deployments, update this URL to your production API endpoint
+
 ## Next Steps
 
 Once setup is complete:
 
-1. Review the [Execution Runbook](./EXECUTION-RUNBOOK.md) for step-by-step migration instructions
-2. Run a dry-run migration to test your configuration
-3. Review the validation reports before running the actual import
-4. Follow the verification checklist after migration completes
+1. **Start the Next.js dev server** (see above) - Required for import phase
+2. Review the [Execution Runbook](./EXECUTION-RUNBOOK.md) for step-by-step migration instructions
+3. Run a dry-run migration to test your configuration
+4. Review the validation reports before running the actual import
+5. Follow the verification checklist after migration completes
 
 ## Security Reminders
 
