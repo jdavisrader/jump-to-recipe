@@ -31,6 +31,7 @@ export interface SearchParams {
 export function RecipeSearch({ onSearch, isLoading, disabled = false }: RecipeSearchProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const searchInputRef = useRef<HTMLInputElement>(null);
   
   const [query, setQuery] = useState(searchParams.get('query') || '');
   const [tags, setTags] = useState<string[]>(
@@ -46,7 +47,7 @@ export function RecipeSearch({ onSearch, isLoading, disabled = false }: RecipeSe
   const [tagInput, setTagInput] = useState('');
 
   // Debounce search query
-  const debouncedQuery = useDebounce(query, 300);
+  const debouncedQuery = useDebounce(query, 650);
   
   // Track last search parameters to prevent infinite loops
   const lastSearchParamsRef = useRef<string>('');
@@ -85,9 +86,10 @@ export function RecipeSearch({ onSearch, isLoading, disabled = false }: RecipeSe
     // Only trigger search if parameters have actually changed
     if (paramsString !== lastSearchParamsRef.current) {
       lastSearchParamsRef.current = paramsString;
+      
       onSearch(params);
 
-      // Update URL
+      // Update URL without causing re-render
       const urlParams = new URLSearchParams();
       Object.entries(params).forEach(([key, value]) => {
         if (value !== undefined && value !== null && value !== '') {
@@ -100,9 +102,15 @@ export function RecipeSearch({ onSearch, isLoading, disabled = false }: RecipeSe
       });
 
       const newUrl = urlParams.toString() ? `?${urlParams.toString()}` : '';
-      router.replace(newUrl, { scroll: false });
+      
+      // Use window.history.replaceState instead of router.replace to avoid re-renders
+      if (typeof window !== 'undefined') {
+        const url = new URL(window.location.href);
+        url.search = newUrl;
+        window.history.replaceState({}, '', url.toString());
+      }
     }
-  }, [debouncedQuery, tags, difficulty, maxCookTime, minCookTime, maxPrepTime, minPrepTime, sortBy, onSearch, router, buildSearchParams]);
+  }, [debouncedQuery, tags, difficulty, maxCookTime, minCookTime, maxPrepTime, minPrepTime, sortBy, onSearch, buildSearchParams]);
 
   const handleAddTag = (tag: string) => {
     const trimmedTag = tag.trim().toLowerCase();
@@ -144,6 +152,7 @@ export function RecipeSearch({ onSearch, isLoading, disabled = false }: RecipeSe
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" aria-hidden="true" />
           <Input
+            ref={searchInputRef}
             id="recipe-search"
             placeholder="Search recipes, ingredients, or instructions..."
             value={query}

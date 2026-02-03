@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { RecipeCard } from "@/components/recipes/recipe-card";
+import { useDebounce } from "@/hooks/useDebounce";
 import type { Recipe } from "@/types/recipe";
 
 interface RecipeSelectorProps {
@@ -21,6 +22,7 @@ export function RecipeSelector({
 }: RecipeSelectorProps) {
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const debouncedSearchQuery = useDebounce(searchQuery, 250);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -47,11 +49,11 @@ export function RecipeSelector({
     fetchRecipes();
   }, []);
 
-  // Filter recipes based on search query
+  // Filter recipes based on search query (debounced)
   const filteredRecipes = recipes.filter((recipe) =>
-    recipe.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    recipe.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    recipe.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
+    recipe.title.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
+    recipe.description?.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
+    recipe.tags.some(tag => tag.toLowerCase().includes(debouncedSearchQuery.toLowerCase()))
   );
 
   const isRecipeSelected = (recipe: Recipe) =>
