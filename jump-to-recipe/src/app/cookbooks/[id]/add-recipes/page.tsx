@@ -10,6 +10,7 @@ import { RecipeCard } from '@/components/recipes';
 import { CookbookRecipeOrganizer } from '@/components/cookbooks/cookbook-recipe-organizer';
 import { Loader2, Search, ArrowLeft, Plus } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
+import { useDebounce } from '@/hooks/useDebounce';
 import type { Recipe } from '@/types/recipe';
 
 export default function AddRecipesPage({ params }: { params: Promise<{ id: string }> }) {
@@ -17,6 +18,7 @@ export default function AddRecipesPage({ params }: { params: Promise<{ id: strin
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const debouncedSearchQuery = useDebounce(searchQuery, 250);
   const [cookbook, setCookbook] = useState<{ id: string; title: string; recipes: Array<{ recipe: Recipe; position: number }> } | null>(null);
   const [userRecipes, setUserRecipes] = useState<Recipe[]>([]);
   const [filteredRecipes, setFilteredRecipes] = useState<Recipe[]>([]);
@@ -84,14 +86,14 @@ export default function AddRecipesPage({ params }: { params: Promise<{ id: strin
     fetchData();
   }, [cookbookId, toast]);
 
-  // Filter recipes based on search query
+  // Filter recipes based on search query (debounced)
   useEffect(() => {
-    if (!searchQuery.trim()) {
+    if (!debouncedSearchQuery.trim()) {
       setFilteredRecipes(userRecipes);
       return;
     }
 
-    const query = searchQuery.toLowerCase();
+    const query = debouncedSearchQuery.toLowerCase();
     const filtered = userRecipes.filter(recipe =>
       recipe.title.toLowerCase().includes(query) ||
       recipe.description?.toLowerCase().includes(query) ||
@@ -99,7 +101,7 @@ export default function AddRecipesPage({ params }: { params: Promise<{ id: strin
     );
 
     setFilteredRecipes(filtered);
-  }, [searchQuery, userRecipes]);
+  }, [debouncedSearchQuery, userRecipes]);
 
   const toggleRecipeSelection = (recipeId: string) => {
     const newSelected = new Set(selectedRecipes);

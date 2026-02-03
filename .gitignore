@@ -50,3 +50,6 @@ coverage/
 tmp/
 temp/
 .env.migration
+
+#image upload folers
+public/uploads/
