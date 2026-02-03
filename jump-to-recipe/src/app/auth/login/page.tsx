@@ -136,7 +136,8 @@ function LoginForm() {
               {isLoading ? 'Signing in...' : 'Sign in'}
             </Button>
             
-            <div className="relative">
+            {/* Google OAuth temporarily disabled */}
+            {/* <div className="relative">
               <div className="absolute inset-0 flex items-center">
                 <span className="w-full border-t" />
               </div>
@@ -158,7 +159,7 @@ function LoginForm() {
                 <Mail className="mr-2 h-4 w-4" />
                 Continue with Google
               </Button>
-            </div>
+            </div> */}
           </CardContent>
         </form>
         <CardFooter className="flex flex-col space-y-4">

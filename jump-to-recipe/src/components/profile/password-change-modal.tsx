@@ -63,6 +63,9 @@ export function PasswordChangeModal({ isOpen, onClose }: PasswordChangeModalProp
     },
   });
 
+  // Merge refs for currentPassword field
+  const { ref: currentPasswordRegisterRef, ...currentPasswordRegister } = register('currentPassword');
+
   const handleClose = useCallback(() => {
     if (isSubmitting) return;
     onClose();
@@ -246,8 +249,11 @@ export function PasswordChangeModal({ isOpen, onClose }: PasswordChangeModalProp
               <Label htmlFor="current-password">Current Password</Label>
               <div className="relative">
                 <Input
-                  {...register('currentPassword')}
-                  ref={currentPasswordRef}
+                  {...currentPasswordRegister}
+                  ref={(e) => {
+                    currentPasswordRegisterRef(e);
+                    currentPasswordRef.current = e;
+                  }}
                   id="current-password"
                   type={showCurrentPassword ? "text" : "password"}
                   placeholder="Enter your current password"
