@@ -3,12 +3,17 @@ FROM node:20-alpine AS base
 
 # Install dependencies only when needed
 FROM base AS deps
-RUN apk add --no-cache libc6-compat vips-dev
+RUN apk add --no-cache \
+    libc6-compat \
+    vips-dev \
+    build-base \
+    python3 \
+    pkgconfig
 WORKDIR /app
 
 # Copy package files from jump-to-recipe directory
 COPY jump-to-recipe/package*.json ./
-RUN npm ci --legacy-peer-deps || npm install --legacy-peer-deps
+RUN npm install --legacy-peer-deps
 
 # Rebuild the source code only when needed
 FROM base AS builder
