@@ -1,22 +1,13 @@
 # Multi-stage build for optimized production image
-FROM node:20-alpine AS base
+FROM node:20-slim AS base
 
 # Install dependencies only when needed
 FROM base AS deps
-RUN apk add --no-cache \
-    libc6-compat \
-    vips-dev \
-    build-base \
-    python3 \
-    pkgconfig
 WORKDIR /app
 
 # Copy package files from jump-to-recipe directory
 COPY jump-to-recipe/package*.json ./
-
-# Install node-gyp globally and then install dependencies
-RUN npm install -g node-gyp && \
-    npm install --legacy-peer-deps
+RUN npm install --legacy-peer-deps
 
 # Rebuild the source code only when needed
 FROM base AS builder
@@ -54,14 +45,11 @@ RUN npm run build
 FROM base AS runner
 WORKDIR /app
 
-# Install runtime dependencies for sharp
-RUN apk add --no-cache vips-dev
-
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
+RUN groupadd --system --gid 1001 nodejs
+RUN useradd --system --uid 1001 nextjs
 
 # Copy node_modules for runtime scripts (drizzle-kit, etc.)
 COPY --from=builder /app/node_modules ./node_modules
