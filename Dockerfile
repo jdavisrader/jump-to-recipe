@@ -13,7 +13,10 @@ WORKDIR /app
 
 # Copy package files from jump-to-recipe directory
 COPY jump-to-recipe/package*.json ./
-RUN npm install --legacy-peer-deps
+
+# Install node-gyp globally and then install dependencies
+RUN npm install -g node-gyp && \
+    npm install --legacy-peer-deps
 
 # Rebuild the source code only when needed
 FROM base AS builder
