@@ -54,7 +54,7 @@ services:
     expose:
       - "3000"
     volumes:
-      - uploads:/app/uploads
+      - uploads:/app/public/uploads
     healthcheck:
       test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/api/health"]
       interval: 30s
