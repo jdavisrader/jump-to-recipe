@@ -2,12 +2,20 @@
 
 ## Root Structure
 ```
-jump-to-recipe/
-├── src/                    # Source code
-├── public/                 # Static assets
+/
+├── jump-to-recipe/         # Main application
+│   ├── src/               # Source code
+│   ├── public/            # Static assets
+│   └── ...                # App config files
+├── docs/                   # Project documentation
+│   ├── deployment/        # Deployment guides
+│   ├── errors/            # Error logs and troubleshooting
+│   ├── specs/             # Feature specifications
+│   ├── dataMigration/     # Migration documentation
+│   └── wireframes/        # Design mockups
 ├── .kiro/                  # Kiro configuration and specs
-├── node_modules/           # Dependencies
-└── config files            # Build and tool configurations
+├── scripts/                # Build and deployment scripts
+└── config files            # Docker and root configurations
 ```
 
 ## Source Code Organization (`src/`)
@@ -61,3 +69,10 @@ src/app/api/
 - Add 'use client' only when client-side features needed
 - Leverage shadcn/ui components for consistency
 - Follow Tailwind responsive design patterns
+
+## Documentation Organization
+- **All documentation** must be placed in `/docs/` (root level)
+- Use logical folder structure for organization
+- Existing folders: deployment, errors, specs, dataMigration, wireframes
+- Create new folders as needed for clear categorization
+- Use descriptive filenames with dates for error logs (e.g., `2026-02-03-Deployment_error.md`)
