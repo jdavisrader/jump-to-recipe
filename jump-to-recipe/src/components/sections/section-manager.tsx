@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { SectionHeader } from './section-header';
 import { cn } from '@/lib/utils';
 import { v4 as uuidv4 } from 'uuid';
+import { Droppable } from '@hello-pangea/dnd';
 import './section-animations.css';
 
 /**
@@ -113,6 +114,13 @@ interface SectionManagerProps<T> {
    * The parent component should re-run validation and update the validationErrors map.
    */
   onValidate?: () => void;
+
+  /**
+   * Whether to enable drag-and-drop reordering for items within sections.
+   * When true, each section's items will be wrapped in a Droppable container.
+   * The parent component must wrap this component in a DragDropContext.
+   */
+  enableDragDrop?: boolean;
 }
 
 /**
@@ -235,7 +243,8 @@ export function SectionManager<T extends { id: string }>({
   isAddingSection = false,
   isAddingItem = {},
   validationErrors,
-  onValidate
+  onValidate,
+  enableDragDrop = false,
 }: SectionManagerProps<T>) {
   const defaultAddSectionLabel = `Add ${itemType === 'ingredient' ? 'Ingredient' : 'Instruction'} Section`;
   const defaultAddItemLabel = `Add ${itemType === 'ingredient' ? 'Ingredient' : 'Step'}`;
@@ -406,14 +415,45 @@ export function SectionManager<T extends { id: string }>({
                     </div>
                   )}
 
-                  {section.items.map((item, itemIndex) => (
-                    <div
-                      key={item.id}
-                      className="section-item-enter"
-                    >
-                      {renderItem(item, itemIndex, section.id)}
-                    </div>
-                  ))}
+                  {enableDragDrop ? (
+                    <Droppable droppableId={`section-${section.id}`} type="ITEM">
+                      {(provided, snapshot) => (
+                        <div
+                          ref={provided.innerRef}
+                          {...provided.droppableProps}
+                          role="list"
+                          aria-label={`${section.name} - drag ${itemType === 'ingredient' ? 'ingredients' : 'steps'} to reorder`}
+                          aria-describedby="drag-instructions"
+                          className={cn(
+                            'space-y-3 transition-all duration-200',
+                            snapshot.isDraggingOver &&
+                              'bg-accent/30 rounded-lg p-4 ring-2 ring-primary ring-offset-2'
+                          )}
+                        >
+                          {section.items.map((item, itemIndex) => (
+                            <div
+                              key={item.id}
+                              className="section-item-enter"
+                            >
+                              {renderItem(item, itemIndex, section.id)}
+                            </div>
+                          ))}
+                          {provided.placeholder}
+                        </div>
+                      )}
+                    </Droppable>
+                  ) : (
+                    <>
+                      {section.items.map((item, itemIndex) => (
+                        <div
+                          key={item.id}
+                          className="section-item-enter"
+                        >
+                          {renderItem(item, itemIndex, section.id)}
+                        </div>
+                      ))}
+                    </>
+                  )}
 
                   {/* Validation Error for Empty Section */}
                   {sectionItemsError && (

@@ -3,6 +3,12 @@
  * 
  * Provides functions for managing positions of sections and items within sections,
  * including validation, reindexing, and conflict resolution for multi-user scenarios.
+ * 
+ * Performance optimizations (Requirement 8.4):
+ * - Efficient array operations with minimal copying
+ * - Early returns for edge cases
+ * - Stable sorting for consistent results
+ * - Optimized position calculations
  */
 
 interface PositionedItem {
@@ -28,6 +34,8 @@ interface PositionValidationResult {
 /**
  * Reindexes section positions to ensure sequential ordering starting from 0
  * 
+ * Performance: O(n log n) due to sorting, optimized with stable sort
+ * 
  * @param sections - Array of sections with position property
  * @returns Array of sections with sequential positions (0, 1, 2, ...)
  * 
@@ -42,6 +50,7 @@ interface PositionValidationResult {
 export function reindexSectionPositions<T extends PositionedSection>(
   sections: T[]
 ): T[] {
+  // Early return for empty arrays (Requirement 8.4)
   if (!sections || sections.length === 0) {
     return sections;
   }
@@ -363,4 +372,197 @@ export function validateAndFixRecipePositions<T extends PositionedSection>(
     errors: allErrors,
     fixedSections,
   };
+}
+
+/**
+ * Reorders items within a single section
+ * 
+ * Handles drag-and-drop reordering within a section by moving an item from
+ * sourceIndex to destinationIndex and updating all affected positions.
+ * 
+ * @param items - Array of items in the section
+ * @param sourceIndex - Original index of the item being moved
+ * @param destinationIndex - Target index for the item
+ * @returns Array of items with updated positions
+ * 
+ * @example
+ * const items = [
+ *   { id: 'a', position: 0, name: 'First' },
+ *   { id: 'b', position: 1, name: 'Second' },
+ *   { id: 'c', position: 2, name: 'Third' }
+ * ];
+ * const reordered = reorderWithinSection(items, 0, 2);
+ * // Result: [{ id: 'b', position: 0 }, { id: 'c', position: 1 }, { id: 'a', position: 2 }]
+ */
+export function reorderWithinSection<T extends PositionedItem>(
+  items: T[],
+  sourceIndex: number,
+  destinationIndex: number
+): T[] {
+  if (!items || items.length === 0) {
+    return items;
+  }
+
+  // Validate indices
+  if (
+    sourceIndex < 0 ||
+    sourceIndex >= items.length ||
+    destinationIndex < 0 ||
+    destinationIndex >= items.length
+  ) {
+    throw new Error(
+      `Invalid indices: sourceIndex=${sourceIndex}, destinationIndex=${destinationIndex}, length=${items.length}`
+    );
+  }
+
+  // If source and destination are the same, no change needed
+  if (sourceIndex === destinationIndex) {
+    return items;
+  }
+
+  // Create a copy of the array
+  const result = Array.from(items);
+
+  // Remove the item from source position
+  const [movedItem] = result.splice(sourceIndex, 1);
+
+  // Insert at destination position
+  result.splice(destinationIndex, 0, movedItem);
+
+  // Reindex all positions to be sequential
+  return result.map((item, index) => ({
+    ...item,
+    position: index,
+  }));
+}
+
+/**
+ * Moves an item from one section to another
+ * 
+ * Handles cross-section drag-and-drop by removing an item from the source section
+ * and adding it to the destination section at the specified index.
+ * 
+ * @param sourceItems - Array of items in the source section
+ * @param destItems - Array of items in the destination section
+ * @param sourceIndex - Index of the item in the source section
+ * @param destinationIndex - Target index in the destination section
+ * @returns Object with updated source and destination item arrays
+ * 
+ * @example
+ * const source = [
+ *   { id: 'a', position: 0, name: 'Item A' },
+ *   { id: 'b', position: 1, name: 'Item B' }
+ * ];
+ * const dest = [
+ *   { id: 'c', position: 0, name: 'Item C' }
+ * ];
+ * const result = moveBetweenSections(source, dest, 0, 1);
+ * // result.sourceItems: [{ id: 'b', position: 0 }]
+ * // result.destItems: [{ id: 'c', position: 0 }, { id: 'a', position: 1 }]
+ */
+export function moveBetweenSections<T extends PositionedItem>(
+  sourceItems: T[],
+  destItems: T[],
+  sourceIndex: number,
+  destinationIndex: number
+): {
+  sourceItems: T[];
+  destItems: T[];
+} {
+  if (!sourceItems || sourceItems.length === 0) {
+    throw new Error('Source items array is empty or undefined');
+  }
+
+  // Validate source index
+  if (sourceIndex < 0 || sourceIndex >= sourceItems.length) {
+    throw new Error(
+      `Invalid source index: ${sourceIndex}, length=${sourceItems.length}`
+    );
+  }
+
+  // Validate destination index
+  const maxDestIndex = (destItems?.length || 0);
+  if (destinationIndex < 0 || destinationIndex > maxDestIndex) {
+    throw new Error(
+      `Invalid destination index: ${destinationIndex}, max allowed=${maxDestIndex}`
+    );
+  }
+
+  // Create copies of the arrays
+  const sourceResult = Array.from(sourceItems);
+  const destResult = Array.from(destItems || []);
+
+  // Remove item from source
+  const [movedItem] = sourceResult.splice(sourceIndex, 1);
+
+  // Insert into destination
+  destResult.splice(destinationIndex, 0, movedItem);
+
+  // Reindex positions in both arrays
+  return {
+    sourceItems: sourceResult.map((item, index) => ({
+      ...item,
+      position: index,
+    })),
+    destItems: destResult.map((item, index) => ({
+      ...item,
+      position: index,
+    })),
+  };
+}
+
+/**
+ * Normalizes positions to ensure sequential values starting from 0
+ * 
+ * This is an alias for reindexItemPositions for better semantic clarity
+ * when used in the context of drag-and-drop operations.
+ * 
+ * @param items - Array of items with position property
+ * @returns Array of items with sequential positions (0, 1, 2, ...)
+ * 
+ * @example
+ * const items = [
+ *   { id: 'a', position: 5, name: 'First' },
+ *   { id: 'b', position: 10, name: 'Second' }
+ * ];
+ * const normalized = normalizePositions(items);
+ * // Result: [{ id: 'a', position: 0 }, { id: 'b', position: 1 }]
+ */
+export function normalizePositions<T extends PositionedItem>(
+  items: T[]
+): T[] {
+  return reindexItemPositions(items);
+}
+
+/**
+ * Gets the next available position for a new item in a section
+ * 
+ * Calculates the position value that should be assigned to a new item
+ * being added to a section. Returns 0 if the section is empty, otherwise
+ * returns max position + 1.
+ * 
+ * @param items - Array of existing items in the section
+ * @returns The position value for the new item
+ * 
+ * @example
+ * const items = [
+ *   { id: 'a', position: 0 },
+ *   { id: 'b', position: 1 }
+ * ];
+ * const nextPos = getNextPosition(items);
+ * // Result: 2
+ * 
+ * const emptyItems = [];
+ * const firstPos = getNextPosition(emptyItems);
+ * // Result: 0
+ */
+export function getNextPosition<T extends PositionedItem>(
+  items: T[]
+): number {
+  if (!items || items.length === 0) {
+    return 0;
+  }
+
+  const maxPosition = Math.max(...items.map((item) => item.position));
+  return maxPosition + 1;
 }

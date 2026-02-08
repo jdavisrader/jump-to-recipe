@@ -1,0 +1,423 @@
+/**
+ * Drag-and-Drop Visual Feedback Styles
+ * 
+ * This file provides enhanced visual feedback for drag-and-drop operations
+ * in the ingredient management system. It includes:
+ * - Ghost image styling for dragged items
+ * - Drop target highlighting
+ * - Cursor states for valid/invalid drops
+ * - Placeholder gaps at original positions
+ * - Smooth animations for drop operations
+ * - Light and dark mode support
+ */
+
+/* ===== Height Override for Draggable Elements ===== */
+
+/**
+ * Force auto height on draggable elements to prevent inline style override
+ * This ensures the row maintains its natural height during drag
+ */
+[data-rfd-draggable-context-id] {
+  height: auto !important;
+  min-height: auto !important;
+}
+
+/* ===== Dragging States ===== */
+
+/**
+ * Style for items being dragged (ghost image)
+ * Creates a semi-transparent, elevated appearance
+ */
+.ingredient-dragging {
+  opacity: 0.6 !important;
+  transform: scale(1.05) !important;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1),
+    0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
+  border: 2px solid hsl(var(--primary)) !important;
+  border-radius: 0.5rem !important;
+  background: hsl(var(--card)) !important;
+  z-index: 50 !important;
+  cursor: grabbing !important;
+}
+
+/**
+ * Placeholder at the original position during drag
+ * Shows where the item came from
+ */
+.ingredient-placeholder {
+  background: hsl(var(--muted) / 0.3);
+  border: 2px dashed hsl(var(--border));
+  border-radius: 0.5rem;
+  min-height: 60px;
+  transition: all 0.2s ease-in-out;
+}
+
+/* ===== Drop Target States ===== */
+
+/**
+ * Valid drop target highlighting
+ * Shows when hovering over a valid drop zone
+ */
+.drop-target-valid {
+  background: hsl(var(--accent) / 0.3) !important;
+  border: 2px solid hsl(var(--primary)) !important;
+  border-radius: 0.5rem !important;
+  box-shadow: 0 0 0 4px hsl(var(--primary) / 0.1) !important;
+  transition: all 0.2s ease-in-out !important;
+}
+
+/**
+ * Invalid drop target indication
+ * Shows when hovering over an invalid drop zone
+ */
+.drop-target-invalid {
+  cursor: not-allowed !important;
+  opacity: 0.5;
+}
+
+/**
+ * Drop zone insertion indicator
+ * Shows where the item will be inserted
+ */
+.drop-indicator {
+  height: 4px;
+  background: hsl(var(--primary));
+  border-radius: 2px;
+  margin: 0.5rem 0;
+  animation: pulse-indicator 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-indicator {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scaleY(1);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scaleY(1.5);
+  }
+}
+
+/* ===== Cursor States ===== */
+
+/**
+ * Cursor for draggable items
+ */
+.cursor-grab {
+  cursor: grab;
+}
+
+.cursor-grab:active {
+  cursor: grabbing;
+}
+
+/**
+ * Cursor for invalid drop zones
+ */
+.cursor-no-drop {
+  cursor: no-drop !important;
+}
+
+/* ===== Animation States ===== */
+
+/**
+ * Smooth animation when item drops at new position
+ */
+.ingredient-drop-animation {
+  animation: drop-settle 0.3s cubic-bezier(0.2, 0, 0, 1);
+}
+
+@keyframes drop-settle {
+  0% {
+    transform: scale(1.05);
+    opacity: 0.6;
+  }
+  50% {
+    transform: scale(0.98);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/**
+ * Fade in animation for newly added items
+ */
+.ingredient-fade-in {
+  animation: fade-in 0.3s ease-in-out;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ===== Section-Specific Styles ===== */
+
+/**
+ * Section container when being dragged over
+ */
+.section-drag-over {
+  background: hsl(var(--accent) / 0.2) !important;
+  border-color: hsl(var(--primary)) !important;
+  box-shadow: 0 0 0 4px hsl(var(--primary) / 0.1) !important;
+  transition: all 0.2s ease-in-out !important;
+}
+
+/**
+ * Section highlight pulse animation
+ */
+.section-highlight-pulse {
+  animation: section-pulse 2s ease-in-out infinite;
+}
+
+@keyframes section-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 hsl(var(--primary) / 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 8px hsl(var(--primary) / 0);
+  }
+}
+
+/* ===== Dark Mode Adjustments ===== */
+
+/**
+ * Enhanced contrast for dark mode
+ */
+.dark .ingredient-dragging {
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.4),
+    0 10px 10px -5px rgba(0, 0, 0, 0.2) !important;
+}
+
+.dark .ingredient-placeholder {
+  background: hsl(var(--muted) / 0.2);
+  border-color: hsl(var(--border) / 0.5);
+}
+
+.dark .drop-target-valid {
+  background: hsl(var(--accent) / 0.2) !important;
+  box-shadow: 0 0 0 4px hsl(var(--primary) / 0.2) !important;
+}
+
+/* ===== Accessibility ===== */
+
+/**
+ * Focus visible states for keyboard navigation
+ */
+.drag-handle:focus-visible {
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: 2px;
+  border-radius: 0.25rem;
+}
+
+/**
+ * Screen reader announcements
+ */
+.drag-announcement {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ===== Performance Optimizations ===== */
+
+/**
+ * Use GPU acceleration for transforms
+ */
+.ingredient-dragging,
+.drop-target-valid,
+.ingredient-drop-animation {
+  will-change: transform, opacity;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+/* ===== Mobile Touch Support ===== */
+
+/**
+ * Touch-specific feedback
+ * Larger hit areas and more prominent visual feedback for touch devices
+ */
+@media (hover: none) and (pointer: coarse) {
+  /* Larger drag handles for easier touch interaction */
+  .drag-handle {
+    min-width: 44px;
+    min-height: 44px;
+    padding: 12px;
+  }
+
+  /* More prominent dragging state for touch */
+  .ingredient-dragging {
+    transform: scale(1.1) !important;
+    opacity: 0.7 !important;
+    box-shadow: 0 25px 30px -5px rgba(0, 0, 0, 0.2),
+      0 15px 15px -5px rgba(0, 0, 0, 0.1) !important;
+  }
+
+  /* Larger drop target indicators for touch */
+  .drop-target-valid {
+    box-shadow: 0 0 0 6px hsl(var(--primary) / 0.15) !important;
+    border-width: 3px !important;
+  }
+
+  /* Larger drop indicator for touch */
+  .drop-indicator {
+    height: 6px;
+    margin: 0.75rem 0;
+  }
+
+  /* Prevent accidental text selection during touch drag */
+  .touch-device {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  /* Larger delete buttons for touch */
+  .delete-button {
+    min-width: 44px;
+    min-height: 44px;
+  }
+}
+
+/**
+ * Touch device specific styles
+ */
+.touch-device .drag-handle {
+  /* Add visual indicator for long-press on touch devices */
+  position: relative;
+}
+
+.touch-device .drag-handle::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 0.25rem;
+  background: hsl(var(--primary) / 0.1);
+  opacity: 0;
+  transition: opacity 0.2s ease-in-out;
+}
+
+.touch-device .drag-handle:active::after {
+  opacity: 1;
+}
+
+/**
+ * Prevent text selection during drag
+ */
+.dragging-active {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+/**
+ * Touch drag cancellation zone
+ * Visual feedback when dragging outside valid drop areas
+ */
+.touch-drag-cancel-zone {
+  position: fixed;
+  inset: 0;
+  background: hsl(var(--destructive) / 0.1);
+  pointer-events: none;
+  z-index: 40;
+  animation: cancel-zone-pulse 1s ease-in-out infinite;
+}
+
+@keyframes cancel-zone-pulse {
+  0%,
+  100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/**
+ * Touch feedback indicator
+ */
+.touch-feedback-indicator {
+  position: fixed;
+  bottom: 1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  z-index: 50;
+  pointer-events: none;
+  animation: slide-up 0.3s ease-out;
+}
+
+@keyframes slide-up {
+  from {
+    transform: translateX(-50%) translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+  }
+}
+
+/**
+ * Long-press visual feedback
+ */
+@keyframes long-press-feedback {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(0.95);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.touch-device .drag-handle:active {
+  animation: long-press-feedback 0.2s ease-in-out;
+}
+
+/**
+ * Improved touch scrolling during drag
+ */
+.touch-device.dragging-active {
+  overflow: hidden;
+  position: fixed;
+  width: 100%;
+}
+
+/**
+ * Touch-specific drop zone highlighting
+ */
+@media (hover: none) and (pointer: coarse) {
+  .section-drag-over {
+    background: hsl(var(--accent) / 0.3) !important;
+    border-width: 3px !important;
+    box-shadow: 0 0 0 6px hsl(var(--primary) / 0.15) !important;
+  }
+}
+

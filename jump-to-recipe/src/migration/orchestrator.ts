@@ -134,7 +134,7 @@ async function executePhase(
 
   try {
     let outputDir: string | undefined;
-    let stats: Record<string, any> = {};
+    const stats: Record<string, any> = {};
 
     switch (phase) {
       case 'extract':

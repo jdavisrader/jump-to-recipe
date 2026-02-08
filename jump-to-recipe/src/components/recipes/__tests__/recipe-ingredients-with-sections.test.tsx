@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { useForm } from 'react-hook-form';
+import { useForm, FormProvider } from 'react-hook-form';
 
 import { RecipeIngredientsWithSections } from '../recipe-ingredients-with-sections';
 
@@ -29,13 +29,15 @@ function TestWrapper({
   });
 
   return (
-    <RecipeIngredientsWithSections
-      control={form.control}
-      watch={form.watch}
-      errors={form.formState.errors}
-      setError={form.setError}
-      clearErrors={form.clearErrors}
-    />
+    <FormProvider {...form}>
+      <RecipeIngredientsWithSections
+        control={form.control}
+        watch={form.watch}
+        errors={form.formState.errors}
+        setError={form.setError}
+        clearErrors={form.clearErrors}
+      />
+    </FormProvider>
   );
 }
 
@@ -96,7 +98,7 @@ describe('RecipeIngredientsWithSections', () => {
     render(<TestWrapper />);
     
     expect(screen.getByPlaceholderText('Ingredient name')).toBeInTheDocument();
-    expect(screen.getByPlaceholderText('Amount')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('Quantity')).toBeInTheDocument();
     expect(screen.getByPlaceholderText('Notes (optional)')).toBeInTheDocument();
   });
 

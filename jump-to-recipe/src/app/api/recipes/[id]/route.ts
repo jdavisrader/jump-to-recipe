@@ -209,7 +209,7 @@ export async function PUT(
         }
 
         // Resolve position conflicts for concurrent edits (Requirement 12.2, 12.3)
-        let processedData = { ...normalizedData };
+        const processedData = { ...normalizedData };
         
         if (normalizedData.ingredientSections && normalizedData.ingredientSections.length > 0) {
             // Resolve conflicts with existing data (last-write-wins)
