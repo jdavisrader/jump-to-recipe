@@ -304,16 +304,18 @@ function normalizeImportedSections<T extends ImportedIngredientItem | ImportedIn
  * - Drops items with empty name (Requirement 6.4)
  * - Generates UUIDs for items missing IDs (Requirement 6.5)
  * - Ensures all required fields have valid values
+ * - Sorts items by position if available (Requirement 6.2)
+ * - Reindexes positions to be sequential after sorting (Requirement 6.4)
  * 
  * @param items - Array of imported ingredient items
  * @param summary - Summary object to track normalization statistics
- * @returns Normalized ingredient items array
+ * @returns Normalized ingredient items array sorted by position with sequential indices
  */
 function normalizeIngredientItems(
   items: ImportedIngredientItem[],
   summary: NormalizationSummary
 ): NormalizedIngredientItem[] {
-  return items
+  const normalized = items
     .filter(item => {
       // Drop items with empty name (Requirement 6.4)
       const hasName = item.name?.trim();
@@ -323,11 +325,17 @@ function normalizeIngredientItems(
       }
       return true;
     })
-    .map(item => {
+    .map((item, index) => {
       // Generate UUID if missing (Requirement 6.5)
       const id = item.id || uuidv4();
       if (!item.id) {
         summary.idsGenerated++;
+      }
+
+      // Auto-assign position if missing (Requirement 6.3)
+      const position = (item as any).position ?? index;
+      if ((item as any).position === undefined) {
+        summary.positionsAssigned++;
       }
 
       return {
@@ -339,8 +347,18 @@ function normalizeIngredientItems(
         notes: item.notes,
         category: item.category,
         sectionId: item.sectionId,
+        position,
       };
     });
+
+  // Sort by position to ensure correct order (Requirement 6.2)
+  const sorted = normalized.sort((a, b) => a.position - b.position);
+  
+  // Reindex positions to be sequential (0, 1, 2, ...) after sorting and filtering (Requirement 6.4)
+  return sorted.map((item, index) => ({
+    ...item,
+    position: index,
+  }));
 }
 
 /**
@@ -350,16 +368,18 @@ function normalizeIngredientItems(
  * - Drops items with empty content (Requirement 6.4)
  * - Generates UUIDs for items missing IDs (Requirement 6.5)
  * - Auto-assigns step numbers sequentially
+ * - Sorts items by position if available (Requirement 6.2)
+ * - Reindexes positions to be sequential after sorting (Requirement 6.4)
  * 
  * @param items - Array of imported instruction items
  * @param summary - Summary object to track normalization statistics
- * @returns Normalized instruction items array
+ * @returns Normalized instruction items array sorted by position with sequential indices
  */
 function normalizeInstructionItems(
   items: ImportedInstructionItem[],
   summary: NormalizationSummary
 ): NormalizedInstructionItem[] {
-  return items
+  const normalized = items
     .filter(item => {
       // Drop items with empty content (Requirement 6.4)
       const hasContent = item.content?.trim();
@@ -379,14 +399,30 @@ function normalizeInstructionItems(
       // Auto-assign step number if missing
       const step = item.step ?? index + 1;
 
+      // Auto-assign position if missing (Requirement 6.3)
+      const position = (item as any).position ?? index;
+      if ((item as any).position === undefined) {
+        summary.positionsAssigned++;
+      }
+
       return {
         id,
         step,
         content: item.content!.trim(),
         duration: item.duration,
         sectionId: item.sectionId,
+        position,
       };
     });
+
+  // Sort by position to ensure correct order (Requirement 6.2)
+  const sorted = normalized.sort((a, b) => a.position - b.position);
+  
+  // Reindex positions to be sequential (0, 1, 2, ...) after sorting and filtering (Requirement 6.4)
+  return sorted.map((item, index) => ({
+    ...item,
+    position: index,
+  }));
 }
 
 /**

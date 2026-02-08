@@ -5,6 +5,10 @@ import {
   resolvePositionConflicts,
   resolveSectionConflicts,
   validateAndFixRecipePositions,
+  reorderWithinSection,
+  moveBetweenSections,
+  normalizePositions,
+  getNextPosition,
 } from '../section-position-utils';
 
 describe('section-position-utils', () => {
@@ -530,6 +534,264 @@ describe('section-position-utils', () => {
       expect(result.isValid).toBe(false);
       expect(result.errors[0]).toContain('Section 0');
       expect(result.errors[0]).toContain('s1');
+    });
+  });
+
+  describe('reorderWithinSection', () => {
+    it('should reorder item from start to end', () => {
+      const items = [
+        { id: 'a', position: 0, name: 'First' },
+        { id: 'b', position: 1, name: 'Second' },
+        { id: 'c', position: 2, name: 'Third' },
+      ];
+
+      const result = reorderWithinSection(items, 0, 2);
+
+      expect(result).toHaveLength(3);
+      expect(result[0]).toMatchObject({ id: 'b', position: 0 });
+      expect(result[1]).toMatchObject({ id: 'c', position: 1 });
+      expect(result[2]).toMatchObject({ id: 'a', position: 2 });
+    });
+
+    it('should reorder item from end to start', () => {
+      const items = [
+        { id: 'a', position: 0, name: 'First' },
+        { id: 'b', position: 1, name: 'Second' },
+        { id: 'c', position: 2, name: 'Third' },
+      ];
+
+      const result = reorderWithinSection(items, 2, 0);
+
+      expect(result).toHaveLength(3);
+      expect(result[0]).toMatchObject({ id: 'c', position: 0 });
+      expect(result[1]).toMatchObject({ id: 'a', position: 1 });
+      expect(result[2]).toMatchObject({ id: 'b', position: 2 });
+    });
+
+    it('should handle reordering to same position', () => {
+      const items = [
+        { id: 'a', position: 0, name: 'First' },
+        { id: 'b', position: 1, name: 'Second' },
+      ];
+
+      const result = reorderWithinSection(items, 1, 1);
+
+      expect(result).toHaveLength(2);
+      expect(result[0]).toMatchObject({ id: 'a', position: 0 });
+      expect(result[1]).toMatchObject({ id: 'b', position: 1 });
+    });
+
+    it('should throw error for invalid source index', () => {
+      const items = [
+        { id: 'a', position: 0, name: 'First' },
+      ];
+
+      expect(() => reorderWithinSection(items, -1, 0)).toThrow('Invalid indices');
+      expect(() => reorderWithinSection(items, 5, 0)).toThrow('Invalid indices');
+    });
+
+    it('should throw error for invalid destination index', () => {
+      const items = [
+        { id: 'a', position: 0, name: 'First' },
+      ];
+
+      expect(() => reorderWithinSection(items, 0, -1)).toThrow('Invalid indices');
+      expect(() => reorderWithinSection(items, 0, 5)).toThrow('Invalid indices');
+    });
+
+    it('should handle empty array', () => {
+      const result = reorderWithinSection([], 0, 0);
+      expect(result).toEqual([]);
+    });
+
+    it('should preserve all item properties', () => {
+      const items = [
+        { id: 'a', position: 0, name: 'First', extra: 'data' },
+        { id: 'b', position: 1, name: 'Second', extra: 'more' },
+      ];
+
+      const result = reorderWithinSection(items, 0, 1);
+
+      expect(result[1]).toMatchObject({
+        id: 'a',
+        position: 1,
+        name: 'First',
+        extra: 'data',
+      });
+    });
+  });
+
+  describe('moveBetweenSections', () => {
+    it('should move item from source to destination', () => {
+      const source = [
+        { id: 'a', position: 0, name: 'Item A' },
+        { id: 'b', position: 1, name: 'Item B' },
+      ];
+      const dest = [
+        { id: 'c', position: 0, name: 'Item C' },
+      ];
+
+      const result = moveBetweenSections(source, dest, 0, 1);
+
+      expect(result.sourceItems).toHaveLength(1);
+      expect(result.sourceItems[0]).toMatchObject({ id: 'b', position: 0 });
+
+      expect(result.destItems).toHaveLength(2);
+      expect(result.destItems[0]).toMatchObject({ id: 'c', position: 0 });
+      expect(result.destItems[1]).toMatchObject({ id: 'a', position: 1 });
+    });
+
+    it('should move item to start of destination', () => {
+      const source = [
+        { id: 'a', position: 0, name: 'Item A' },
+      ];
+      const dest = [
+        { id: 'b', position: 0, name: 'Item B' },
+        { id: 'c', position: 1, name: 'Item C' },
+      ];
+
+      const result = moveBetweenSections(source, dest, 0, 0);
+
+      expect(result.sourceItems).toHaveLength(0);
+      expect(result.destItems).toHaveLength(3);
+      expect(result.destItems[0]).toMatchObject({ id: 'a', position: 0 });
+      expect(result.destItems[1]).toMatchObject({ id: 'b', position: 1 });
+      expect(result.destItems[2]).toMatchObject({ id: 'c', position: 2 });
+    });
+
+    it('should move item to empty destination', () => {
+      const source = [
+        { id: 'a', position: 0, name: 'Item A' },
+        { id: 'b', position: 1, name: 'Item B' },
+      ];
+      const dest: any[] = [];
+
+      const result = moveBetweenSections(source, dest, 1, 0);
+
+      expect(result.sourceItems).toHaveLength(1);
+      expect(result.sourceItems[0]).toMatchObject({ id: 'a', position: 0 });
+
+      expect(result.destItems).toHaveLength(1);
+      expect(result.destItems[0]).toMatchObject({ id: 'b', position: 0 });
+    });
+
+    it('should throw error for empty source', () => {
+      const dest = [{ id: 'a', position: 0, name: 'Item A' }];
+
+      expect(() => moveBetweenSections([], dest, 0, 0)).toThrow('Source items array is empty');
+    });
+
+    it('should throw error for invalid source index', () => {
+      const source = [{ id: 'a', position: 0, name: 'Item A' }];
+      const dest = [{ id: 'b', position: 0, name: 'Item B' }];
+
+      expect(() => moveBetweenSections(source, dest, -1, 0)).toThrow('Invalid source index');
+      expect(() => moveBetweenSections(source, dest, 5, 0)).toThrow('Invalid source index');
+    });
+
+    it('should throw error for invalid destination index', () => {
+      const source = [{ id: 'a', position: 0, name: 'Item A' }];
+      const dest = [{ id: 'b', position: 0, name: 'Item B' }];
+
+      expect(() => moveBetweenSections(source, dest, 0, -1)).toThrow('Invalid destination index');
+      expect(() => moveBetweenSections(source, dest, 0, 5)).toThrow('Invalid destination index');
+    });
+
+    it('should preserve all item properties', () => {
+      const source = [
+        { id: 'a', position: 0, name: 'Item A', extra: 'data', nested: { value: 1 } },
+      ];
+      const dest = [
+        { id: 'b', position: 0, name: 'Item B' },
+      ];
+
+      const result = moveBetweenSections(source, dest, 0, 0);
+
+      expect(result.destItems[0]).toMatchObject({
+        id: 'a',
+        position: 0,
+        name: 'Item A',
+        extra: 'data',
+        nested: { value: 1 },
+      });
+    });
+  });
+
+  describe('normalizePositions', () => {
+    it('should normalize non-sequential positions', () => {
+      const items = [
+        { id: 'a', position: 5, name: 'First' },
+        { id: 'b', position: 10, name: 'Second' },
+        { id: 'c', position: 3, name: 'Third' },
+      ];
+
+      const result = normalizePositions(items);
+
+      expect(result).toHaveLength(3);
+      expect(result[0]).toMatchObject({ id: 'c', position: 0 });
+      expect(result[1]).toMatchObject({ id: 'a', position: 1 });
+      expect(result[2]).toMatchObject({ id: 'b', position: 2 });
+    });
+
+    it('should handle already normalized positions', () => {
+      const items = [
+        { id: 'a', position: 0, name: 'First' },
+        { id: 'b', position: 1, name: 'Second' },
+      ];
+
+      const result = normalizePositions(items);
+
+      expect(result).toHaveLength(2);
+      expect(result[0]).toMatchObject({ id: 'a', position: 0 });
+      expect(result[1]).toMatchObject({ id: 'b', position: 1 });
+    });
+
+    it('should handle empty array', () => {
+      const result = normalizePositions([]);
+      expect(result).toEqual([]);
+    });
+  });
+
+  describe('getNextPosition', () => {
+    it('should return 0 for empty array', () => {
+      const result = getNextPosition([]);
+      expect(result).toBe(0);
+    });
+
+    it('should return max position plus one', () => {
+      const items = [
+        { id: 'a', position: 0 },
+        { id: 'b', position: 1 },
+        { id: 'c', position: 2 },
+      ];
+
+      const result = getNextPosition(items);
+      expect(result).toBe(3);
+    });
+
+    it('should handle non-sequential positions', () => {
+      const items = [
+        { id: 'a', position: 5 },
+        { id: 'b', position: 10 },
+        { id: 'c', position: 3 },
+      ];
+
+      const result = getNextPosition(items);
+      expect(result).toBe(11);
+    });
+
+    it('should handle single item', () => {
+      const items = [
+        { id: 'a', position: 0 },
+      ];
+
+      const result = getNextPosition(items);
+      expect(result).toBe(1);
+    });
+
+    it('should handle undefined array', () => {
+      const result = getNextPosition(undefined as any);
+      expect(result).toBe(0);
     });
   });
 });

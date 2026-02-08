@@ -241,7 +241,7 @@ export async function POST(req: NextRequest) {
         }
 
         // Validate and fix positions (Requirement 12.3)
-        let processedBody = { ...body };
+        const processedBody = { ...body };
         
         if (body.ingredientSections && body.ingredientSections.length > 0) {
             const ingredientResult = validateAndFixRecipePositions(body.ingredientSections);

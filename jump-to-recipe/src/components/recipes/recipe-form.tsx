@@ -417,17 +417,40 @@ export function RecipeForm({
   };
 
   const submitRecipe = async (data: any) => {
+    // Ensure positions are assigned to all ingredients in sections
+    const processedData = { ...data };
+    
+    if (processedData.ingredientSections && Array.isArray(processedData.ingredientSections)) {
+      processedData.ingredientSections = processedData.ingredientSections.map((section: any) => ({
+        ...section,
+        items: section.items.map((item: any, index: number) => ({
+          ...item,
+          position: typeof item.position === 'number' ? item.position : index,
+        })),
+      }));
+    }
+    
+    if (processedData.instructionSections && Array.isArray(processedData.instructionSections)) {
+      processedData.instructionSections = processedData.instructionSections.map((section: any) => ({
+        ...section,
+        items: section.items.map((item: any, index: number) => ({
+          ...item,
+          position: typeof item.position === 'number' ? item.position : index,
+        })),
+      }));
+    }
+    
     // Convert form data to match NewRecipeInput type
     const recipeData: NewRecipeInput = {
-      ...data,
-      description: data.description || null,
-      difficulty: data.difficulty || null,
-      prepTime: data.prepTime || null,
-      cookTime: data.cookTime || null,
-      servings: data.servings || null,
-      notes: data.notes || null,
-      imageUrl: data.imageUrl || null,
-      sourceUrl: data.sourceUrl || null,
+      ...processedData,
+      description: processedData.description || null,
+      difficulty: processedData.difficulty || null,
+      prepTime: processedData.prepTime || null,
+      cookTime: processedData.cookTime || null,
+      servings: processedData.servings || null,
+      notes: processedData.notes || null,
+      imageUrl: processedData.imageUrl || null,
+      sourceUrl: processedData.sourceUrl || null,
     };
     
     await onSubmit(recipeData, photos);
