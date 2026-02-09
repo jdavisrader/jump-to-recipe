@@ -55,7 +55,7 @@ describe('PUT /api/recipes/[id] - Update with Strict Validation', () => {
         user: { id: mockUserId, role: 'user' },
       } as any);
 
-      (db.query.recipes.findFirst as jest.Mock).mockResolvedValue(null);
+      (db.query.recipes.findFirst as jest.MockedFunction<any>).mockResolvedValue(null);
 
       const request = new NextRequest('http://localhost/api/recipes/recipe-456', {
         method: 'PUT',
@@ -75,7 +75,7 @@ describe('PUT /api/recipes/[id] - Update with Strict Validation', () => {
         user: { id: mockUserId, role: 'user' },
       } as any);
 
-      (db.query.recipes.findFirst as jest.Mock).mockResolvedValue({
+      (db.query.recipes.findFirst as jest.MockedFunction<any>).mockResolvedValue({
         id: mockRecipeId,
         authorId: 'different-user-id',
       });
@@ -100,7 +100,7 @@ describe('PUT /api/recipes/[id] - Update with Strict Validation', () => {
         user: { id: mockUserId, role: 'user' },
       } as any);
 
-      (db.query.recipes.findFirst as jest.Mock).mockResolvedValue({
+      (db.query.recipes.findFirst as jest.MockedFunction<any>).mockResolvedValue({
         id: mockRecipeId,
         authorId: mockUserId,
       });
@@ -259,24 +259,24 @@ describe('PUT /api/recipes/[id] - Update with Strict Validation', () => {
         user: { id: mockUserId, role: 'user' },
       } as any);
 
-      (db.query.recipes.findFirst as jest.Mock).mockResolvedValue({
+      (db.query.recipes.findFirst as jest.MockedFunction<any>).mockResolvedValue({
         id: mockRecipeId,
         authorId: mockUserId,
       });
 
-      (db.update as jest.Mock).mockReturnValue({
+      (db.update as jest.MockedFunction<any>).mockReturnValue({
         set: jest.fn().mockReturnValue({
           where: jest.fn().mockReturnValue({
-            returning: jest.fn().mockResolvedValue([
+            returning: (jest.fn() as any).mockResolvedValue([
               {
                 id: mockRecipeId,
                 title: 'Test Recipe',
                 updatedAt: new Date(),
               }
             ])
-          })
-        })
-      });
+          } as any)
+        } as any)
+      } as any);
     });
 
     it('should normalize existing recipe data on update', async () => {
@@ -351,15 +351,15 @@ describe('PUT /api/recipes/[id] - Update with Strict Validation', () => {
         user: { id: mockUserId, role: 'admin' },
       } as any);
 
-      (db.query.recipes.findFirst as jest.Mock).mockResolvedValue({
+      (db.query.recipes.findFirst as jest.MockedFunction<any>).mockResolvedValue({
         id: mockRecipeId,
         authorId: 'original-author-id',
       });
 
-      (db.update as jest.Mock).mockReturnValue({
+      (db.update as jest.MockedFunction<any>).mockReturnValue({
         set: jest.fn().mockReturnValue({
           where: jest.fn().mockReturnValue({
-            returning: jest.fn().mockResolvedValue([
+            returning: (jest.fn() as any).mockResolvedValue([
               {
                 id: mockRecipeId,
                 title: 'Test Recipe',
@@ -367,13 +367,13 @@ describe('PUT /api/recipes/[id] - Update with Strict Validation', () => {
                 updatedAt: new Date(),
               }
             ])
-          })
-        })
-      });
+          } as any)
+        } as any)
+      } as any);
     });
 
     it('should allow admin to transfer ownership with valid recipe data', async () => {
-      (db.query.users.findFirst as jest.Mock).mockResolvedValue({
+      (db.query.users.findFirst as jest.MockedFunction<any>).mockResolvedValue({
         id: 'new-author-id',
         name: 'New Author',
       });

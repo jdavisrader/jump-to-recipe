@@ -185,15 +185,49 @@ export function normalizeImportedRecipe(
   );
 
   // Build flat arrays from sections for backward compatibility
-  // If no sections exist, use the flat arrays from input (normalized)
-  let flatIngredients = buildFlatIngredientArray(normalizedIngredientSections);
-  let flatInstructions = buildFlatInstructionArray(normalizedInstructionSections);
-
-  // If flat arrays are empty but input had flat arrays, normalize those
-  if (flatIngredients.length === 0 && data.ingredients && data.ingredients.length > 0) {
+  // Strategy:
+  // - If sections exist AND flat arrays are explicitly provided (even if empty): Use what was provided
+  // - If sections exist AND no flat arrays in input: Build flat arrays from sections (legacy support)
+  // - If no sections: Use flat arrays from input
+  const hasIngredientSections = data.ingredientSections && Array.isArray(data.ingredientSections) && data.ingredientSections.length > 0;
+  const hasInstructionSections = data.instructionSections && Array.isArray(data.instructionSections) && data.instructionSections.length > 0;
+  
+  // Check if flat arrays were explicitly provided in the input (even if empty)
+  const ingredientsProvided = 'ingredients' in data && Array.isArray(data.ingredients);
+  const instructionsProvided = 'instructions' in data && Array.isArray(data.instructions);
+  
+  let flatIngredients: NormalizedIngredientItem[] = [];
+  let flatInstructions: NormalizedInstructionItem[] = [];
+  
+  // Handle ingredients
+  if (hasIngredientSections && ingredientsProvided) {
+    // Sections exist AND flat array was explicitly provided
+    // Use the provided flat array (even if empty - this is sections-only mode)
+    if (data.ingredients && data.ingredients.length > 0) {
+      flatIngredients = normalizeIngredientItems(data.ingredients, stats);
+    }
+    // else: keep empty (sections-only mode)
+  } else if (normalizedIngredientSections && normalizedIngredientSections.length > 0) {
+    // Sections exist but no flat array provided - build for backward compatibility
+    flatIngredients = buildFlatIngredientArray(normalizedIngredientSections);
+  } else if (data.ingredients && data.ingredients.length > 0) {
+    // No sections - use flat array from input
     flatIngredients = normalizeIngredientItems(data.ingredients, stats);
   }
-  if (flatInstructions.length === 0 && data.instructions && data.instructions.length > 0) {
+  
+  // Handle instructions
+  if (hasInstructionSections && instructionsProvided) {
+    // Sections exist AND flat array was explicitly provided
+    // Use the provided flat array (even if empty - this is sections-only mode)
+    if (data.instructions && data.instructions.length > 0) {
+      flatInstructions = normalizeInstructionItems(data.instructions, stats);
+    }
+    // else: keep empty (sections-only mode)
+  } else if (normalizedInstructionSections && normalizedInstructionSections.length > 0) {
+    // Sections exist but no flat array provided - build for backward compatibility
+    flatInstructions = buildFlatInstructionArray(normalizedInstructionSections);
+  } else if (data.instructions && data.instructions.length > 0) {
+    // No sections - use flat array from input
     flatInstructions = normalizeInstructionItems(data.instructions, stats);
   }
 

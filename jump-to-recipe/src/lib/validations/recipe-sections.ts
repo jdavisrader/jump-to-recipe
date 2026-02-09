@@ -167,10 +167,9 @@ export const strictRecipeWithSectionsSchema = z.object({
   description: z.string().nullable().optional(),
   
   // Flat arrays (for backward compatibility)
-  ingredients: z.array(strictExtendedIngredientSchema)
-    .min(1, 'At least one ingredient is required for a recipe'),
-  instructions: z.array(strictExtendedInstructionSchema)
-    .min(1, 'At least one instruction is required for a recipe'),
+  // These can be empty when sections are used
+  ingredients: z.array(strictExtendedIngredientSchema),
+  instructions: z.array(strictExtendedInstructionSchema),
   
   // Section arrays (optional, for structured recipes)
   ingredientSections: z.array(strictIngredientSectionSchema).optional(),
@@ -197,13 +196,8 @@ export const strictRecipeWithSectionsSchema = z.object({
     const sectionIngredientCount = data.ingredientSections
       ?.reduce((total, section) => total + section.items.length, 0) ?? 0;
     
-    // If sections exist, they should contain ingredients
-    if (data.ingredientSections && data.ingredientSections.length > 0) {
-      return sectionIngredientCount > 0;
-    }
-    
-    // Otherwise, flat array must have ingredients
-    return flatIngredientCount > 0;
+    // At least one ingredient must exist in either flat array or sections
+    return flatIngredientCount > 0 || sectionIngredientCount > 0;
   },
   {
     message: 'At least one ingredient is required for a recipe',
@@ -216,13 +210,8 @@ export const strictRecipeWithSectionsSchema = z.object({
     const sectionInstructionCount = data.instructionSections
       ?.reduce((total, section) => total + section.items.length, 0) ?? 0;
     
-    // If sections exist, they should contain instructions
-    if (data.instructionSections && data.instructionSections.length > 0) {
-      return sectionInstructionCount > 0;
-    }
-    
-    // Otherwise, flat array must have instructions
-    return flatInstructionCount > 0;
+    // At least one instruction must exist in either flat array or sections
+    return flatInstructionCount > 0 || sectionInstructionCount > 0;
   },
   {
     message: 'At least one instruction is required for a recipe',

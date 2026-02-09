@@ -512,5 +512,44 @@ describe('recipe-import-normalizer', () => {
       expect(result.ingredientSections[0].items[0].notes).toBe('All-purpose');
       expect(result.ingredientSections[0].items[0].category).toBe('Dry');
     });
+
+    it('should NOT rebuild flat arrays when explicitly empty (sections-only mode)', () => {
+      // This test verifies the bug fix for ingredient duplication
+      // When using sections, flat arrays should remain empty
+      const imported = {
+        title: 'Sectioned Recipe',
+        ingredients: [], // Explicitly empty - indicates sections-only mode
+        instructions: [], // Explicitly empty - indicates sections-only mode
+        ingredientSections: [
+          {
+            name: 'Section 1',
+            items: [
+              { name: 'Flour', amount: 2, unit: 'cups' },
+              { name: 'Sugar', amount: 1, unit: 'cup' },
+            ],
+          },
+        ],
+        instructionSections: [
+          {
+            name: 'Preparation',
+            items: [
+              { content: 'Mix ingredients' },
+            ],
+          },
+        ],
+      };
+
+      const result = normalizeImportedRecipe(imported);
+
+      // Flat arrays should remain empty when explicitly provided as empty
+      expect(result.ingredients).toEqual([]);
+      expect(result.instructions).toEqual([]);
+
+      // Sections should be normalized correctly
+      expect(result.ingredientSections).toHaveLength(1);
+      expect(result.ingredientSections![0].items).toHaveLength(2);
+      expect(result.instructionSections).toHaveLength(1);
+      expect(result.instructionSections![0].items).toHaveLength(1);
+    });
   });
 });

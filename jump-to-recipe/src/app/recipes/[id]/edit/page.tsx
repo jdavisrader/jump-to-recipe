@@ -347,6 +347,8 @@ export default function EditRecipePage({ params }: EditRecipePageProps) {
             description: recipe.description,
             ingredients: recipe.ingredients,
             instructions: recipe.instructions,
+            ingredientSections: recipe.ingredientSections,
+            instructionSections: recipe.instructionSections,
             prepTime: recipe.prepTime,
             cookTime: recipe.cookTime,
             servings: recipe.servings,

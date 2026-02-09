@@ -162,8 +162,8 @@ describe('Recipe Schema Backward Compatibility', () => {
       if (!result.success) {
         const errors = result.error.issues.map(issue => issue.message);
         expect(errors).toContain('Title is required');
-        expect(errors).toContain('At least one ingredient is required');
-        expect(errors).toContain('At least one instruction is required');
+        expect(errors).toContain('At least one ingredient is required for a recipe');
+        expect(errors).toContain('At least one instruction is required for a recipe');
       }
     });
   });

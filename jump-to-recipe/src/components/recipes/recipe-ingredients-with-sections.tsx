@@ -641,10 +641,16 @@ export function RecipeIngredientsWithSections({
         };
 
         // Update both sections in the form
-        // We need to update them in a way that doesn't cause race conditions
-        const updatedSections = [...ingredientSections];
-        updatedSections[sourceSectionIndex] = updatedSourceSection;
-        updatedSections[destSectionIndex] = updatedDestSection;
+        // Build a fresh array to ensure we don't have stale references
+        const updatedSections = ingredientSections.map((section: IngredientSection, index: number) => {
+          if (index === sourceSectionIndex) {
+            return updatedSourceSection;
+          }
+          if (index === destSectionIndex) {
+            return updatedDestSection;
+          }
+          return section;
+        });
 
         // Replace all sections at once to avoid race conditions
         replaceSections(updatedSections);

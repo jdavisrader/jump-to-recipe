@@ -15,9 +15,9 @@ describe('section-position-utils', () => {
   describe('reindexSectionPositions', () => {
     it('should assign sequential positions starting from 0', () => {
       const sections = [
-        { id: 'a', position: 5, name: 'First' },
-        { id: 'b', position: 2, name: 'Second' },
-        { id: 'c', position: 10, name: 'Third' },
+        { id: 'a', position: 5, name: 'First', items: [] },
+        { id: 'b', position: 2, name: 'Second', items: [] },
+        { id: 'c', position: 10, name: 'Third', items: [] },
       ];
 
       const result = reindexSectionPositions(sections);
@@ -34,7 +34,7 @@ describe('section-position-utils', () => {
     });
 
     it('should handle single section', () => {
-      const sections = [{ id: 'a', position: 99, name: 'Only' }];
+      const sections = [{ id: 'a', position: 99, name: 'Only', items: [] }];
       const result = reindexSectionPositions(sections);
 
       expect(result).toHaveLength(1);
@@ -43,9 +43,9 @@ describe('section-position-utils', () => {
 
     it('should maintain stable sort when positions are equal', () => {
       const sections = [
-        { id: 'c', position: 0, name: 'Third' },
-        { id: 'a', position: 0, name: 'First' },
-        { id: 'b', position: 0, name: 'Second' },
+        { id: 'c', position: 0, name: 'Third', items: [] },
+        { id: 'a', position: 0, name: 'First', items: [] },
+        { id: 'b', position: 0, name: 'Second', items: [] },
       ];
 
       const result = reindexSectionPositions(sections);
@@ -58,7 +58,7 @@ describe('section-position-utils', () => {
 
     it('should preserve other properties', () => {
       const sections = [
-        { id: 'a', position: 1, name: 'Test', items: [1, 2, 3] },
+        { id: 'a', position: 1, name: 'Test', items: [{ id: '1', position: 0 }, { id: '2', position: 1 }, { id: '3', position: 2 }] },
       ];
 
       const result = reindexSectionPositions(sections);
@@ -67,7 +67,7 @@ describe('section-position-utils', () => {
         id: 'a',
         position: 0,
         name: 'Test',
-        items: [1, 2, 3],
+        items: [{ id: '1', position: 0 }, { id: '2', position: 1 }, { id: '3', position: 2 }],
       });
     });
   });

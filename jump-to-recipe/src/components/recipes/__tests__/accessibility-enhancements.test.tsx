@@ -41,7 +41,7 @@ jest.mock('@hello-pangea/dnd', () => ({
 }));
 
 // Test wrapper component
-function TestWrapper({ children }: { children: React.ReactNode }) {
+function TestWrapper() {
   const { control, watch } = useForm({
     defaultValues: {
       ingredients: [
@@ -203,8 +203,9 @@ describe('Accessibility Enhancements', () => {
       const errors = {
         ingredientSections: {
           message: 'Section cannot be empty',
+          type: 'validation',
         },
-      };
+      } as any;
 
       render(
         <RecipeIngredientsWithSections
