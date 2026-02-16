@@ -15,9 +15,9 @@ describe('section-position-utils', () => {
   describe('reindexSectionPositions', () => {
     it('should assign sequential positions starting from 0', () => {
       const sections = [
-        { id: 'a', position: 5, name: 'First' },
-        { id: 'b', position: 2, name: 'Second' },
-        { id: 'c', position: 10, name: 'Third' },
+        { id: 'a', position: 5, name: 'First', items: [] },
+        { id: 'b', position: 2, name: 'Second', items: [] },
+        { id: 'c', position: 10, name: 'Third', items: [] },
       ];
 
       const result = reindexSectionPositions(sections);
@@ -34,7 +34,7 @@ describe('section-position-utils', () => {
     });
 
     it('should handle single section', () => {
-      const sections = [{ id: 'a', position: 99, name: 'Only' }];
+      const sections = [{ id: 'a', position: 99, name: 'Only', items: [] }];
       const result = reindexSectionPositions(sections);
 
       expect(result).toHaveLength(1);
@@ -43,9 +43,9 @@ describe('section-position-utils', () => {
 
     it('should maintain stable sort when positions are equal', () => {
       const sections = [
-        { id: 'c', position: 0, name: 'Third' },
-        { id: 'a', position: 0, name: 'First' },
-        { id: 'b', position: 0, name: 'Second' },
+        { id: 'c', position: 0, name: 'Third', items: [] },
+        { id: 'a', position: 0, name: 'First', items: [] },
+        { id: 'b', position: 0, name: 'Second', items: [] },
       ];
 
       const result = reindexSectionPositions(sections);
@@ -58,7 +58,7 @@ describe('section-position-utils', () => {
 
     it('should preserve other properties', () => {
       const sections = [
-        { id: 'a', position: 1, name: 'Test', items: [1, 2, 3] },
+        { id: 'a', position: 1, name: 'Test', items: [{ id: '1', position: 0 }, { id: '2', position: 1 }, { id: '3', position: 2 }] },
       ];
 
       const result = reindexSectionPositions(sections);
@@ -67,7 +67,7 @@ describe('section-position-utils', () => {
         id: 'a',
         position: 0,
         name: 'Test',
-        items: [1, 2, 3],
+        items: [{ id: '1', position: 0 }, { id: '2', position: 1 }, { id: '3', position: 2 }],
       });
     });
   });
@@ -228,7 +228,7 @@ describe('section-position-utils', () => {
   });
 
   describe('resolvePositionConflicts', () => {
-    it('should merge items with last-write-wins strategy', () => {
+    it('should use incoming items as authoritative (last-write-wins)', () => {
       const existing = [
         { id: 'a', position: 0, text: 'Old text' },
         { id: 'b', position: 1, text: 'Item B' },
@@ -241,17 +241,16 @@ describe('section-position-utils', () => {
 
       const result = resolvePositionConflicts(existing, incoming);
 
-      expect(result).toHaveLength(3);
-      // Incoming 'a' should overwrite existing 'a'
+      // Incoming is authoritative — only 'a' and 'c' should be present
+      expect(result).toHaveLength(2);
       const itemA = result.find((item) => item.id === 'a');
       expect(itemA?.text).toBe('New text');
-      // Existing 'b' should be preserved
-      expect(result.find((item) => item.id === 'b')).toBeDefined();
-      // Incoming 'c' should be added
+      // Existing 'b' was not in incoming, so it's dropped
+      expect(result.find((item) => item.id === 'b')).toBeUndefined();
       expect(result.find((item) => item.id === 'c')).toBeDefined();
     });
 
-    it('should reindex positions after merge', () => {
+    it('should reindex positions from incoming items', () => {
       const existing = [
         { id: 'a', position: 5, text: 'A' },
         { id: 'b', position: 10, text: 'B' },
@@ -264,12 +263,10 @@ describe('section-position-utils', () => {
 
       const result = resolvePositionConflicts(existing, incoming);
 
-      expect(result).toHaveLength(4);
-      // All positions should be sequential
+      // Only incoming items should be present
+      expect(result).toHaveLength(2);
       expect(result[0].position).toBe(0);
       expect(result[1].position).toBe(1);
-      expect(result[2].position).toBe(2);
-      expect(result[3].position).toBe(3);
     });
 
     it('should handle empty existing items', () => {
@@ -285,7 +282,7 @@ describe('section-position-utils', () => {
       expect(result[1].position).toBe(1);
     });
 
-    it('should handle empty incoming items', () => {
+    it('should treat empty incoming items as intentionally emptied', () => {
       const existing = [
         { id: 'a', position: 0, text: 'A' },
         { id: 'b', position: 1, text: 'B' },
@@ -293,12 +290,12 @@ describe('section-position-utils', () => {
 
       const result = resolvePositionConflicts(existing, []);
 
-      expect(result).toHaveLength(2);
-      expect(result[0].position).toBe(0);
-      expect(result[1].position).toBe(1);
+      // Empty incoming array means the section was intentionally emptied
+      // (e.g., all items moved to another section via drag-and-drop)
+      expect(result).toHaveLength(0);
     });
 
-    it('should preserve items from other users', () => {
+    it('should treat incoming items as authoritative (last-write-wins)', () => {
       const existing = [
         { id: 'a', position: 0, text: 'User 1 item' },
         { id: 'b', position: 1, text: 'User 2 item' },
@@ -310,13 +307,15 @@ describe('section-position-utils', () => {
 
       const result = resolvePositionConflicts(existing, incoming);
 
-      expect(result).toHaveLength(2);
-      expect(result.find((item) => item.id === 'b')).toBeDefined();
+      // Incoming is authoritative — item 'b' was intentionally removed
+      expect(result).toHaveLength(1);
+      expect(result[0].id).toBe('a');
+      expect(result[0].text).toBe('User 1 updated');
     });
   });
 
   describe('resolveSectionConflicts', () => {
-    it('should merge sections and resolve item conflicts', () => {
+    it('should use incoming sections as authoritative and not merge items from existing', () => {
       const existing = [
         {
           id: 's1',
@@ -345,17 +344,16 @@ describe('section-position-utils', () => {
 
       expect(result).toHaveLength(1);
       expect(result[0].name).toBe('Section 1 Updated');
-      expect(result[0].items).toHaveLength(3);
-      // Item 'a' should be updated
+      // Incoming is authoritative — only items 'a' and 'c' should be present
+      expect(result[0].items).toHaveLength(2);
       const itemA = result[0].items.find((item) => item.id === 'a');
       expect(itemA?.text).toBe('New A');
-      // Item 'b' should be preserved
-      expect(result[0].items.find((item) => item.id === 'b')).toBeDefined();
-      // Item 'c' should be added
+      // Item 'b' was intentionally removed (not in incoming)
+      expect(result[0].items.find((item) => item.id === 'b')).toBeUndefined();
       expect(result[0].items.find((item) => item.id === 'c')).toBeDefined();
     });
 
-    it('should preserve sections from other users', () => {
+    it('should not preserve sections absent from incoming (incoming is authoritative)', () => {
       const existing = [
         {
           id: 's1',
@@ -382,8 +380,10 @@ describe('section-position-utils', () => {
 
       const result = resolveSectionConflicts(existing, incoming);
 
-      expect(result).toHaveLength(2);
-      expect(result.find((s) => s.id === 's2')).toBeDefined();
+      // Incoming is authoritative — section s2 was intentionally removed
+      expect(result).toHaveLength(1);
+      expect(result[0].id).toBe('s1');
+      expect(result.find((s) => s.id === 's2')).toBeUndefined();
     });
 
     it('should reindex section and item positions', () => {
@@ -407,13 +407,10 @@ describe('section-position-utils', () => {
 
       const result = resolveSectionConflicts(existing, incoming);
 
-      expect(result).toHaveLength(2);
-      // Sections should have sequential positions
+      // Only incoming section s2 should be present (incoming is authoritative)
+      expect(result).toHaveLength(1);
       expect(result[0].position).toBe(0);
-      expect(result[1].position).toBe(1);
-      // Items should have sequential positions
       expect(result[0].items[0].position).toBe(0);
-      expect(result[1].items[0].position).toBe(0);
     });
 
     it('should handle empty existing sections', () => {
@@ -433,7 +430,7 @@ describe('section-position-utils', () => {
       expect(result[0].items[0].position).toBe(0);
     });
 
-    it('should handle empty incoming sections', () => {
+    it('should treat empty incoming sections as intentionally emptied', () => {
       const existing = [
         {
           id: 's1',
@@ -445,8 +442,8 @@ describe('section-position-utils', () => {
 
       const result = resolveSectionConflicts(existing, []);
 
-      expect(result).toHaveLength(1);
-      expect(result[0].position).toBe(0);
+      // Empty incoming array means all sections were intentionally removed
+      expect(result).toHaveLength(0);
     });
   });
 

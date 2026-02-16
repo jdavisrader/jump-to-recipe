@@ -20,6 +20,7 @@ import { SectionManager, Section } from '@/components/sections/section-manager';
 import type { Instruction } from '@/types/recipe';
 import type { InstructionSection } from '@/types/sections';
 import { validateSectionName } from '@/lib/validations/recipe';
+import { getNextPosition } from '@/lib/section-position-utils';
 
 interface RecipeInstructionsWithSectionsProps {
   control: Control<any>;
@@ -86,7 +87,11 @@ export function RecipeInstructionsWithSections({
           id: uuidv4(),
           name: 'Instructions',
           order: 0,
-          items: instructions.map((instruction: Instruction) => ({ ...instruction })), // Create copies to avoid reference issues
+          // Preserve order: map instructions with their current array index as position
+          items: instructions.map((instruction: Instruction, index: number) => ({
+            ...instruction,
+            position: index, // Explicitly assign position based on current order
+          })),
         };
         appendSection(defaultSection);
       } else {
@@ -102,23 +107,47 @@ export function RecipeInstructionsWithSections({
       setUseSections(true);
     } else {
       // Convert sections back to flat instructions
-      const allInstructions = instructionSections.flatMap((section: InstructionSection) => 
-        section.items.map((item: Instruction) => ({ ...item })) // Create copies to avoid reference issues
+      // Preserve order: first by section order, then by instruction position within each section
+      
+      // Sort sections by their order property
+      const sortedSections = [...instructionSections].sort(
+        (a: InstructionSection, b: InstructionSection) => a.order - b.order
       );
+      
+      // Flatten instructions while preserving order
+      const allInstructions = sortedSections.flatMap((section: InstructionSection) => {
+        // Sort items within each section by position (if available) or array index
+        const sortedItems = [...section.items].sort((a: any, b: any) => {
+          const posA = typeof a.position === 'number' ? a.position : section.items.indexOf(a);
+          const posB = typeof b.position === 'number' ? b.position : section.items.indexOf(b);
+          return posA - posB;
+        });
+        
+        // Keep all properties including position (Requirement 3.1, 3.2, 4.4)
+        return sortedItems;
+      });
+      
+      // Reindex positions for flat list (global scope) and renumber steps
+      const reindexedInstructions = allInstructions.map((item: any, index: number) => ({
+        ...item,
+        position: index,
+        step: index + 1,
+      }));
       
       // Clear sections using replace method
       replaceSections([]);
       
       // Replace flat instructions with all instructions from sections
-      if (allInstructions.length > 0) {
-        replaceInstructions(allInstructions);
+      if (reindexedInstructions.length > 0) {
+        replaceInstructions(reindexedInstructions);
       } else {
-        // Ensure at least one empty instruction exists
+        // Ensure at least one empty instruction exists with position
         replaceInstructions([{
           id: uuidv4(),
           step: 1,
           content: '',
           duration: undefined,
+          position: 0,
         }]);
       }
       
@@ -202,11 +231,14 @@ export function RecipeInstructionsWithSections({
     if (sectionIndex >= 0) {
       const section = instructionSections[sectionIndex];
       const newStep = section.items.length + 1;
-      const newInstruction: Instruction = {
+      const nextPosition = getNextPosition(section.items);
+      
+      const newInstruction: Instruction & { position: number } = {
         id: uuidv4(),
         step: newStep,
         content: '',
         duration: undefined,
+        position: nextPosition,
       };
 
       const updatedSection = {
@@ -229,10 +261,11 @@ export function RecipeInstructionsWithSections({
       const section = instructionSections[sectionIndex];
       const updatedItems = section.items.filter((item: Instruction) => item.id !== instructionId);
       
-      // Renumber steps after removal
+      // Renumber steps and positions after removal
       const renumberedItems = updatedItems.map((item: Instruction, index: number) => ({
         ...item,
         step: index + 1,
+        position: index,
       }));
 
       const updatedSection = {

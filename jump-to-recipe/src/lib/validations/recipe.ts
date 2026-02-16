@@ -13,6 +13,9 @@ export const ingredientSchema = z.object({
   displayAmount: z.string().optional(), // Original fraction format for display
   notes: z.string().optional(),
   category: z.string().optional(),
+  position: z.number()
+    .int('Position must be an integer')
+    .nonnegative('Position must be non-negative'),
 });
 
 // Instruction validation
@@ -21,6 +24,9 @@ export const instructionSchema = z.object({
   step: z.number().int().positive('Step number must be positive'),
   content: z.string().min(1, 'Instruction content is required'),
   duration: z.number().int().positive().optional(),
+  position: z.number()
+    .int('Position must be an integer')
+    .nonnegative('Position must be non-negative'),
 });
 
 // Extended ingredient with section reference
@@ -55,12 +61,12 @@ export const sectionValidationErrorSchema = z.object({
   message: z.string(),
 });
 
-// Base recipe validation (backward compatible)
+// Base recipe validation schema
 export const baseRecipeSchema = z.object({
   title: z.string().min(1, 'Title is required').max(500, 'Title is too long'),
   description: z.string().nullable().optional(),
-  ingredients: z.array(extendedIngredientSchema).min(1, 'At least one ingredient is required'),
-  instructions: z.array(extendedInstructionSchema).min(1, 'At least one instruction is required'),
+  ingredients: z.array(extendedIngredientSchema),
+  instructions: z.array(extendedInstructionSchema),
   prepTime: z.number().int().positive().nullable().optional(),
   cookTime: z.number().int().positive().nullable().optional(),
   servings: z.number().int().positive().nullable().optional(),
@@ -80,9 +86,33 @@ export const baseRecipeSchema = z.object({
 export const recipeWithSectionsSchema = baseRecipeSchema.extend({
   ingredientSections: z.array(ingredientSectionSchema).optional(),
   instructionSections: z.array(instructionSectionSchema).optional(),
-});
+}).refine(
+  (data) => {
+    // At least one ingredient must exist in either flat array or sections
+    const flatIngredientCount = data.ingredients.length;
+    const sectionIngredientCount = data.ingredientSections
+      ?.reduce((total, section) => total + section.items.length, 0) ?? 0;
+    return flatIngredientCount > 0 || sectionIngredientCount > 0;
+  },
+  {
+    message: 'At least one ingredient is required for a recipe',
+    path: ['ingredients'],
+  }
+).refine(
+  (data) => {
+    // At least one instruction must exist in either flat array or sections
+    const flatInstructionCount = data.instructions.length;
+    const sectionInstructionCount = data.instructionSections
+      ?.reduce((total, section) => total + section.items.length, 0) ?? 0;
+    return flatInstructionCount > 0 || sectionInstructionCount > 0;
+  },
+  {
+    message: 'At least one instruction is required for a recipe',
+    path: ['instructions'],
+  }
+);
 
-// Main recipe schema (maintains backward compatibility)
+// Main recipe schema with sections support
 export const recipeSchema = recipeWithSectionsSchema;
 
 // Schema for creating a new recipe

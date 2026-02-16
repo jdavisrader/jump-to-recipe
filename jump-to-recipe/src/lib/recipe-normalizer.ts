@@ -49,6 +49,7 @@ export function normalizeRecipeData(
             name: 'Add ingredients here',
             amount: 0,
             unit: '',
+            position: 0,
         });
     }
 
@@ -57,6 +58,7 @@ export function normalizeRecipeData(
             id: uuidv4(),
             step: 1,
             content: 'Add cooking instructions here',
+            position: 0,
         });
     }
 
@@ -138,14 +140,15 @@ function normalizeDescription(description?: string | null): string | null {
 
 /**
  * Normalize ingredients array
+ * Ensures position is always present (Requirements 5.1, 5.2, 5.5)
  */
 function normalizeIngredients(ingredients: unknown[]): Ingredient[] {
     if (!Array.isArray(ingredients)) {
         return [];
     }
 
-    return ingredients
-        .map((ingredient) => {
+    const normalized = ingredients
+        .map((ingredient, index) => {
             // Handle string ingredients (from HTML parsing)
             if (typeof ingredient === 'string') {
                 const parsed = parseIngredientText(ingredient);
@@ -156,12 +159,18 @@ function normalizeIngredients(ingredients: unknown[]): Ingredient[] {
                     unit: (parsed.unit as Unit) || '',
                     notes: '',
                     category: '',
+                    position: index, // Auto-assign position based on array index
                 } as Ingredient;
             }
 
             // Handle object ingredients
             if (typeof ingredient === 'object' && ingredient !== null) {
                 const ingredientObj = ingredient as Record<string, unknown>;
+                // Use existing position if valid, otherwise assign based on array index
+                const position = typeof ingredientObj.position === 'number' && ingredientObj.position >= 0
+                    ? ingredientObj.position
+                    : index;
+                
                 return {
                     id: (ingredientObj.id as string) || uuidv4(),
                     name: normalizeIngredientName(ingredientObj.name),
@@ -169,6 +178,7 @@ function normalizeIngredients(ingredients: unknown[]): Ingredient[] {
                     unit: normalizeUnit(ingredientObj.unit),
                     notes: normalizeNotes(ingredientObj.notes) || '',
                     category: normalizeCategory(ingredientObj.category),
+                    position, // Ensure position is always present
                 } as Ingredient;
             }
 
@@ -176,6 +186,12 @@ function normalizeIngredients(ingredients: unknown[]): Ingredient[] {
         })
         .filter((ingredient): ingredient is Ingredient => ingredient !== null)
         .filter(ingredient => ingredient.name.trim().length > 0);
+
+    // Reindex positions to be sequential after filtering
+    return normalized.map((ingredient, index) => ({
+        ...ingredient,
+        position: index,
+    }));
 }
 
 /**
@@ -291,13 +307,14 @@ function normalizeCategory(category: unknown): string {
 
 /**
  * Normalize instructions array
+ * Ensures position is always present (Requirements 5.1, 5.2, 5.5)
  */
 function normalizeInstructions(instructions: unknown[]): Instruction[] {
     if (!Array.isArray(instructions)) {
         return [];
     }
 
-    return instructions
+    const normalized = instructions
         .map((instruction, index) => {
             // Handle string instructions
             if (typeof instruction === 'string') {
@@ -309,6 +326,7 @@ function normalizeInstructions(instructions: unknown[]): Instruction[] {
                     step: index + 1,
                     content: normalizeInstructionContent(content),
                     duration: undefined,
+                    position: index, // Auto-assign position based on array index
                 } as Instruction;
             }
 
@@ -318,17 +336,29 @@ function normalizeInstructions(instructions: unknown[]): Instruction[] {
                 const content = normalizeInstructionContent(instructionObj.content || instructionObj.text || '');
                 if (content.length === 0) return null;
 
+                // Use existing position if valid, otherwise assign based on array index
+                const position = typeof instructionObj.position === 'number' && instructionObj.position >= 0
+                    ? instructionObj.position
+                    : index;
+
                 return {
                     id: (instructionObj.id as string) || uuidv4(),
                     step: (instructionObj.step as number) || index + 1,
                     content,
                     duration: normalizeTime(instructionObj.duration),
+                    position, // Ensure position is always present
                 } as Instruction;
             }
 
             return null;
         })
         .filter((instruction): instruction is Instruction => instruction !== null);
+
+    // Reindex positions to be sequential after filtering
+    return normalized.map((instruction, index) => ({
+        ...instruction,
+        position: index,
+    }));
 }
 
 /**

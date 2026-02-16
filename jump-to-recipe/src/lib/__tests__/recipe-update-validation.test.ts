@@ -15,10 +15,10 @@ describe('Recipe Update Validation', () => {
       const invalidRecipe = {
         title: 'Test Recipe',
         ingredients: [
-          { id: '123e4567-e89b-12d3-a456-426614174000', name: 'Flour', amount: 1, unit: 'cup' }
+          { id: '123e4567-e89b-12d3-a456-426614174000', name: 'Flour', amount: 1, unit: 'cup' , position: 0 }
         ],
         instructions: [
-          { id: '123e4567-e89b-12d3-a456-426614174001', step: 1, content: 'Mix ingredients' }
+          { id: '123e4567-e89b-12d3-a456-426614174001', step: 1, content: 'Mix ingredients' , position: 0 }
         ],
         ingredientSections: [
           {
@@ -26,7 +26,7 @@ describe('Recipe Update Validation', () => {
             name: '',  // Empty name should fail
             order: 0,
             items: [
-              { id: '123e4567-e89b-12d3-a456-426614174000', name: 'Flour', amount: 1, unit: 'cup' }
+              { id: '123e4567-e89b-12d3-a456-426614174000', name: 'Flour', amount: 1, unit: 'cup' , position: 0 }
             ]
           }
         ]
@@ -49,7 +49,7 @@ describe('Recipe Update Validation', () => {
         title: 'Test Recipe',
         ingredients: [],
         instructions: [
-          { id: '123e4567-e89b-12d3-a456-426614174001', step: 1, content: 'Mix ingredients' }
+          { id: '123e4567-e89b-12d3-a456-426614174001', step: 1, content: 'Mix ingredients' , position: 0 }
         ],
         ingredientSections: [
           {
@@ -77,7 +77,7 @@ describe('Recipe Update Validation', () => {
         title: 'Test Recipe',
         ingredients: [],
         instructions: [
-          { id: '123e4567-e89b-12d3-a456-426614174001', step: 1, content: 'Mix ingredients' }
+          { id: '123e4567-e89b-12d3-a456-426614174001', step: 1, content: 'Mix ingredients' , position: 0 }
         ]
       };
 
@@ -94,10 +94,10 @@ describe('Recipe Update Validation', () => {
       const invalidRecipe = {
         title: 'Test Recipe',
         ingredients: [
-          { id: 'invalid-uuid', name: 'Flour', amount: 1, unit: 'cup' }
+          { id: 'invalid-uuid', name: 'Flour', amount: 1, unit: 'cup' , position: 0 }
         ],
         instructions: [
-          { id: '123e4567-e89b-12d3-a456-426614174001', step: 1, content: 'Mix ingredients' }
+          { id: '123e4567-e89b-12d3-a456-426614174001', step: 1, content: 'Mix ingredients' , position: 0 }
         ]
       };
 
@@ -114,10 +114,10 @@ describe('Recipe Update Validation', () => {
       const invalidRecipe = {
         title: 'Test Recipe',
         ingredients: [
-          { id: '123e4567-e89b-12d3-a456-426614174000', name: '', amount: 1, unit: 'cup' }
+          { id: '123e4567-e89b-12d3-a456-426614174000', name: '', amount: 1, unit: 'cup' , position: 0 }
         ],
         instructions: [
-          { id: '123e4567-e89b-12d3-a456-426614174001', step: 1, content: 'Mix ingredients' }
+          { id: '123e4567-e89b-12d3-a456-426614174001', step: 1, content: 'Mix ingredients' , position: 0 }
         ]
       };
 
@@ -134,10 +134,10 @@ describe('Recipe Update Validation', () => {
       const invalidRecipe = {
         title: 'Test Recipe',
         ingredients: [
-          { id: '123e4567-e89b-12d3-a456-426614174000', name: '   ', amount: 1, unit: 'cup' }
+          { id: '123e4567-e89b-12d3-a456-426614174000', name: '   ', amount: 1, unit: 'cup' , position: 0 }
         ],
         instructions: [
-          { id: '123e4567-e89b-12d3-a456-426614174001', step: 1, content: 'Mix ingredients' }
+          { id: '123e4567-e89b-12d3-a456-426614174001', step: 1, content: 'Mix ingredients' , position: 0 }
         ]
       };
 
@@ -154,10 +154,10 @@ describe('Recipe Update Validation', () => {
       const invalidRecipe = {
         title: 'Test Recipe',
         ingredients: [
-          { id: '123e4567-e89b-12d3-a456-426614174000', name: '', amount: 1, unit: 'cup' }
+          { id: '123e4567-e89b-12d3-a456-426614174000', name: '', amount: 1, unit: 'cup' , position: 0 }
         ],
         instructions: [
-          { id: '123e4567-e89b-12d3-a456-426614174001', step: 1, content: 'Mix ingredients' }
+          { id: '123e4567-e89b-12d3-a456-426614174001', step: 1, content: 'Mix ingredients' , position: 0 }
         ]
       };
 
@@ -184,10 +184,10 @@ describe('Recipe Update Validation', () => {
       const recipeWithMissingName = {
         title: 'Test Recipe',
         ingredients: [
-          { id: '123e4567-e89b-12d3-a456-426614174000', name: 'Flour', amount: 1, unit: 'cup' }
+          { id: '123e4567-e89b-12d3-a456-426614174000', name: 'Flour', amount: 1, unit: 'cup' , position: 0 }
         ],
         instructions: [
-          { id: '123e4567-e89b-12d3-a456-426614174001', step: 1, content: 'Mix ingredients' }
+          { id: '123e4567-e89b-12d3-a456-426614174001', step: 1, content: 'Mix ingredients' , position: 0 }
         ],
         ingredientSections: [
           {
@@ -195,7 +195,7 @@ describe('Recipe Update Validation', () => {
             name: '',  // Will be normalized to "Imported Section"
             order: 0,
             items: [
-              { id: '123e4567-e89b-12d3-a456-426614174000', name: 'Flour', amount: 1, unit: 'cup' }
+              { id: '123e4567-e89b-12d3-a456-426614174000', name: 'Flour', amount: 1, unit: 'cup' , position: 0 }
             ]
           }
         ]
@@ -212,10 +212,10 @@ describe('Recipe Update Validation', () => {
       const recipeWithEmptySection = {
         title: 'Test Recipe',
         ingredients: [
-          { id: '123e4567-e89b-12d3-a456-426614174000', name: 'Flour', amount: 1, unit: 'cup' }
+          { id: '123e4567-e89b-12d3-a456-426614174000', name: 'Flour', amount: 1, unit: 'cup' , position: 0 }
         ],
         instructions: [
-          { id: '123e4567-e89b-12d3-a456-426614174001', step: 1, content: 'Mix ingredients' }
+          { id: '123e4567-e89b-12d3-a456-426614174001', step: 1, content: 'Mix ingredients' , position: 0 }
         ],
         ingredientSections: [
           {
@@ -223,7 +223,7 @@ describe('Recipe Update Validation', () => {
             name: 'Valid Section',
             order: 0,
             items: [
-              { id: '123e4567-e89b-12d3-a456-426614174000', name: 'Flour', amount: 1, unit: 'cup' }
+              { id: '123e4567-e89b-12d3-a456-426614174000', name: 'Flour', amount: 1, unit: 'cup' , position: 0 }
             ]
           },
           {
@@ -247,11 +247,11 @@ describe('Recipe Update Validation', () => {
       const recipeWithEmptyItems = {
         title: 'Test Recipe',
         ingredients: [
-          { id: '123e4567-e89b-12d3-a456-426614174000', name: 'Flour', amount: 1, unit: 'cup' },
-          { id: '123e4567-e89b-12d3-a456-426614174001', name: '', amount: 1, unit: 'cup' }
+          { id: '123e4567-e89b-12d3-a456-426614174000', name: 'Flour', amount: 1, unit: 'cup' , position: 0 },
+          { id: '123e4567-e89b-12d3-a456-426614174001', name: '', amount: 1, unit: 'cup' , position: 0 }
         ],
         instructions: [
-          { id: '123e4567-e89b-12d3-a456-426614174002', step: 1, content: 'Mix ingredients' }
+          { id: '123e4567-e89b-12d3-a456-426614174002', step: 1, content: 'Mix ingredients' , position: 0 }
         ],
         ingredientSections: [
           {
@@ -259,8 +259,8 @@ describe('Recipe Update Validation', () => {
             name: 'Ingredients',
             order: 0,
             items: [
-              { id: '123e4567-e89b-12d3-a456-426614174000', name: 'Flour', amount: 1, unit: 'cup' },
-              { id: '123e4567-e89b-12d3-a456-426614174001', name: '', amount: 1, unit: 'cup' }
+              { id: '123e4567-e89b-12d3-a456-426614174000', name: 'Flour', amount: 1, unit: 'cup' , position: 0 },
+              { id: '123e4567-e89b-12d3-a456-426614174001', name: '', amount: 1, unit: 'cup' , position: 0 }
             ]
           }
         ]
@@ -278,7 +278,7 @@ describe('Recipe Update Validation', () => {
       const recipeWithMissingIds = {
         title: 'Test Recipe',
         ingredients: [
-          { name: 'Flour', amount: 1, unit: 'cup' }  // Missing ID
+          { name: 'Flour', amount: 1, unit: 'cup' , position: 0 }  // Missing ID
         ],
         instructions: [
           { step: 1, content: 'Mix ingredients' }  // Missing ID
@@ -288,7 +288,7 @@ describe('Recipe Update Validation', () => {
             name: 'Ingredients',
             order: 0,
             items: [
-              { name: 'Flour', amount: 1, unit: 'cup' }  // Missing ID
+              { name: 'Flour', amount: 1, unit: 'cup' , position: 0 }  // Missing ID
             ]
           }
         ]
@@ -308,10 +308,10 @@ describe('Recipe Update Validation', () => {
       const validRecipe = {
         title: 'Test Recipe',
         ingredients: [
-          { id: '123e4567-e89b-12d3-a456-426614174000', name: 'Flour', amount: 1, unit: 'cup' }
+          { id: '123e4567-e89b-12d3-a456-426614174000', name: 'Flour', amount: 1, unit: 'cup' , position: 0 }
         ],
         instructions: [
-          { id: '123e4567-e89b-12d3-a456-426614174001', step: 1, content: 'Mix ingredients' }
+          { id: '123e4567-e89b-12d3-a456-426614174001', step: 1, content: 'Mix ingredients' , position: 0 }
         ],
         ingredientSections: [
           {
@@ -319,7 +319,7 @@ describe('Recipe Update Validation', () => {
             name: 'Dry Ingredients',
             order: 0,
             items: [
-              { id: '123e4567-e89b-12d3-a456-426614174000', name: 'Flour', amount: 1, unit: 'cup' }
+              { id: '123e4567-e89b-12d3-a456-426614174000', name: 'Flour', amount: 1, unit: 'cup' , position: 0 }
             ]
           }
         ]
@@ -334,10 +334,10 @@ describe('Recipe Update Validation', () => {
       const validRecipe = {
         title: 'Test Recipe',
         ingredients: [
-          { id: '123e4567-e89b-12d3-a456-426614174000', name: 'Flour', amount: 1, unit: 'cup' }
+          { id: '123e4567-e89b-12d3-a456-426614174000', name: 'Flour', amount: 1, unit: 'cup' , position: 0 }
         ],
         instructions: [
-          { id: '123e4567-e89b-12d3-a456-426614174001', step: 1, content: 'Mix ingredients' }
+          { id: '123e4567-e89b-12d3-a456-426614174001', step: 1, content: 'Mix ingredients' , position: 0 }
         ]
       };
 
@@ -350,12 +350,12 @@ describe('Recipe Update Validation', () => {
       const validRecipe = {
         title: 'Test Recipe',
         ingredients: [
-          { id: '123e4567-e89b-12d3-a456-426614174000', name: 'Flour', amount: 1, unit: 'cup' },
-          { id: '123e4567-e89b-12d3-a456-426614174001', name: 'Sugar', amount: 0.5, unit: 'cup' }
+          { id: '123e4567-e89b-12d3-a456-426614174000', name: 'Flour', amount: 1, unit: 'cup' , position: 0 },
+          { id: '123e4567-e89b-12d3-a456-426614174001', name: 'Sugar', amount: 0.5, unit: 'cup' , position: 0 }
         ],
         instructions: [
-          { id: '123e4567-e89b-12d3-a456-426614174002', step: 1, content: 'Mix dry ingredients' },
-          { id: '123e4567-e89b-12d3-a456-426614174003', step: 2, content: 'Add wet ingredients' }
+          { id: '123e4567-e89b-12d3-a456-426614174002', step: 1, content: 'Mix dry ingredients' , position: 0 },
+          { id: '123e4567-e89b-12d3-a456-426614174003', step: 2, content: 'Add wet ingredients' , position: 0 }
         ],
         ingredientSections: [
           {
@@ -363,7 +363,7 @@ describe('Recipe Update Validation', () => {
             name: 'Dry Ingredients',
             order: 0,
             items: [
-              { id: '123e4567-e89b-12d3-a456-426614174000', name: 'Flour', amount: 1, unit: 'cup' }
+              { id: '123e4567-e89b-12d3-a456-426614174000', name: 'Flour', amount: 1, unit: 'cup' , position: 0 }
             ]
           },
           {
@@ -371,7 +371,7 @@ describe('Recipe Update Validation', () => {
             name: 'Wet Ingredients',
             order: 1,
             items: [
-              { id: '123e4567-e89b-12d3-a456-426614174001', name: 'Sugar', amount: 0.5, unit: 'cup' }
+              { id: '123e4567-e89b-12d3-a456-426614174001', name: 'Sugar', amount: 0.5, unit: 'cup' , position: 0 }
             ]
           }
         ]
@@ -388,10 +388,10 @@ describe('Recipe Update Validation', () => {
       const legacyRecipe = {
         title: 'Legacy Recipe',
         ingredients: [
-          { id: '123e4567-e89b-12d3-a456-426614174000', name: 'Flour', amount: 1, unit: 'cup' }
+          { id: '123e4567-e89b-12d3-a456-426614174000', name: 'Flour', amount: 1, unit: 'cup' , position: 0 }
         ],
         instructions: [
-          { id: '123e4567-e89b-12d3-a456-426614174001', step: 1, content: 'Mix ingredients' }
+          { id: '123e4567-e89b-12d3-a456-426614174001', step: 1, content: 'Mix ingredients' , position: 0 }
         ]
         // No sections - legacy format
       };
@@ -413,7 +413,7 @@ describe('Recipe Update Validation', () => {
       const recipeNeedingNormalization = {
         title: 'Test Recipe',
         ingredients: [
-          { name: 'Flour', amount: 1, unit: 'cup' }  // Missing ID
+          { name: 'Flour', amount: 1, unit: 'cup' , position: 0 }  // Missing ID
         ],
         instructions: [
           { step: 1, content: 'Mix ingredients' }  // Missing ID
@@ -423,7 +423,7 @@ describe('Recipe Update Validation', () => {
             name: '',  // Empty name
             order: 0,
             items: [
-              { name: 'Flour', amount: 1, unit: 'cup' }
+              { name: 'Flour', amount: 1, unit: 'cup' , position: 0 }
             ]
           }
         ]

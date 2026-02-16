@@ -179,6 +179,7 @@ export function generateGroceryList(
           unit: existing.unit as Unit, // Safe cast since displayAmount is undefined
           displayAmount: existing.displayAmount,
           notes: existing.notes,
+          position: 0, // Position not relevant for grocery list
         })) {
           // Combine ingredients
           const combinedIngredient = combineIngredients(
@@ -189,6 +190,7 @@ export function generateGroceryList(
               unit: existing.unit as Unit, // Safe cast since displayAmount is undefined
               displayAmount: existing.displayAmount,
               notes: existing.notes,
+              position: 0, // Position not relevant for grocery list
             }, 
             scaledIngredient,
             [...existing.recipeIds, recipe.id]

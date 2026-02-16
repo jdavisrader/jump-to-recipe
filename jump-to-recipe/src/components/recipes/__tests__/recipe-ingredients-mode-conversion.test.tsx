@@ -14,15 +14,7 @@ import { RecipeIngredientsWithSections } from '../recipe-ingredients-with-sectio
 import type { Ingredient } from '@/types/recipe';
 import type { IngredientSection } from '@/types/sections';
 
-// Extended ingredient type with position for testing
-interface IngredientWithPosition extends Ingredient {
-  position?: number;
-}
-
-// Extended section type for testing
-interface TestIngredientSection extends Omit<IngredientSection, 'items'> {
-  items: IngredientWithPosition[];
-}
+// Note: Ingredient now includes required position property as of explicit-position-persistence spec
 
 // Mock the SectionManager component to avoid complex rendering
 jest.mock('../../sections/section-manager', () => ({
@@ -58,7 +50,7 @@ function TestWrapper({
   onFormChange
 }: { 
   defaultIngredients?: Ingredient[];
-  defaultSections?: TestIngredientSection[];
+  defaultSections?: IngredientSection[];
   onFormChange?: (data: any) => void;
 }) {
   const form = useForm({
@@ -93,9 +85,9 @@ describe('RecipeIngredientsWithSections - Mode Conversion', () => {
       const user = userEvent.setup();
       
       const flatIngredients: Ingredient[] = [
-        { id: '1', name: 'First Ingredient', amount: 1, unit: 'cup', displayAmount: '1', notes: '' },
-        { id: '2', name: 'Second Ingredient', amount: 2, unit: 'tbsp', displayAmount: '2', notes: '' },
-        { id: '3', name: 'Third Ingredient', amount: 3, unit: 'tsp', displayAmount: '3', notes: '' },
+        { id: '1', name: 'First Ingredient', amount: 1, unit: 'cup', displayAmount: '1', notes: '', position: 0 },
+        { id: '2', name: 'Second Ingredient', amount: 2, unit: 'tbsp', displayAmount: '2', notes: '', position: 1 },
+        { id: '3', name: 'Third Ingredient', amount: 3, unit: 'tsp', displayAmount: '3', notes: '', position: 2 },
       ];
 
       let capturedFormData: any = null;
@@ -143,7 +135,7 @@ describe('RecipeIngredientsWithSections - Mode Conversion', () => {
       const user = userEvent.setup();
       
       const flatIngredients: Ingredient[] = [
-        { id: '1', name: 'Test', amount: 1, unit: 'cup', displayAmount: '1', notes: '' },
+        { id: '1', name: 'Test', amount: 1, unit: 'cup', displayAmount: '1', notes: '', position: 0 },
       ];
 
       let capturedFormData: any = null;
@@ -191,7 +183,7 @@ describe('RecipeIngredientsWithSections - Mode Conversion', () => {
     it('preserves ingredient order when converting from sectioned to flat', async () => {
       const user = userEvent.setup();
       
-      const sections: TestIngredientSection[] = [
+      const sections: IngredientSection[] = [
         {
           id: 'section-1',
           name: 'First Section',
@@ -241,8 +233,11 @@ describe('RecipeIngredientsWithSections - Mode Conversion', () => {
         expect(capturedFormData.ingredients[2].name).toBe('Ingredient C');
         expect(capturedFormData.ingredients[3].name).toBe('Ingredient D');
         
-        // Verify position property is removed in flat mode
-        expect(capturedFormData.ingredients[0].position).toBeUndefined();
+        // Verify position property is recalculated for flat mode (Requirement 4.4)
+        expect(capturedFormData.ingredients[0].position).toBe(0);
+        expect(capturedFormData.ingredients[1].position).toBe(1);
+        expect(capturedFormData.ingredients[2].position).toBe(2);
+        expect(capturedFormData.ingredients[3].position).toBe(3);
       });
     });
 
@@ -250,7 +245,7 @@ describe('RecipeIngredientsWithSections - Mode Conversion', () => {
       const user = userEvent.setup();
       
       // Sections with non-sequential order values
-      const sections: TestIngredientSection[] = [
+      const sections: IngredientSection[] = [
         {
           id: 'section-2',
           name: 'Second Section',
@@ -296,7 +291,7 @@ describe('RecipeIngredientsWithSections - Mode Conversion', () => {
     it('respects item position within sections when flattening', async () => {
       const user = userEvent.setup();
       
-      const sections: TestIngredientSection[] = [
+      const sections: IngredientSection[] = [
         {
           id: 'section-1',
           name: 'Test Section',
@@ -334,7 +329,7 @@ describe('RecipeIngredientsWithSections - Mode Conversion', () => {
     it('handles empty sections when converting to flat', async () => {
       const user = userEvent.setup();
       
-      const sections: TestIngredientSection[] = [
+      const sections: IngredientSection[] = [
         {
           id: 'section-1',
           name: 'Empty Section',
@@ -368,9 +363,9 @@ describe('RecipeIngredientsWithSections - Mode Conversion', () => {
       const user = userEvent.setup();
       
       const originalIngredients: Ingredient[] = [
-        { id: '1', name: 'First', amount: 1, unit: 'cup', displayAmount: '1', notes: '' },
-        { id: '2', name: 'Second', amount: 2, unit: 'tbsp', displayAmount: '2', notes: '' },
-        { id: '3', name: 'Third', amount: 3, unit: 'tsp', displayAmount: '3', notes: '' },
+        { id: '1', name: 'First', amount: 1, unit: 'cup', displayAmount: '1', notes: '', position: 0 },
+        { id: '2', name: 'Second', amount: 2, unit: 'tbsp', displayAmount: '2', notes: '', position: 1 },
+        { id: '3', name: 'Third', amount: 3, unit: 'tsp', displayAmount: '3', notes: '', position: 2 },
       ];
 
       let capturedFormData: any = null;
@@ -402,6 +397,176 @@ describe('RecipeIngredientsWithSections - Mode Conversion', () => {
         expect(capturedFormData.ingredients[0].name).toBe('First');
         expect(capturedFormData.ingredients[1].name).toBe('Second');
         expect(capturedFormData.ingredients[2].name).toBe('Third');
+      });
+    });
+  });
+
+  describe('Position Management During Mode Conversion', () => {
+    it('recalculates positions to global scope when converting sections to flat (Requirement 4.4)', async () => {
+      const user = userEvent.setup();
+      
+      // Multiple sections with section-scoped positions
+      const sections: IngredientSection[] = [
+        {
+          id: 'section-1',
+          name: 'Dry Ingredients',
+          order: 0,
+          items: [
+            { id: '1', name: 'Flour', amount: 2, unit: 'cup', displayAmount: '2', notes: '', position: 0 },
+            { id: '2', name: 'Sugar', amount: 1, unit: 'cup', displayAmount: '1', notes: '', position: 1 },
+          ],
+        },
+        {
+          id: 'section-2',
+          name: 'Wet Ingredients',
+          order: 1,
+          items: [
+            { id: '3', name: 'Milk', amount: 1, unit: 'cup', displayAmount: '1', notes: '', position: 0 }, // Section-scoped position 0
+            { id: '4', name: 'Eggs', amount: 2, unit: '', displayAmount: '2', notes: '', position: 1 }, // Section-scoped position 1
+          ],
+        },
+      ];
+
+      let capturedFormData: any = null;
+      
+      render(
+        <TestWrapper 
+          defaultSections={sections}
+          onFormChange={(data) => { capturedFormData = data; }}
+        />
+      );
+
+      // Convert to flat list
+      const toggleButton = screen.getByText('Use Simple List');
+      await user.click(toggleButton);
+
+      await waitFor(() => {
+        expect(capturedFormData?.ingredients).toBeDefined();
+        expect(capturedFormData.ingredients.length).toBe(4);
+        
+        // Verify positions are recalculated to global scope (0, 1, 2, 3)
+        expect(capturedFormData.ingredients[0].position).toBe(0);
+        expect(capturedFormData.ingredients[1].position).toBe(1);
+        expect(capturedFormData.ingredients[2].position).toBe(2);
+        expect(capturedFormData.ingredients[3].position).toBe(3);
+        
+        // Verify order is preserved (section order, then item position)
+        expect(capturedFormData.ingredients[0].name).toBe('Flour');
+        expect(capturedFormData.ingredients[1].name).toBe('Sugar');
+        expect(capturedFormData.ingredients[2].name).toBe('Milk');
+        expect(capturedFormData.ingredients[3].name).toBe('Eggs');
+      });
+    });
+
+    it('assigns section-scoped positions when converting flat to sections (Requirement 4.5)', async () => {
+      const user = userEvent.setup();
+      
+      // Flat list with global positions
+      const flatIngredients: Ingredient[] = [
+        { id: '1', name: 'First', amount: 1, unit: 'cup', displayAmount: '1', notes: '', position: 0 },
+        { id: '2', name: 'Second', amount: 2, unit: 'tbsp', displayAmount: '2', notes: '', position: 1 },
+        { id: '3', name: 'Third', amount: 3, unit: 'tsp', displayAmount: '3', notes: '', position: 2 },
+      ];
+
+      let capturedFormData: any = null;
+      
+      render(
+        <TestWrapper 
+          defaultIngredients={flatIngredients}
+          onFormChange={(data) => { capturedFormData = data; }}
+        />
+      );
+
+      // Convert to sections
+      const toggleButton = screen.getByText('Organize into Sections');
+      await user.click(toggleButton);
+
+      await waitFor(() => {
+        expect(capturedFormData?.ingredientSections).toBeDefined();
+        expect(capturedFormData.ingredientSections.length).toBe(1);
+        
+        const section = capturedFormData.ingredientSections[0];
+        expect(section.items.length).toBe(3);
+        
+        // Verify positions are assigned based on array order (section-scoped)
+        expect(section.items[0].position).toBe(0);
+        expect(section.items[1].position).toBe(1);
+        expect(section.items[2].position).toBe(2);
+        
+        // Verify order is preserved
+        expect(section.items[0].name).toBe('First');
+        expect(section.items[1].name).toBe('Second');
+        expect(section.items[2].name).toBe('Third');
+      });
+    });
+
+    it('maintains position integrity through multiple conversions', async () => {
+      const user = userEvent.setup();
+      
+      const originalIngredients: Ingredient[] = [
+        { id: '1', name: 'A', amount: 1, unit: 'cup', displayAmount: '1', notes: '', position: 0 },
+        { id: '2', name: 'B', amount: 2, unit: 'tbsp', displayAmount: '2', notes: '', position: 1 },
+        { id: '3', name: 'C', amount: 3, unit: 'tsp', displayAmount: '3', notes: '', position: 2 },
+      ];
+
+      let capturedFormData: any = null;
+      
+      render(
+        <TestWrapper 
+          defaultIngredients={originalIngredients}
+          onFormChange={(data) => { capturedFormData = data; }}
+        />
+      );
+
+      // First conversion: flat -> sections
+      const toggleToSections = screen.getByText('Organize into Sections');
+      await user.click(toggleToSections);
+
+      await waitFor(() => {
+        expect(capturedFormData?.ingredientSections).toBeDefined();
+        const section = capturedFormData.ingredientSections[0];
+        
+        // Verify section-scoped positions
+        expect(section.items[0].position).toBe(0);
+        expect(section.items[1].position).toBe(1);
+        expect(section.items[2].position).toBe(2);
+      });
+
+      // Second conversion: sections -> flat
+      const toggleToFlat = screen.getByText('Use Simple List');
+      await user.click(toggleToFlat);
+
+      await waitFor(() => {
+        expect(capturedFormData?.ingredients).toBeDefined();
+        
+        // Verify global positions
+        expect(capturedFormData.ingredients[0].position).toBe(0);
+        expect(capturedFormData.ingredients[1].position).toBe(1);
+        expect(capturedFormData.ingredients[2].position).toBe(2);
+        
+        // Verify order is still correct
+        expect(capturedFormData.ingredients[0].name).toBe('A');
+        expect(capturedFormData.ingredients[1].name).toBe('B');
+        expect(capturedFormData.ingredients[2].name).toBe('C');
+      });
+
+      // Third conversion: flat -> sections again
+      const toggleToSectionsAgain = screen.getByText('Organize into Sections');
+      await user.click(toggleToSectionsAgain);
+
+      await waitFor(() => {
+        expect(capturedFormData?.ingredientSections).toBeDefined();
+        const section = capturedFormData.ingredientSections[0];
+        
+        // Verify section-scoped positions are still correct
+        expect(section.items[0].position).toBe(0);
+        expect(section.items[1].position).toBe(1);
+        expect(section.items[2].position).toBe(2);
+        
+        // Verify order is still correct
+        expect(section.items[0].name).toBe('A');
+        expect(section.items[1].name).toBe('B');
+        expect(section.items[2].name).toBe('C');
       });
     });
   });

@@ -15,7 +15,7 @@ jest.mock('../../sections/section-manager', () => ({
 
 // Simple test wrapper
 function TestWrapper({ 
-  defaultIngredients = [{ id: '1', name: 'Test Ingredient', amount: 1, unit: 'cup', notes: '' }],
+  defaultIngredients = [{ id: '1', name: 'Test Ingredient', amount: 1, unit: 'cup', notes: '', position: 0 }],
   defaultSections = []
 }: { 
   defaultIngredients?: any[];
@@ -62,7 +62,7 @@ describe('RecipeIngredientsWithSections', () => {
         name: 'Main Ingredients',
         order: 0,
         items: [
-          { id: '1', name: 'Flour', amount: 2, unit: 'cups', notes: '' }
+          { id: '1', name: 'Flour', amount: 2, unit: 'cups', notes: '', position: 0 }
         ]
       }
     ];

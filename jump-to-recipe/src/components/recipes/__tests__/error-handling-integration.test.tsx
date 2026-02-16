@@ -40,7 +40,7 @@ describe('Error Handling Integration', () => {
           name: 'Dry Ingredients',
           order: 0,
           items: [
-            { id: '1', name: 'Flour', amount: 2, unit: 'cup', displayAmount: '2', notes: '' },
+            { id: '1', name: 'Flour', amount: 2, unit: 'cup', displayAmount: '2', notes: '', position: 0 },
           ],
         },
       ];
@@ -96,8 +96,8 @@ describe('Error Handling Integration', () => {
   describe('Data Validation', () => {
     it('should validate ingredient data', () => {
       const validIngredients: Ingredient[] = [
-        { id: '1', name: 'Flour', amount: 2, unit: 'cup', displayAmount: '2', notes: '' },
-        { id: '2', name: 'Sugar', amount: 1, unit: 'cup', displayAmount: '1', notes: '' },
+        { id: '1', name: 'Flour', amount: 2, unit: 'cup', displayAmount: '2', notes: '', position: 0 },
+        { id: '2', name: 'Sugar', amount: 1, unit: 'cup', displayAmount: '1', notes: '', position: 0 },
       ];
 
       const result = errorRecovery.validateIngredientData(validIngredients);
@@ -108,8 +108,8 @@ describe('Error Handling Integration', () => {
 
     it('should detect invalid ingredient data', () => {
       const invalidIngredients: Ingredient[] = [
-        { id: '1', name: 'Flour', amount: -2, unit: 'cup', displayAmount: '-2', notes: '' },
-        { id: '', name: 'Sugar', amount: 1, unit: 'cup', displayAmount: '1', notes: '' },
+        { id: '1', name: 'Flour', amount: -2, unit: 'cup', displayAmount: '-2', notes: '', position: 0 },
+        { id: '', name: 'Sugar', amount: 1, unit: 'cup', displayAmount: '1', notes: '', position: 0 },
       ];
 
       const result = errorRecovery.validateIngredientData(invalidIngredients);
@@ -127,7 +127,7 @@ describe('Error Handling Integration', () => {
           name: 'Dry Ingredients',
           order: 0,
           items: [
-            { id: '1', name: 'Flour', amount: 2, unit: 'cup', displayAmount: '2', notes: '' },
+            { id: '1', name: 'Flour', amount: 2, unit: 'cup', displayAmount: '2', notes: '', position: 0 },
           ],
         },
       ];
@@ -145,7 +145,7 @@ describe('Error Handling Integration', () => {
           name: '',
           order: 0,
           items: [
-            { id: '1', name: 'Flour', amount: -2, unit: 'cup', displayAmount: '-2', notes: '' },
+            { id: '1', name: 'Flour', amount: -2, unit: 'cup', displayAmount: '-2', notes: '', position: 0 },
           ],
         },
       ];
@@ -162,7 +162,7 @@ describe('Error Handling Integration', () => {
       const manager = new errorRecovery.SnapshotManager();
 
       const ingredients: Ingredient[] = [
-        { id: '1', name: 'Flour', amount: 2, unit: 'cup', displayAmount: '2', notes: '' },
+        { id: '1', name: 'Flour', amount: 2, unit: 'cup', displayAmount: '2', notes: '', position: 0 },
       ];
 
       const snapshot = manager.createSnapshot(ingredients, undefined, 'flat');
@@ -179,11 +179,11 @@ describe('Error Handling Integration', () => {
       const manager = new errorRecovery.SnapshotManager();
 
       const ingredients1: Ingredient[] = [
-        { id: '1', name: 'Flour', amount: 2, unit: 'cup', displayAmount: '2', notes: '' },
+        { id: '1', name: 'Flour', amount: 2, unit: 'cup', displayAmount: '2', notes: '', position: 0 },
       ];
       const ingredients2: Ingredient[] = [
-        { id: '1', name: 'Flour', amount: 2, unit: 'cup', displayAmount: '2', notes: '' },
-        { id: '2', name: 'Sugar', amount: 1, unit: 'cup', displayAmount: '1', notes: '' },
+        { id: '1', name: 'Flour', amount: 2, unit: 'cup', displayAmount: '2', notes: '', position: 0 },
+        { id: '2', name: 'Sugar', amount: 1, unit: 'cup', displayAmount: '1', notes: '', position: 0 },
       ];
 
       manager.createSnapshot(ingredients1, undefined, 'flat');
@@ -201,7 +201,7 @@ describe('Error Handling Integration', () => {
       // Create more than the limit (10)
       for (let i = 0; i < 15; i++) {
         manager.createSnapshot(
-          [{ id: `${i}`, name: `Item ${i}`, amount: 1, unit: 'cup', displayAmount: '1', notes: '' }],
+          [{ id: `${i}`, name: `Item ${i}`, amount: 1, unit: 'cup', displayAmount: '1', notes: '', position: 0 }],
           undefined,
           'flat'
         );
@@ -216,8 +216,8 @@ describe('Error Handling Integration', () => {
       const manager = new errorRecovery.SnapshotManager();
 
       const originalIngredients: Ingredient[] = [
-        { id: '1', name: 'Flour', amount: 2, unit: 'cup', displayAmount: '2', notes: '' },
-        { id: '2', name: 'Sugar', amount: 1, unit: 'cup', displayAmount: '1', notes: '' },
+        { id: '1', name: 'Flour', amount: 2, unit: 'cup', displayAmount: '2', notes: '', position: 0 },
+        { id: '2', name: 'Sugar', amount: 1, unit: 'cup', displayAmount: '1', notes: '', position: 0 },
       ];
 
       const snapshot = manager.createSnapshot(originalIngredients, undefined, 'flat');

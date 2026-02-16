@@ -9,20 +9,34 @@
  * - Early returns for edge cases
  * - Stable sorting for consistent results
  * - Optimized position calculations
+ * 
+ * Type System (Requirement 2.4):
+ * - Works directly with Ingredient and Instruction types
+ * - No runtime type coercion required
+ * - Generic constraints ensure position property exists
  */
 
-interface PositionedItem {
+import type { Ingredient, Instruction } from '@/types/recipe';
+import type { Section } from '@/types/sections';
+
+/**
+ * Generic constraint for items that have position property
+ * This replaces the old PositionedItem interface and works with actual types
+ */
+type WithPosition = {
   id: string;
   position: number;
-  [key: string]: any;
-}
+};
 
-interface PositionedSection<T = PositionedItem> {
+/**
+ * Generic constraint for sections with positioned items
+ * This replaces the old PositionedSection interface
+ */
+type SectionWithPosition<T extends WithPosition = WithPosition> = {
   id: string;
   position: number;
   items: T[];
-  [key: string]: any;
-}
+};
 
 interface PositionValidationResult {
   isValid: boolean;
@@ -47,7 +61,7 @@ interface PositionValidationResult {
  * const reindexed = reindexSectionPositions(sections);
  * // Result: [{ id: 'a', position: 0, ... }, { id: 'b', position: 1, ... }]
  */
-export function reindexSectionPositions<T extends PositionedSection>(
+export function reindexSectionPositions<T extends SectionWithPosition>(
   sections: T[]
 ): T[] {
   // Early return for empty arrays (Requirement 8.4)
@@ -73,6 +87,8 @@ export function reindexSectionPositions<T extends PositionedSection>(
 /**
  * Reindexes item positions within a section to ensure sequential ordering starting from 0
  * 
+ * Works directly with Ingredient and Instruction types (Requirement 2.4)
+ * 
  * @param items - Array of items with position property
  * @returns Array of items with sequential positions (0, 1, 2, ...)
  * 
@@ -84,7 +100,7 @@ export function reindexSectionPositions<T extends PositionedSection>(
  * const reindexed = reindexItemPositions(items);
  * // Result: [{ id: 'x', position: 0, ... }, { id: 'y', position: 1, ... }]
  */
-export function reindexItemPositions<T extends PositionedItem>(
+export function reindexItemPositions<T extends WithPosition>(
   items: T[]
 ): T[] {
   if (!items || items.length === 0) {
@@ -109,6 +125,8 @@ export function reindexItemPositions<T extends PositionedItem>(
 /**
  * Validates positions in an array to check for duplicates or invalid values
  * 
+ * Works directly with Ingredient and Instruction types (Requirement 2.4)
+ * 
  * @param items - Array of items with position property
  * @returns Validation result with errors and problematic positions
  * 
@@ -123,7 +141,7 @@ export function reindexItemPositions<T extends PositionedItem>(
  * // result.duplicates === [0]
  * // result.invalid === [-1]
  */
-export function validatePositions<T extends PositionedItem>(
+export function validatePositions<T extends WithPosition>(
   items: T[]
 ): PositionValidationResult {
   const result: PositionValidationResult = {
@@ -173,6 +191,8 @@ export function validatePositions<T extends PositionedItem>(
  * This function handles the case where multiple users edit the same recipe simultaneously.
  * It uses a last-write-wins strategy with automatic reindexing to maintain data integrity.
  * 
+ * Works directly with Ingredient and Instruction types (Requirement 2.4)
+ * 
  * @param existingItems - Current items in the database
  * @param incomingItems - New items from the save request
  * @returns Merged and reindexed items with conflicts resolved
@@ -195,48 +215,20 @@ export function validatePositions<T extends PositionedItem>(
  * const resolved = resolvePositionConflicts(existing, incoming);
  * // Result includes all items with updated positions
  */
-export function resolvePositionConflicts<T extends PositionedItem>(
+export function resolvePositionConflicts<T extends WithPosition>(
   existingItems: T[],
   incomingItems: T[]
 ): T[] {
-  if (!incomingItems || incomingItems.length === 0) {
+  // Incoming items are authoritative (last-write-wins).
+  // An empty incoming array means the section was intentionally emptied
+  // (e.g., all items were moved to another section via drag-and-drop).
+  // We must NOT fall back to existing items in that case.
+  if (!incomingItems) {
     return reindexItemPositions(existingItems || []);
   }
 
-  if (!existingItems || existingItems.length === 0) {
-    return reindexItemPositions(incomingItems);
-  }
-
-  // Create a map of incoming items by ID for quick lookup
-  const incomingMap = new Map<string, T>();
-  incomingItems.forEach((item) => {
-    incomingMap.set(item.id, item);
-  });
-
-  // Create a map of existing items by ID
-  const existingMap = new Map<string, T>();
-  existingItems.forEach((item) => {
-    existingMap.set(item.id, item);
-  });
-
-  // Merge: incoming items take precedence (last-write-wins)
-  const mergedItems: T[] = [];
-
-  // Add all incoming items (these are the user's intended changes)
-  incomingItems.forEach((item) => {
-    mergedItems.push(item);
-  });
-
-  // Add existing items that weren't in the incoming set
-  // (these might be additions from other users)
-  existingItems.forEach((item) => {
-    if (!incomingMap.has(item.id)) {
-      mergedItems.push(item);
-    }
-  });
-
-  // Reindex to ensure sequential positions
-  return reindexItemPositions(mergedItems);
+  // Incoming array is the source of truth — use it directly
+  return reindexItemPositions(incomingItems);
 }
 
 /**
@@ -245,20 +237,24 @@ export function resolvePositionConflicts<T extends PositionedItem>(
  * Similar to resolvePositionConflicts but operates on sections with nested items.
  * Resolves conflicts at both section and item levels.
  * 
+ * Works directly with Section types containing Ingredient or Instruction items (Requirement 2.4)
+ * 
  * @param existingSections - Current sections in the database
  * @param incomingSections - New sections from the save request
  * @returns Merged and reindexed sections with conflicts resolved
  */
-export function resolveSectionConflicts<T extends PositionedSection>(
+export function resolveSectionConflicts<T extends SectionWithPosition>(
   existingSections: T[],
   incomingSections: T[]
 ): T[] {
-  if (!incomingSections || incomingSections.length === 0) {
+  // Incoming sections are authoritative (last-write-wins).
+  // If incoming is null/undefined, fall back to existing.
+  // An empty incoming array means all sections were intentionally removed.
+  if (!incomingSections) {
     return reindexSectionPositions(existingSections || []);
   }
 
   if (!existingSections || existingSections.length === 0) {
-    // Reindex both sections and their items
     return reindexSectionPositions(
       incomingSections.map((section) => ({
         ...section,
@@ -267,53 +263,20 @@ export function resolveSectionConflicts<T extends PositionedSection>(
     );
   }
 
-  // Create maps for quick lookup
-  const incomingMap = new Map<string, T>();
-  incomingSections.forEach((section) => {
-    incomingMap.set(section.id, section);
-  });
-
+  // Incoming sections are the source of truth.
+  // For sections that exist in both, resolve item positions using incoming as authoritative.
   const existingMap = new Map<string, T>();
   existingSections.forEach((section) => {
     existingMap.set(section.id, section);
   });
 
-  // Merge sections
-  const mergedSections: T[] = [];
-
-  // Add all incoming sections with resolved item conflicts
-  incomingSections.forEach((incomingSection) => {
-    const existingSection = existingMap.get(incomingSection.id);
-
-    if (existingSection) {
-      // Section exists in both - resolve item conflicts
-      mergedSections.push({
-        ...incomingSection,
-        items: resolvePositionConflicts(
-          existingSection.items,
-          incomingSection.items
-        ),
-      });
-    } else {
-      // New section - just reindex items
-      mergedSections.push({
-        ...incomingSection,
-        items: reindexItemPositions(incomingSection.items),
-      });
-    }
+  const mergedSections: T[] = incomingSections.map((incomingSection) => {
+    return {
+      ...incomingSection,
+      items: reindexItemPositions(incomingSection.items),
+    };
   });
 
-  // Add existing sections that weren't in the incoming set
-  existingSections.forEach((existingSection) => {
-    if (!incomingMap.has(existingSection.id)) {
-      mergedSections.push({
-        ...existingSection,
-        items: reindexItemPositions(existingSection.items),
-      });
-    }
-  });
-
-  // Reindex section positions
   return reindexSectionPositions(mergedSections);
 }
 
@@ -323,10 +286,12 @@ export function resolveSectionConflicts<T extends PositionedSection>(
  * This is a convenience function that validates and reindexes all positions
  * in a recipe's sections and items.
  * 
+ * Works directly with Section types containing Ingredient or Instruction items (Requirement 2.4)
+ * 
  * @param sections - Array of sections to validate and fix
  * @returns Object with validation results and fixed sections
  */
-export function validateAndFixRecipePositions<T extends PositionedSection>(
+export function validateAndFixRecipePositions<T extends SectionWithPosition>(
   sections: T[]
 ): {
   isValid: boolean;
@@ -380,6 +345,8 @@ export function validateAndFixRecipePositions<T extends PositionedSection>(
  * Handles drag-and-drop reordering within a section by moving an item from
  * sourceIndex to destinationIndex and updating all affected positions.
  * 
+ * Works directly with Ingredient and Instruction types (Requirement 2.4)
+ * 
  * @param items - Array of items in the section
  * @param sourceIndex - Original index of the item being moved
  * @param destinationIndex - Target index for the item
@@ -394,7 +361,7 @@ export function validateAndFixRecipePositions<T extends PositionedSection>(
  * const reordered = reorderWithinSection(items, 0, 2);
  * // Result: [{ id: 'b', position: 0 }, { id: 'c', position: 1 }, { id: 'a', position: 2 }]
  */
-export function reorderWithinSection<T extends PositionedItem>(
+export function reorderWithinSection<T extends WithPosition>(
   items: T[],
   sourceIndex: number,
   destinationIndex: number
@@ -442,6 +409,8 @@ export function reorderWithinSection<T extends PositionedItem>(
  * Handles cross-section drag-and-drop by removing an item from the source section
  * and adding it to the destination section at the specified index.
  * 
+ * Works directly with Ingredient and Instruction types (Requirement 2.4)
+ * 
  * @param sourceItems - Array of items in the source section
  * @param destItems - Array of items in the destination section
  * @param sourceIndex - Index of the item in the source section
@@ -460,7 +429,7 @@ export function reorderWithinSection<T extends PositionedItem>(
  * // result.sourceItems: [{ id: 'b', position: 0 }]
  * // result.destItems: [{ id: 'c', position: 0 }, { id: 'a', position: 1 }]
  */
-export function moveBetweenSections<T extends PositionedItem>(
+export function moveBetweenSections<T extends WithPosition>(
   sourceItems: T[],
   destItems: T[],
   sourceIndex: number,
@@ -517,6 +486,8 @@ export function moveBetweenSections<T extends PositionedItem>(
  * This is an alias for reindexItemPositions for better semantic clarity
  * when used in the context of drag-and-drop operations.
  * 
+ * Works directly with Ingredient and Instruction types (Requirement 2.4)
+ * 
  * @param items - Array of items with position property
  * @returns Array of items with sequential positions (0, 1, 2, ...)
  * 
@@ -528,7 +499,7 @@ export function moveBetweenSections<T extends PositionedItem>(
  * const normalized = normalizePositions(items);
  * // Result: [{ id: 'a', position: 0 }, { id: 'b', position: 1 }]
  */
-export function normalizePositions<T extends PositionedItem>(
+export function normalizePositions<T extends WithPosition>(
   items: T[]
 ): T[] {
   return reindexItemPositions(items);
@@ -540,6 +511,8 @@ export function normalizePositions<T extends PositionedItem>(
  * Calculates the position value that should be assigned to a new item
  * being added to a section. Returns 0 if the section is empty, otherwise
  * returns max position + 1.
+ * 
+ * Works directly with Ingredient and Instruction types (Requirement 2.4)
  * 
  * @param items - Array of existing items in the section
  * @returns The position value for the new item
@@ -556,7 +529,7 @@ export function normalizePositions<T extends PositionedItem>(
  * const firstPos = getNextPosition(emptyItems);
  * // Result: 0
  */
-export function getNextPosition<T extends PositionedItem>(
+export function getNextPosition<T extends WithPosition>(
   items: T[]
 ): number {
   if (!items || items.length === 0) {

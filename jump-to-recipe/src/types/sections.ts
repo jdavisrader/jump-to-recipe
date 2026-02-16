@@ -20,10 +20,12 @@ export interface InstructionSection extends Section<Instruction> {
 // Extended ingredient and instruction types with section references
 export interface ExtendedIngredient extends Ingredient {
   sectionId?: string;
+  // position is inherited from Ingredient
 }
 
 export interface ExtendedInstruction extends Instruction {
   sectionId?: string;
+  // position is inherited from Instruction
 }
 
 // Recipe with sections support

@@ -15,25 +15,25 @@ describe('Section Integration Tests', () => {
           name: 'Flour',
           amount: 2,
           unit: 'cup'
-        },
+        , position: 0 },
         {
           id: '2',
           name: 'Sugar',
           amount: 1,
           unit: 'cup'
-        }
+        , position: 0 }
       ],
       instructions: [
         {
           id: '1',
           step: 1,
           content: 'Mix ingredients'
-        },
+        , position: 0 },
         {
           id: '2',
           step: 2,
           content: 'Bake for 30 minutes'
-        }
+        , position: 0 }
       ],
       prepTime: 15,
       cookTime: 30,
@@ -100,7 +100,7 @@ describe('Section Integration Tests', () => {
               name: 'Flour',
               amount: 2,
               unit: 'cup'
-            }
+            , position: 0 }
           ]
         }
       ],
@@ -114,7 +114,7 @@ describe('Section Integration Tests', () => {
               id: '1',
               step: 1,
               content: 'Mix ingredients'
-            }
+            , position: 0 }
           ]
         }
       ]

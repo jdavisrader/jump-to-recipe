@@ -29,6 +29,7 @@ const createValidIngredientItem = (overrides = {}) => ({
   name: 'Flour',
   amount: 2,
   unit: 'cups',
+  position: 0,
   ...overrides,
 });
 
@@ -36,6 +37,7 @@ const createValidInstructionItem = (overrides = {}) => ({
   id: validUUID,
   step: 1,
   content: 'Mix ingredients',
+  position: 0,
   ...overrides,
 });
 
@@ -222,7 +224,7 @@ describe('strictInstructionItemSchema', () => {
     });
 
     it('should accept optional duration', () => {
-      const item = createValidInstructionItem({ duration: 30 });
+      const item = createValidInstructionItem({ duration: 30 , position: 0 });
       const result = strictInstructionItemSchema.safeParse(item);
       expect(result.success).toBe(true);
     });
@@ -306,13 +308,13 @@ describe('strictInstructionItemSchema', () => {
 
   describe('Duration Validation', () => {
     it('should accept positive duration', () => {
-      const item = createValidInstructionItem({ duration: 30 });
+      const item = createValidInstructionItem({ duration: 30 , position: 0 });
       const result = strictInstructionItemSchema.safeParse(item);
       expect(result.success).toBe(true);
     });
 
     it('should reject zero duration', () => {
-      const item = createValidInstructionItem({ duration: 0 });
+      const item = createValidInstructionItem({ duration: 0 , position: 0 });
       const result = strictInstructionItemSchema.safeParse(item);
       expect(result.success).toBe(false);
     });
@@ -506,7 +508,7 @@ describe('strictInstructionSectionSchema', () => {
       const section = createValidInstructionSection({
         items: [
           createValidInstructionItem({ id: validUUID, step: 1 }),
-          createValidInstructionItem({ id: validUUID2, step: 2, content: 'Bake' }),
+          createValidInstructionItem({ id: validUUID2, step: 2, content: 'Bake' , position: 0 }),
         ],
       });
       const result = strictInstructionSectionSchema.safeParse(section);
@@ -1454,7 +1456,7 @@ describe('Complex Validation Scenarios', () => {
           order: 0,
           items: [
             createValidInstructionItem({ id: '550e8400-e29b-41d4-a716-446655440004', step: 1 }),
-            createValidInstructionItem({ id: '550e8400-e29b-41d4-a716-446655440005', step: 2, content: 'Bake' }),
+            createValidInstructionItem({ id: '550e8400-e29b-41d4-a716-446655440005', step: 2, content: 'Bake' , position: 0 }),
           ],
         }),
       ],

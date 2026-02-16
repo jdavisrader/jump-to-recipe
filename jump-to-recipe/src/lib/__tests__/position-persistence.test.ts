@@ -22,9 +22,9 @@ describe('Position Persistence', () => {
             name: 'Main',
             order: 0,
             items: [
-              { id: 'ing-1', name: 'Flour', amount: 2, unit: 'cup' },
-              { id: 'ing-2', name: 'Sugar', amount: 1, unit: 'cup' },
-              { id: 'ing-3', name: 'Eggs', amount: 3, unit: '' },
+              { id: 'ing-1', name: 'Flour', amount: 2, unit: 'cup' } as any, // No position
+              { id: 'ing-2', name: 'Sugar', amount: 1, unit: 'cup' } as any, // No position
+              { id: 'ing-3', name: 'Eggs', amount: 3, unit: '' } as any, // No position
             ],
           },
         ],
@@ -78,7 +78,7 @@ describe('Position Persistence', () => {
             order: 0,
             items: [
               { id: 'ing-1', name: 'Flour', amount: 2, unit: 'cup', position: 0 },
-              { id: 'ing-2', name: 'Sugar', amount: 1, unit: 'cup' }, // No position
+              { id: 'ing-2', name: 'Sugar', amount: 1, unit: 'cup' } as any, // No position
               { id: 'ing-3', name: 'Eggs', amount: 3, unit: '', position: 2 },
             ],
           },

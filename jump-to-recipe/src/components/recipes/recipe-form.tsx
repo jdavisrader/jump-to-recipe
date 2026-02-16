@@ -359,7 +359,20 @@ export function RecipeForm({
   // Validation handler that can be called on blur or manually
   const handleValidation = useCallback(() => {
     const formData = form.getValues();
+    
+    // Debug logging
+    console.log('Validating form data:', {
+      hasIngredients: formData.ingredients?.length > 0,
+      hasIngredientSections: formData.ingredientSections?.length > 0,
+      ingredientSectionItemCount: formData.ingredientSections?.reduce((total: number, section: any) => total + section.items.length, 0) ?? 0,
+      hasInstructions: formData.instructions?.length > 0,
+      hasInstructionSections: formData.instructionSections?.length > 0,
+      instructionSectionItemCount: formData.instructionSections?.reduce((total: number, section: any) => total + section.items.length, 0) ?? 0,
+    });
+    
     const isFormValid = validate(formData);
+    
+    console.log('Validation result:', isFormValid, 'Errors:', errors);
     
     // Update validation errors map for section components
     const errorsMap = new Map<string, string>();
@@ -385,6 +398,8 @@ export function RecipeForm({
       // Run strict validation before submission
       const isFormValid = handleValidation();
       
+      console.log('handleSubmit - isFormValid:', isFormValid, 'isValid from hook:', isValid);
+      
       if (!isFormValid) {
         // Validation failed, errors are already displayed
         // Move focus to the first invalid field
@@ -401,6 +416,8 @@ export function RecipeForm({
       // Validate the recipe with sections (for empty section warnings)
       const validationResult = validateRecipeWithSections(data);
       
+      console.log('Empty sections check:', validationResult.warnings.emptySections);
+      
       // Show warning for empty sections if any exist
       if (validationResult.warnings.emptySections.length > 0) {
         setEmptySections(validationResult.warnings.emptySections);
@@ -410,6 +427,7 @@ export function RecipeForm({
       }
 
       // If no empty sections, proceed with submission
+      console.log('Proceeding to submitRecipe');
       await submitRecipe(data);
     } catch (error) {
       console.error("Error submitting recipe:", error);
@@ -420,7 +438,29 @@ export function RecipeForm({
     // Ensure positions are assigned to all ingredients in sections
     const processedData = { ...data };
     
-    if (processedData.ingredientSections && Array.isArray(processedData.ingredientSections)) {
+    console.log('submitRecipe - Raw data:', {
+      hasIngredients: data.ingredients?.length,
+      hasIngredientSections: data.ingredientSections?.length,
+      hasInstructions: data.instructions?.length,
+      hasInstructionSections: data.instructionSections?.length,
+    });
+    
+    // Determine which mode we're in for each type
+    const hasIngredientSections = processedData.ingredientSections && processedData.ingredientSections.length > 0;
+    const hasInstructionSections = processedData.instructionSections && processedData.instructionSections.length > 0;
+    
+    console.log('submitRecipe - Mode detection:', { 
+      hasIngredientSections, 
+      hasInstructionSections 
+    });
+    
+    // CRITICAL: Always clear flat arrays when sections exist to prevent duplication
+    // This ensures the backend only receives ONE source of truth
+    if (hasIngredientSections) {
+      console.log('Clearing flat ingredients array (sections exist)');
+      processedData.ingredients = [];
+      
+      // Process ingredient sections
       processedData.ingredientSections = processedData.ingredientSections.map((section: any) => ({
         ...section,
         items: section.items.map((item: any, index: number) => ({
@@ -428,9 +468,16 @@ export function RecipeForm({
           position: typeof item.position === 'number' ? item.position : index,
         })),
       }));
+    } else {
+      // No sections - ensure sections array is empty
+      processedData.ingredientSections = [];
     }
     
-    if (processedData.instructionSections && Array.isArray(processedData.instructionSections)) {
+    if (hasInstructionSections) {
+      console.log('Clearing flat instructions array (sections exist)');
+      processedData.instructions = [];
+      
+      // Process instruction sections
       processedData.instructionSections = processedData.instructionSections.map((section: any) => ({
         ...section,
         items: section.items.map((item: any, index: number) => ({
@@ -438,7 +485,17 @@ export function RecipeForm({
           position: typeof item.position === 'number' ? item.position : index,
         })),
       }));
+    } else {
+      // No sections - ensure sections array is empty
+      processedData.instructionSections = [];
     }
+    
+    console.log('submitRecipe - Processed data before sending:', {
+      ingredientsLength: processedData.ingredients?.length,
+      ingredientSectionsLength: processedData.ingredientSections?.length,
+      instructionsLength: processedData.instructions?.length,
+      instructionSectionsLength: processedData.instructionSections?.length,
+    });
     
     // Convert form data to match NewRecipeInput type
     const recipeData: NewRecipeInput = {
@@ -452,6 +509,8 @@ export function RecipeForm({
       imageUrl: processedData.imageUrl || null,
       sourceUrl: processedData.sourceUrl || null,
     };
+    
+    console.log('submitRecipe - Final recipe data to send:', recipeData);
     
     await onSubmit(recipeData, photos);
   };
@@ -848,6 +907,7 @@ export function RecipeForm({
             disabled={isLoading || !isValid} 
             className="w-full"
             title={!isValid ? `Cannot save: ${errorSummary?.count || 0} validation ${errorSummary?.count === 1 ? 'error' : 'errors'}` : undefined}
+            onClick={() => console.log('Button clicked - isValid:', isValid, 'isLoading:', isLoading, 'disabled:', isLoading || !isValid)}
           >
             {isLoading ? "Saving..." : submitLabel}
           </Button>

@@ -29,8 +29,8 @@ describe('SnapshotManager', () => {
 
   it('should create and store snapshots', () => {
     const ingredients: Ingredient[] = [
-      { id: '1', name: 'Flour', amount: 2, unit: 'cup', displayAmount: '2', notes: '' },
-      { id: '2', name: 'Sugar', amount: 1, unit: 'cup', displayAmount: '1', notes: '' },
+      { id: '1', name: 'Flour', amount: 2, unit: 'cup', displayAmount: '2', notes: '', position: 0 },
+      { id: '2', name: 'Sugar', amount: 1, unit: 'cup', displayAmount: '1', notes: '', position: 0 },
     ];
 
     const snapshot = manager.createSnapshot(ingredients, undefined, 'flat');
@@ -43,11 +43,11 @@ describe('SnapshotManager', () => {
 
   it('should retrieve the latest snapshot', () => {
     const ingredients1: Ingredient[] = [
-      { id: '1', name: 'Flour', amount: 2, unit: 'cup', displayAmount: '2', notes: '' },
+      { id: '1', name: 'Flour', amount: 2, unit: 'cup', displayAmount: '2', notes: '', position: 0 },
     ];
     const ingredients2: Ingredient[] = [
-      { id: '1', name: 'Flour', amount: 2, unit: 'cup', displayAmount: '2', notes: '' },
-      { id: '2', name: 'Sugar', amount: 1, unit: 'cup', displayAmount: '1', notes: '' },
+      { id: '1', name: 'Flour', amount: 2, unit: 'cup', displayAmount: '2', notes: '', position: 0 },
+      { id: '2', name: 'Sugar', amount: 1, unit: 'cup', displayAmount: '1', notes: '', position: 0 },
     ];
 
     manager.createSnapshot(ingredients1, undefined, 'flat');
@@ -62,7 +62,7 @@ describe('SnapshotManager', () => {
     // Create more than maxSnapshots (10)
     for (let i = 0; i < 15; i++) {
       manager.createSnapshot(
-        [{ id: `${i}`, name: `Item ${i}`, amount: 1, unit: 'cup', displayAmount: '1', notes: '' }],
+        [{ id: `${i}`, name: `Item ${i}`, amount: 1, unit: 'cup', displayAmount: '1', notes: '', position: 0 }],
         undefined,
         'flat'
       );
@@ -73,7 +73,7 @@ describe('SnapshotManager', () => {
 
   it('should create deep copies of data', () => {
     const ingredients: Ingredient[] = [
-      { id: '1', name: 'Flour', amount: 2, unit: 'cup', displayAmount: '2', notes: '' },
+      { id: '1', name: 'Flour', amount: 2, unit: 'cup', displayAmount: '2', notes: '', position: 0 },
     ];
 
     const snapshot = manager.createSnapshot(ingredients, undefined, 'flat');
@@ -87,7 +87,7 @@ describe('SnapshotManager', () => {
 
   it('should clear all snapshots', () => {
     manager.createSnapshot(
-      [{ id: '1', name: 'Flour', amount: 2, unit: 'cup', displayAmount: '2', notes: '' }],
+      [{ id: '1', name: 'Flour', amount: 2, unit: 'cup', displayAmount: '2', notes: '', position: 0 }],
       undefined,
       'flat'
     );
@@ -145,7 +145,7 @@ describe('validateDragDestination', () => {
         name: 'Section 1',
         order: 0,
         items: [
-          { id: '1', name: 'Flour', amount: 2, unit: 'cup', displayAmount: '2', notes: '' },
+          { id: '1', name: 'Flour', amount: 2, unit: 'cup', displayAmount: '2', notes: '', position: 0 },
         ],
       },
     ];
@@ -161,8 +161,8 @@ describe('validateDragDestination', () => {
 
   it('should accept valid flat list destination', () => {
     const ingredients: Ingredient[] = [
-      { id: '1', name: 'Flour', amount: 2, unit: 'cup', displayAmount: '2', notes: '' },
-      { id: '2', name: 'Sugar', amount: 1, unit: 'cup', displayAmount: '1', notes: '' },
+      { id: '1', name: 'Flour', amount: 2, unit: 'cup', displayAmount: '2', notes: '', position: 0 },
+      { id: '2', name: 'Sugar', amount: 1, unit: 'cup', displayAmount: '1', notes: '', position: 0 },
     ];
 
     const result = validateDragDestination(
@@ -182,7 +182,7 @@ describe('validateDragDestination', () => {
         name: 'Section 1',
         order: 0,
         items: [
-          { id: '1', name: 'Flour', amount: 2, unit: 'cup', displayAmount: '2', notes: '' },
+          { id: '1', name: 'Flour', amount: 2, unit: 'cup', displayAmount: '2', notes: '', position: 0 },
         ],
       },
     ];
@@ -317,8 +317,8 @@ describe('autoCorrectPositions', () => {
 describe('validateIngredientData', () => {
   it('should validate correct ingredient data', () => {
     const ingredients: Ingredient[] = [
-      { id: '1', name: 'Flour', amount: 2, unit: 'cup', displayAmount: '2', notes: '' },
-      { id: '2', name: 'Sugar', amount: 1, unit: 'cup', displayAmount: '1', notes: '' },
+      { id: '1', name: 'Flour', amount: 2, unit: 'cup', displayAmount: '2', notes: '', position: 0 },
+      { id: '2', name: 'Sugar', amount: 1, unit: 'cup', displayAmount: '1', notes: '', position: 0 },
     ];
 
     const result = validateIngredientData(ingredients);
@@ -329,7 +329,7 @@ describe('validateIngredientData', () => {
 
   it('should detect missing IDs', () => {
     const ingredients = [
-      { id: '', name: 'Flour', amount: 2, unit: 'cup', displayAmount: '2', notes: '' },
+      { id: '', name: 'Flour', amount: 2, unit: 'cup', displayAmount: '2', notes: '', position: 0 },
     ] as Ingredient[];
 
     const result = validateIngredientData(ingredients);
@@ -340,8 +340,8 @@ describe('validateIngredientData', () => {
 
   it('should detect duplicate IDs', () => {
     const ingredients: Ingredient[] = [
-      { id: '1', name: 'Flour', amount: 2, unit: 'cup', displayAmount: '2', notes: '' },
-      { id: '1', name: 'Sugar', amount: 1, unit: 'cup', displayAmount: '1', notes: '' },
+      { id: '1', name: 'Flour', amount: 2, unit: 'cup', displayAmount: '2', notes: '', position: 0 },
+      { id: '1', name: 'Sugar', amount: 1, unit: 'cup', displayAmount: '1', notes: '', position: 0 },
     ];
 
     const result = validateIngredientData(ingredients);
@@ -352,7 +352,7 @@ describe('validateIngredientData', () => {
 
   it('should detect negative amounts', () => {
     const ingredients: Ingredient[] = [
-      { id: '1', name: 'Flour', amount: -2, unit: 'cup', displayAmount: '-2', notes: '' },
+      { id: '1', name: 'Flour', amount: -2, unit: 'cup', displayAmount: '-2', notes: '', position: 0 },
     ];
 
     const result = validateIngredientData(ingredients);
@@ -370,7 +370,7 @@ describe('validateSectionData', () => {
         name: 'Dry Ingredients',
         order: 0,
         items: [
-          { id: '1', name: 'Flour', amount: 2, unit: 'cup', displayAmount: '2', notes: '' },
+          { id: '1', name: 'Flour', amount: 2, unit: 'cup', displayAmount: '2', notes: '', position: 0 },
         ],
       },
     ];
@@ -427,7 +427,7 @@ describe('validateSectionData', () => {
         name: 'Ingredients',
         order: 0,
         items: [
-          { id: '1', name: 'Flour', amount: -2, unit: 'cup', displayAmount: '-2', notes: '' },
+          { id: '1', name: 'Flour', amount: -2, unit: 'cup', displayAmount: '-2', notes: '', position: 0 },
         ],
       },
     ];

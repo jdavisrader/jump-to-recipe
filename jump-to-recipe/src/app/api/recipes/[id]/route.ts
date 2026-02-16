@@ -61,6 +61,13 @@ export async function GET(
                 { status: 404 }
             );
         }
+        
+        console.log('GET /api/recipes/[id] - Recipe from DB:', {
+            ingredientsLength: (recipe.ingredients as any[])?.length,
+            ingredientSectionsLength: (recipe.ingredientSections as any[])?.length,
+            instructionsLength: (recipe.instructions as any[])?.length,
+            instructionSectionsLength: (recipe.instructionSections as any[])?.length,
+        });
 
         return NextResponse.json(recipe);
     } catch (error) {
@@ -79,6 +86,12 @@ export async function GET(
  * Requires authentication
  * Only the author or admin can update a recipe
  * Admins can transfer ownership by including authorId in the request
+ * 
+ * Position Validation (Requirement 7.2):
+ * - All ingredients must have a valid position property (non-negative integer)
+ * - All instructions must have a valid position property (non-negative integer)
+ * - Position conflicts are auto-corrected to sequential values
+ * - Missing positions will result in validation error (400 Bad Request)
  */
 export async function PUT(
     req: NextRequest,
@@ -131,6 +144,15 @@ export async function PUT(
 
         // Parse request body
         const body = await req.json();
+        
+        console.log('PUT /api/recipes/[id] - Received body:', {
+            hasIngredients: body.ingredients?.length,
+            hasIngredientSections: body.ingredientSections?.length,
+            hasInstructions: body.instructions?.length,
+            hasInstructionSections: body.instructionSections?.length,
+            ingredientsProvided: 'ingredients' in body,
+            instructionsProvided: 'instructions' in body,
+        });
 
         // Check if ownership is being changed (only relevant for admins)
         const isOwnershipChange = isAdmin && body.authorId !== undefined && body.authorId !== existingRecipe.authorId;
@@ -175,6 +197,13 @@ export async function PUT(
         // Apply normalization for existing recipes on first edit (Requirement 11.2, 11.3)
         const normalizationSummary = createNormalizationSummary();
         const normalizedData = normalizeExistingRecipe(body, normalizationSummary);
+        
+        console.log('PUT /api/recipes/[id] - After normalization:', {
+            ingredientsLength: normalizedData.ingredients?.length,
+            ingredientSectionsLength: normalizedData.ingredientSections?.length,
+            instructionsLength: normalizedData.instructions?.length,
+            instructionSectionsLength: normalizedData.instructionSections?.length,
+        });
 
         // Validate unique section IDs (Requirement 12.4)
         if (!validateUniqueSectionIds(normalizedData)) {
@@ -276,6 +305,13 @@ export async function PUT(
         if (isOwnershipChange) {
             updateData.authorId = body.authorId;
         }
+        
+        console.log('PUT /api/recipes/[id] - Saving to DB:', {
+            ingredientsLength: updateData.ingredients?.length,
+            ingredientSectionsLength: updateData.ingredientSections?.length,
+            instructionsLength: updateData.instructions?.length,
+            instructionSectionsLength: updateData.instructionSections?.length,
+        });
 
         // Update recipe
         const updatedRecipe = await db.update(recipes)

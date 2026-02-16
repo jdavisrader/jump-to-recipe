@@ -11,6 +11,9 @@ This directory contains utility scripts and tools for the Jump to Recipe applica
 ### Utilities
 - `utils/fix-regex-patterns.js` - Regex pattern testing and debugging tool for ingredient parsing
 
+### Migration Scripts
+- `migrate-positions.sh` - Database migration script for explicit position persistence (production use)
+
 ## Usage
 
 Run utility scripts from the application root:
@@ -18,6 +21,9 @@ Run utility scripts from the application root:
 ```bash
 # Test regex patterns for ingredient parsing
 node scripts/utils/fix-regex-patterns.js
+
+# Run position migration (production)
+./scripts/migrate-positions.sh
 ```
 
 ## Related Scripts

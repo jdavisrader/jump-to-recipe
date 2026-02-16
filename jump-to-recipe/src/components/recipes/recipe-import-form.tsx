@@ -134,7 +134,7 @@ export function RecipeImportForm({
     );
 
     // Check for validation errors
-    const hasValidationErrors = !isValid && errorSummary && errorSummary.count > 0;
+    const hasValidationErrors = !isValid && errorSummary !== null && errorSummary.count > 0;
 
     return (
       <div className="space-y-6">

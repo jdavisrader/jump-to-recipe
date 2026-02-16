@@ -43,7 +43,8 @@ export class SectionDataTransformer {
           unit: ingredient.unit,
           displayAmount: ingredient.displayAmount,
           notes: ingredient.notes,
-          category: ingredient.category
+          category: ingredient.category,
+          position: ingredient.position
         });
       } else {
         unsectionedItems.push({
@@ -53,7 +54,8 @@ export class SectionDataTransformer {
           unit: ingredient.unit,
           displayAmount: ingredient.displayAmount,
           notes: ingredient.notes,
-          category: ingredient.category
+          category: ingredient.category,
+          position: ingredient.position
         });
       }
     });
@@ -101,14 +103,16 @@ export class SectionDataTransformer {
           id: instruction.id,
           step: instruction.step,
           content: instruction.content,
-          duration: instruction.duration
+          duration: instruction.duration,
+          position: instruction.position
         });
       } else {
         unsectionedItems.push({
           id: instruction.id,
           step: instruction.step,
           content: instruction.content,
-          duration: instruction.duration
+          duration: instruction.duration,
+          position: instruction.position
         });
       }
     });
@@ -170,7 +174,10 @@ export class SectionDataTransformer {
   }
 
   /**
-   * Convert flat ingredients to flat array without section references (for backward compatibility)
+   * Convert sectioned ingredients to flat array.
+   * 
+   * Flattens sectioned ingredients while preserving explicit position values.
+   * Section references are removed in the output.
    */
   static sectionsToFlatIngredients(sections: IngredientSection[]): Ingredient[] {
     const ingredients: Ingredient[] = [];
@@ -184,7 +191,8 @@ export class SectionDataTransformer {
           unit: ingredient.unit,
           displayAmount: ingredient.displayAmount,
           notes: ingredient.notes,
-          category: ingredient.category
+          category: ingredient.category,
+          position: ingredient.position
         });
       });
     });
@@ -193,7 +201,10 @@ export class SectionDataTransformer {
   }
 
   /**
-   * Convert flat instructions to flat array without section references (for backward compatibility)
+   * Convert sectioned instructions to flat array.
+   * 
+   * Flattens sectioned instructions while preserving explicit position values.
+   * Section references are removed in the output.
    */
   static sectionsToFlatInstructions(sections: InstructionSection[]): Instruction[] {
     const instructions: Instruction[] = [];
@@ -204,7 +215,8 @@ export class SectionDataTransformer {
           id: instruction.id,
           step: instruction.step,
           content: instruction.content,
-          duration: instruction.duration
+          duration: instruction.duration,
+          position: instruction.position
         });
       });
     });
@@ -213,7 +225,10 @@ export class SectionDataTransformer {
   }
 
   /**
-   * Migrate existing recipe to support sections while maintaining backward compatibility
+   * Migrate existing recipe to support sections.
+   * 
+   * Converts flat recipe format to sectioned format while preserving
+   * explicit position values on all items.
    */
   static migrateRecipeToSections(recipe: Recipe): RecipeWithSections {
     // Convert existing flat arrays to extended format (no sections initially)

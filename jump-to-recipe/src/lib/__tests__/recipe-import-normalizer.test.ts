@@ -20,7 +20,7 @@ describe('recipe-import-normalizer', () => {
         title: 'Test Recipe',
         ingredientSections: [
           {
-            items: [{ name: 'Flour', amount: 2, unit: 'cups' }],
+            items: [{ name: 'Flour', amount: 2, unit: 'cups' , position: 0 }],
           },
         ],
       };
@@ -39,7 +39,7 @@ describe('recipe-import-normalizer', () => {
         ingredientSections: [
           {
             name: '',
-            items: [{ name: 'Sugar', amount: 1, unit: 'cup' }],
+            items: [{ name: 'Sugar', amount: 1, unit: 'cup' , position: 0 }],
           },
         ],
       };
@@ -57,7 +57,7 @@ describe('recipe-import-normalizer', () => {
         ingredientSections: [
           {
             name: '   ',
-            items: [{ name: 'Salt', amount: 1, unit: 'tsp' }],
+            items: [{ name: 'Salt', amount: 1, unit: 'tsp' , position: 0 }],
           },
         ],
       };
@@ -75,7 +75,7 @@ describe('recipe-import-normalizer', () => {
         ingredientSections: [
           {
             name: 'Valid Section',
-            items: [{ name: 'Flour', amount: 2, unit: 'cups' }],
+            items: [{ name: 'Flour', amount: 2, unit: 'cups' , position: 0 }],
           },
           {
             name: 'Empty Section',
@@ -98,11 +98,11 @@ describe('recipe-import-normalizer', () => {
         ingredientSections: [
           {
             name: 'Section 1',
-            items: [{ name: 'Flour', amount: 2, unit: 'cups' }],
+            items: [{ name: 'Flour', amount: 2, unit: 'cups' , position: 0 }],
           },
           {
             name: 'Section 2',
-            items: [{ name: 'Sugar', amount: 1, unit: 'cup' }],
+            items: [{ name: 'Sugar', amount: 1, unit: 'cup' , position: 0 }],
           },
         ],
       };
@@ -122,9 +122,9 @@ describe('recipe-import-normalizer', () => {
           {
             name: 'Ingredients',
             items: [
-              { name: 'Flour', amount: 2, unit: 'cups' },
-              { name: '', amount: 1, unit: 'cup' },
-              { name: '   ', amount: 1, unit: 'tsp' },
+              { name: 'Flour', amount: 2, unit: 'cups' , position: 0 },
+              { name: '', amount: 1, unit: 'cup' , position: 0 },
+              { name: '   ', amount: 1, unit: 'tsp' , position: 0 },
             ],
           },
         ],
@@ -168,8 +168,8 @@ describe('recipe-import-normalizer', () => {
           {
             name: 'Ingredients',
             items: [
-              { name: 'Flour', amount: 2, unit: 'cups' },
-              { name: 'Sugar', amount: 1, unit: 'cup' },
+              { name: 'Flour', amount: 2, unit: 'cups' , position: 0 },
+              { name: 'Sugar', amount: 1, unit: 'cup' , position: 0 },
             ],
           },
         ],
@@ -204,14 +204,14 @@ describe('recipe-import-normalizer', () => {
           {
             name: 'Dry Ingredients',
             items: [
-              { name: 'Flour', amount: 2, unit: 'cups' },
-              { name: 'Sugar', amount: 1, unit: 'cup' },
+              { name: 'Flour', amount: 2, unit: 'cups' , position: 0 },
+              { name: 'Sugar', amount: 1, unit: 'cup' , position: 0 },
             ],
           },
           {
             name: 'Wet Ingredients',
             items: [
-              { name: 'Milk', amount: 1, unit: 'cup' },
+              { name: 'Milk', amount: 1, unit: 'cup' , position: 0 },
             ],
           },
         ],
@@ -233,13 +233,13 @@ describe('recipe-import-normalizer', () => {
         ingredientSections: [
           {
             name: '',
-            items: [{ name: 'Flour', amount: 2, unit: 'cups' }],
+            items: [{ name: 'Flour', amount: 2, unit: 'cups' , position: 0 }],
           },
           {
             name: 'Valid Section',
             items: [
-              { name: 'Sugar', amount: 1, unit: 'cup' },
-              { name: '', amount: 1, unit: 'tsp' },
+              { name: 'Sugar', amount: 1, unit: 'cup' , position: 0 },
+              { name: '', amount: 1, unit: 'tsp' , position: 0 },
             ],
           },
           {
@@ -295,7 +295,7 @@ describe('recipe-import-normalizer', () => {
         ingredientSections: [
           {
             name: '',
-            items: [{ name: 'Flour', amount: 2, unit: 'cups' }],
+            items: [{ name: 'Flour', amount: 2, unit: 'cups' , position: 0 }],
           },
         ],
       };
@@ -312,8 +312,8 @@ describe('recipe-import-normalizer', () => {
         ingredientSections: [
           {
             items: [
-              { name: 'Flour', amount: 2, unit: 'cups' },
-              { name: '', amount: 1, unit: 'cup' },
+              { name: 'Flour', amount: 2, unit: 'cups' , position: 0 },
+              { name: '', amount: 1, unit: 'cup' , position: 0 },
             ],
           },
           {
@@ -433,8 +433,8 @@ describe('recipe-import-normalizer', () => {
           {
             name: 'Section',
             items: [
-              { name: '', amount: 1, unit: 'cup' },
-              { name: '   ', amount: 2, unit: 'tsp' },
+              { name: '', amount: 1, unit: 'cup' , position: 0 },
+              { name: '   ', amount: 2, unit: 'tsp' , position: 0 },
             ],
           },
         ],
@@ -454,7 +454,7 @@ describe('recipe-import-normalizer', () => {
           {
             name: '  Ingredients  ',
             items: [
-              { name: '  Flour  ', amount: 2, unit: 'cups' },
+              { name: '  Flour  ', amount: 2, unit: 'cups' , position: 0 },
             ],
           },
         ],
@@ -511,6 +511,45 @@ describe('recipe-import-normalizer', () => {
       expect(result.ingredientSections[0].items[0].displayAmount).toBe('2');
       expect(result.ingredientSections[0].items[0].notes).toBe('All-purpose');
       expect(result.ingredientSections[0].items[0].category).toBe('Dry');
+    });
+
+    it('should NOT rebuild flat arrays when explicitly empty (sections-only mode)', () => {
+      // This test verifies the bug fix for ingredient duplication
+      // When using sections, flat arrays should remain empty
+      const imported = {
+        title: 'Sectioned Recipe',
+        ingredients: [], // Explicitly empty - indicates sections-only mode
+        instructions: [], // Explicitly empty - indicates sections-only mode
+        ingredientSections: [
+          {
+            name: 'Section 1',
+            items: [
+              { name: 'Flour', amount: 2, unit: 'cups' , position: 0 },
+              { name: 'Sugar', amount: 1, unit: 'cup' , position: 0 },
+            ],
+          },
+        ],
+        instructionSections: [
+          {
+            name: 'Preparation',
+            items: [
+              { content: 'Mix ingredients' },
+            ],
+          },
+        ],
+      };
+
+      const result = normalizeImportedRecipe(imported);
+
+      // Flat arrays should remain empty when explicitly provided as empty
+      expect(result.ingredients).toEqual([]);
+      expect(result.instructions).toEqual([]);
+
+      // Sections should be normalized correctly
+      expect(result.ingredientSections).toHaveLength(1);
+      expect(result.ingredientSections![0].items).toHaveLength(2);
+      expect(result.instructionSections).toHaveLength(1);
+      expect(result.instructionSections![0].items).toHaveLength(1);
     });
   });
 });

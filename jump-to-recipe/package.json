@@ -30,6 +30,7 @@
     "migration:validate-config": "tsx src/migration/utils/config-loader.ts --validate",
     "migration:show-config": "tsx src/migration/utils/config-loader.ts --show",
     "migration:report": "tsx src/migration/verify/comprehensive-report-generator.ts",
+    "migrate:positions": "tsx src/db/migrations/migrate-explicit-positions.ts",
     "build:migration": "tsc -p tsconfig.migration.json",
     "test:migration": "jest --config jest.migration.config.js"
   },

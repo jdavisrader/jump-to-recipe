@@ -63,7 +63,10 @@ export class RecipeMigrationUtils {
   }
 
   /**
-   * Convert a sectioned recipe back to flat format for backward compatibility
+   * Convert a sectioned recipe back to flat format.
+   * 
+   * Extracts flat arrays from sections while preserving explicit position values.
+   * Useful for APIs or systems that expect flat recipe structure.
    */
   static convertSectionedRecipeToFlat(recipe: RecipeWithSections): Recipe {
     // Extract flat ingredients from sections or use existing flat array
@@ -82,12 +85,12 @@ export class RecipeMigrationUtils {
       flatInstructions = recipe.instructions.map(({ sectionId, ...instruction }) => instruction);
     }
 
-    // Return a recipe with flat structure (assuming we have the full recipe object)
+    // Return a recipe with flat structure
     return {
       ...(recipe as any), // Cast to bypass type checking for missing properties
       ingredients: flatIngredients,
       instructions: flatInstructions,
-      // Remove section properties for backward compatibility
+      // Remove section properties
       ingredientSections: undefined,
       instructionSections: undefined
     };

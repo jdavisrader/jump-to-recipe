@@ -39,7 +39,7 @@ describe('Performance Monitor', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     performanceMonitor.clear();
-    mockPerformance.getEntriesByName.mockReturnValue([{ duration: 100 }]);
+    mockPerformance.getEntriesByName.mockReturnValue([{ duration: 100 , position: 0 }]);
   });
 
   describe('Basic Functionality', () => {

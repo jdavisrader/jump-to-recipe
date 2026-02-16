@@ -186,10 +186,10 @@ describe('RecipeForm with Sections', () => {
       title: 'Test Recipe',
       description: 'A test recipe',
       ingredients: [
-        { id: '1', name: 'Flour', amount: 2, unit: 'cup' as const, notes: '' },
+        { id: '1', name: 'Flour', amount: 2, unit: 'cup' as const, notes: '', position: 0 },
       ],
       instructions: [
-        { id: '1', step: 1, content: 'Mix ingredients', duration: 5 },
+        { id: '1', step: 1, content: 'Mix ingredients', duration: 5 , position: 0 },
       ],
       ingredientSections: [
         {
@@ -197,7 +197,7 @@ describe('RecipeForm with Sections', () => {
           name: 'Dry Ingredients',
           order: 0,
           items: [
-            { id: '1', name: 'Flour', amount: 2, unit: 'cup' as const, notes: '' },
+            { id: '1', name: 'Flour', amount: 2, unit: 'cup' as const, notes: '', position: 0 },
           ],
         },
       ],
@@ -207,7 +207,7 @@ describe('RecipeForm with Sections', () => {
           name: 'Preparation',
           order: 0,
           items: [
-            { id: '1', step: 1, content: 'Mix ingredients', duration: 5 },
+            { id: '1', step: 1, content: 'Mix ingredients', duration: 5 , position: 0 },
           ],
         },
       ],
@@ -297,10 +297,10 @@ describe('RecipeForm with Sections', () => {
     const initialData = {
       title: 'Simple Recipe',
       ingredients: [
-        { id: '1', name: 'Flour', amount: 2, unit: 'cup' as const, notes: '' },
+        { id: '1', name: 'Flour', amount: 2, unit: 'cup' as const, notes: '', position: 0 },
       ],
       instructions: [
-        { id: '1', step: 1, content: 'Mix ingredients', duration: 5 },
+        { id: '1', step: 1, content: 'Mix ingredients', duration: 5 , position: 0 },
       ],
       // No sections provided
     };
@@ -631,7 +631,7 @@ describe('RecipeForm with Sections', () => {
             name: 'Dry Ingredients',
             order: 0,
             items: [
-              { id: '1', name: 'Flour', amount: 2, unit: 'cup' as const, notes: '' },
+              { id: '1', name: 'Flour', amount: 2, unit: 'cup' as const, notes: '', position: 0 },
             ],
           },
           {
@@ -639,7 +639,7 @@ describe('RecipeForm with Sections', () => {
             name: 'Wet Ingredients',
             order: 1,
             items: [
-              { id: '2', name: 'Milk', amount: 1, unit: 'cup' as const, notes: '' },
+              { id: '2', name: 'Milk', amount: 1, unit: 'cup' as const, notes: '', position: 0 },
             ],
           },
         ],
@@ -649,7 +649,7 @@ describe('RecipeForm with Sections', () => {
             name: 'Preparation',
             order: 0,
             items: [
-              { id: '1', step: 1, content: 'Mix dry ingredients', duration: 5 },
+              { id: '1', step: 1, content: 'Mix dry ingredients', duration: 5 , position: 0 },
             ],
           },
         ],

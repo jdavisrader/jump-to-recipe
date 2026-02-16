@@ -136,6 +136,7 @@ export function cleanInstructionHtml(html: string, stepNumber: number): CleanedI
     step: stepNumber,
     content,
     duration: undefined, // Not in legacy data
+    position: 0, // Will be set during normalization
     originalHtml,
   };
 }

@@ -71,7 +71,7 @@ src/app/api/
 - Follow Tailwind responsive design patterns
 
 ## Documentation Organization
-- **All documentation** must be placed in `/docs/` (root level)
+- **All documentation** must be placed in `/docs/{name of spec}/` (root level)
 - Use logical folder structure for organization
 - Existing folders: deployment, errors, specs, dataMigration, wireframes
 - Create new folders as needed for clear categorization
