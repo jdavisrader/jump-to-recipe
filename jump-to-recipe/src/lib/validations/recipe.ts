@@ -119,7 +119,14 @@ export const recipeSchema = recipeWithSectionsSchema;
 export const createRecipeSchema = recipeSchema;
 
 // Schema for updating an existing recipe
-export const updateRecipeSchema = recipeSchema.partial().omit({ authorId: true });
+// Note: We apply .partial() to baseRecipeSchema (before refinements) to avoid Zod error
+export const updateRecipeSchema = baseRecipeSchema
+  .extend({
+    ingredientSections: z.array(ingredientSectionSchema).optional(),
+    instructionSections: z.array(instructionSectionSchema).optional(),
+  })
+  .partial()
+  .omit({ authorId: true });
 
 // Schema for recipe search/filtering
 export const recipeFilterSchema = z.object({
