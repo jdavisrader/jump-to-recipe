@@ -19,6 +19,7 @@ export interface Ingredient {
   displayAmount?: string; // Original fraction format for display (e.g., "1½", "¾")
   notes?: string;
   category?: string;
+  position: number; // Explicit position property for ordering
 }
 
 export interface Instruction {
@@ -26,6 +27,7 @@ export interface Instruction {
   step: number;
   content: string;
   duration?: number; // in minutes
+  position: number; // Explicit position property for ordering
 }
 
 export interface Recipe {

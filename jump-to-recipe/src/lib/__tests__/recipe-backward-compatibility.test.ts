@@ -23,21 +23,21 @@ describe('Recipe Backward Compatibility - Section Order Preservation', () => {
     instructionSections: InstructionSection[];
   } => {
     const allIngredients: Ingredient[] = [
-      { id: '1', name: 'Flour', amount: 2, unit: 'cup' },
-      { id: '2', name: 'Sugar', amount: 1, unit: 'cup' },
-      { id: '3', name: 'Milk', amount: 1, unit: 'cup' },
-      { id: '4', name: 'Eggs', amount: 2, unit: '' },
-      { id: '5', name: 'Chocolate Chips', amount: 0.5, unit: 'cup' },
+      { id: '1', name: 'Flour', amount: 2, unit: 'cup' , position: 0 },
+      { id: '2', name: 'Sugar', amount: 1, unit: 'cup' , position: 0 },
+      { id: '3', name: 'Milk', amount: 1, unit: 'cup' , position: 0 },
+      { id: '4', name: 'Eggs', amount: 2, unit: '' , position: 0 },
+      { id: '5', name: 'Chocolate Chips', amount: 0.5, unit: 'cup' , position: 0 },
     ];
     
     const allInstructions: Instruction[] = [
-      { id: '1', step: 1, content: 'Preheat oven to 350°F' },
-      { id: '2', step: 2, content: 'Grease baking pan' },
-      { id: '3', step: 3, content: 'Mix dry ingredients' },
-      { id: '4', step: 4, content: 'Mix wet ingredients' },
-      { id: '5', step: 5, content: 'Combine wet and dry' },
-      { id: '6', step: 6, content: 'Pour into pan' },
-      { id: '7', step: 7, content: 'Bake for 30 minutes' },
+      { id: '1', step: 1, content: 'Preheat oven to 350°F', position: 0 },
+      { id: '2', step: 2, content: 'Grease baking pan', position: 0 },
+      { id: '3', step: 3, content: 'Mix dry ingredients' , position: 0 },
+      { id: '4', step: 4, content: 'Mix wet ingredients' , position: 0 },
+      { id: '5', step: 5, content: 'Combine wet and dry' , position: 0 },
+      { id: '6', step: 6, content: 'Pour into pan' , position: 0 },
+      { id: '7', step: 7, content: 'Bake for 30 minutes' , position: 0 },
     ];
 
     return {
@@ -52,8 +52,8 @@ describe('Recipe Backward Compatibility - Section Order Preservation', () => {
         name: 'Dry Ingredients',
         order: 0,
         items: [
-          { id: '1', name: 'Flour', amount: 2, unit: 'cup' },
-          { id: '2', name: 'Sugar', amount: 1, unit: 'cup' },
+          { id: '1', name: 'Flour', amount: 2, unit: 'cup' , position: 0 },
+          { id: '2', name: 'Sugar', amount: 1, unit: 'cup' , position: 0 },
         ],
       },
       {
@@ -61,8 +61,8 @@ describe('Recipe Backward Compatibility - Section Order Preservation', () => {
         name: 'Wet Ingredients',
         order: 1,
         items: [
-          { id: '3', name: 'Milk', amount: 1, unit: 'cup' },
-          { id: '4', name: 'Eggs', amount: 2, unit: '' },
+          { id: '3', name: 'Milk', amount: 1, unit: 'cup' , position: 0 },
+          { id: '4', name: 'Eggs', amount: 2, unit: '' , position: 0 },
         ],
       },
       {
@@ -70,7 +70,7 @@ describe('Recipe Backward Compatibility - Section Order Preservation', () => {
         name: 'Toppings',
         order: 2,
         items: [
-          { id: '5', name: 'Chocolate Chips', amount: 0.5, unit: 'cup' },
+          { id: '5', name: 'Chocolate Chips', amount: 0.5, unit: 'cup' , position: 0 },
         ],
       },
     ],
@@ -80,8 +80,8 @@ describe('Recipe Backward Compatibility - Section Order Preservation', () => {
         name: 'Preparation',
         order: 0,
         items: [
-          { id: '1', step: 1, content: 'Preheat oven to 350°F' },
-          { id: '2', step: 2, content: 'Grease baking pan' },
+          { id: '1', step: 1, content: 'Preheat oven to 350°F' , position: 0 },
+          { id: '2', step: 2, content: 'Grease baking pan' , position: 0 },
         ],
       },
       {
@@ -89,9 +89,9 @@ describe('Recipe Backward Compatibility - Section Order Preservation', () => {
         name: 'Mixing',
         order: 1,
         items: [
-          { id: '3', step: 3, content: 'Mix dry ingredients' },
-          { id: '4', step: 4, content: 'Mix wet ingredients' },
-          { id: '5', step: 5, content: 'Combine wet and dry' },
+          { id: '3', step: 3, content: 'Mix dry ingredients' , position: 0 },
+          { id: '4', step: 4, content: 'Mix wet ingredients' , position: 0 },
+          { id: '5', step: 5, content: 'Combine wet and dry' , position: 0 },
         ],
       },
       {
@@ -99,8 +99,8 @@ describe('Recipe Backward Compatibility - Section Order Preservation', () => {
         name: 'Baking',
         order: 2,
         items: [
-          { id: '6', step: 6, content: 'Pour into pan' },
-          { id: '7', step: 7, content: 'Bake for 30 minutes' },
+          { id: '6', step: 6, content: 'Pour into pan' , position: 0 },
+          { id: '7', step: 7, content: 'Bake for 30 minutes' , position: 0 },
         ],
       },
     ],
@@ -289,7 +289,7 @@ describe('Recipe Backward Compatibility - Section Order Preservation', () => {
         id: 'ing-section-4',
         name: 'Garnish',
         order: currentLength,
-        items: [{ id: '7', name: 'Mint', amount: 1, unit: 'tbsp' }],
+        items: [{ id: '7', name: 'Mint', amount: 1, unit: 'tbsp' , position: 0 }],
       };
 
       const updatedSections = [...recipe.ingredientSections, newSection];
@@ -417,12 +417,12 @@ describe('Recipe Backward Compatibility - Section Order Preservation', () => {
         title: 'Old Recipe',
         description: 'Recipe without sections',
         ingredients: [
-          { id: '1', name: 'Flour', amount: 2, unit: 'cup' },
-          { id: '2', name: 'Sugar', amount: 1, unit: 'cup' },
+          { id: '1', name: 'Flour', amount: 2, unit: 'cup' , position: 0 },
+          { id: '2', name: 'Sugar', amount: 1, unit: 'cup' , position: 0 },
         ],
         instructions: [
-          { id: '1', step: 1, content: 'Mix ingredients' },
-          { id: '2', step: 2, content: 'Bake' },
+          { id: '1', step: 1, content: 'Mix ingredients' , position: 0 },
+          { id: '2', step: 2, content: 'Bake' , position: 0 },
         ],
         prepTime: 10,
         cookTime: 20,
@@ -456,14 +456,14 @@ describe('Recipe Backward Compatibility - Section Order Preservation', () => {
       title: 'Simple Recipe',
       description: 'Recipe without sections',
       ingredients: [
-        { id: '1', name: 'Flour', amount: 2, unit: 'cup' },
-        { id: '2', name: 'Sugar', amount: 1, unit: 'cup' },
-        { id: '3', name: 'Eggs', amount: 2, unit: '' },
+        { id: '1', name: 'Flour', amount: 2, unit: 'cup' , position: 0 },
+        { id: '2', name: 'Sugar', amount: 1, unit: 'cup' , position: 0 },
+        { id: '3', name: 'Eggs', amount: 2, unit: '' , position: 0 },
       ],
       instructions: [
-        { id: '1', step: 1, content: 'Mix dry ingredients' },
-        { id: '2', step: 2, content: 'Add eggs' },
-        { id: '3', step: 3, content: 'Bake for 25 minutes' },
+        { id: '1', step: 1, content: 'Mix dry ingredients' , position: 0 },
+        { id: '2', step: 2, content: 'Add eggs' , position: 0 },
+        { id: '3', step: 3, content: 'Bake for 25 minutes' , position: 0 },
       ],
       prepTime: 10,
       cookTime: 25,
@@ -516,6 +516,7 @@ describe('Recipe Backward Compatibility - Section Order Preservation', () => {
         id: '4',
         step: 4,
         content: 'Let cool before serving',
+        position: 0,
       });
 
       expect(recipe.ingredients).toHaveLength(4);
@@ -580,14 +581,14 @@ describe('Recipe Backward Compatibility - Section Order Preservation', () => {
       title: 'Simple Recipe',
       description: 'Recipe without sections',
       ingredients: [
-        { id: '1', name: 'Flour', amount: 2, unit: 'cup' },
-        { id: '2', name: 'Sugar', amount: 1, unit: 'cup' },
-        { id: '3', name: 'Eggs', amount: 2, unit: '' },
+        { id: '1', name: 'Flour', amount: 2, unit: 'cup' , position: 0 },
+        { id: '2', name: 'Sugar', amount: 1, unit: 'cup' , position: 0 },
+        { id: '3', name: 'Eggs', amount: 2, unit: '' , position: 0 },
       ],
       instructions: [
-        { id: '1', step: 1, content: 'Mix dry ingredients' },
-        { id: '2', step: 2, content: 'Add eggs' },
-        { id: '3', step: 3, content: 'Bake for 25 minutes' },
+        { id: '1', step: 1, content: 'Mix dry ingredients' , position: 0 },
+        { id: '2', step: 2, content: 'Add eggs' , position: 0 },
+        { id: '3', step: 3, content: 'Bake for 25 minutes' , position: 0 },
       ],
       prepTime: 10,
       cookTime: 25,
@@ -615,7 +616,7 @@ describe('Recipe Backward Compatibility - Section Order Preservation', () => {
             name: 'Main Ingredients',
             order: 0,
             items: [
-              { id: '1', name: 'Flour', amount: 2, unit: 'cup' },
+              { id: '1', name: 'Flour', amount: 2, unit: 'cup' , position: 0 },
             ],
           },
         ],
@@ -635,7 +636,7 @@ describe('Recipe Backward Compatibility - Section Order Preservation', () => {
             name: 'Steps',
             order: 0,
             items: [
-              { id: '1', step: 1, content: 'Mix ingredients' },
+              { id: '1', step: 1, content: 'Mix ingredients' , position: 0 },
             ],
           },
         ],

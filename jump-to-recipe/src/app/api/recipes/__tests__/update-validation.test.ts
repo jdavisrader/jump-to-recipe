@@ -113,7 +113,7 @@ describe('PUT /api/recipes/[id] - Update with Strict Validation', () => {
           { id: '123e4567-e89b-12d3-a456-426614174000', name: 'Flour', amount: 1, unit: 'cup', step: 1 }
         ],
         instructions: [
-          { id: '123e4567-e89b-12d3-a456-426614174001', step: 1, content: 'Mix ingredients' }
+          { id: '123e4567-e89b-12d3-a456-426614174001', step: 1, content: 'Mix ingredients' , position: 0 }
         ],
         ingredientSections: [
           {
@@ -121,7 +121,7 @@ describe('PUT /api/recipes/[id] - Update with Strict Validation', () => {
             name: '',  // Empty name should fail
             order: 0,
             items: [
-              { id: '123e4567-e89b-12d3-a456-426614174000', name: 'Flour', amount: 1, unit: 'cup' }
+              { id: '123e4567-e89b-12d3-a456-426614174000', name: 'Flour', amount: 1, unit: 'cup' , position: 0 }
             ]
           }
         ]
@@ -147,7 +147,7 @@ describe('PUT /api/recipes/[id] - Update with Strict Validation', () => {
         title: 'Test Recipe',
         ingredients: [],
         instructions: [
-          { id: '123e4567-e89b-12d3-a456-426614174001', step: 1, content: 'Mix ingredients' }
+          { id: '123e4567-e89b-12d3-a456-426614174001', step: 1, content: 'Mix ingredients' , position: 0 }
         ],
         ingredientSections: [
           {
@@ -178,7 +178,7 @@ describe('PUT /api/recipes/[id] - Update with Strict Validation', () => {
         title: 'Test Recipe',
         ingredients: [],
         instructions: [
-          { id: '123e4567-e89b-12d3-a456-426614174001', step: 1, content: 'Mix ingredients' }
+          { id: '123e4567-e89b-12d3-a456-426614174001', step: 1, content: 'Mix ingredients' , position: 0 }
         ]
       };
 
@@ -200,10 +200,10 @@ describe('PUT /api/recipes/[id] - Update with Strict Validation', () => {
       const invalidRecipe = {
         title: 'Test Recipe',
         ingredients: [
-          { id: 'invalid-uuid', name: 'Flour', amount: 1, unit: 'cup' }
+          { id: 'invalid-uuid', name: 'Flour', amount: 1, unit: 'cup' , position: 0 }
         ],
         instructions: [
-          { id: '123e4567-e89b-12d3-a456-426614174001', step: 1, content: 'Mix ingredients' }
+          { id: '123e4567-e89b-12d3-a456-426614174001', step: 1, content: 'Mix ingredients' , position: 0 }
         ]
       };
 
@@ -225,10 +225,10 @@ describe('PUT /api/recipes/[id] - Update with Strict Validation', () => {
       const invalidRecipe = {
         title: 'Test Recipe',
         ingredients: [
-          { id: '123e4567-e89b-12d3-a456-426614174000', name: '', amount: 1, unit: 'cup' }  // Empty name
+          { id: '123e4567-e89b-12d3-a456-426614174000', name: '', amount: 1, unit: 'cup' , position: 0 }  // Empty name
         ],
         instructions: [
-          { id: '123e4567-e89b-12d3-a456-426614174001', step: 1, content: 'Mix ingredients' }
+          { id: '123e4567-e89b-12d3-a456-426614174001', step: 1, content: 'Mix ingredients' , position: 0 }
         ]
       };
 
@@ -283,10 +283,10 @@ describe('PUT /api/recipes/[id] - Update with Strict Validation', () => {
       const recipeWithMissingData = {
         title: 'Test Recipe',
         ingredients: [
-          { id: '123e4567-e89b-12d3-a456-426614174000', name: 'Flour', amount: 1, unit: 'cup' }
+          { id: '123e4567-e89b-12d3-a456-426614174000', name: 'Flour', amount: 1, unit: 'cup' , position: 0 }
         ],
         instructions: [
-          { id: '123e4567-e89b-12d3-a456-426614174001', step: 1, content: 'Mix ingredients' }
+          { id: '123e4567-e89b-12d3-a456-426614174001', step: 1, content: 'Mix ingredients' , position: 0 }
         ],
         ingredientSections: [
           {
@@ -294,7 +294,7 @@ describe('PUT /api/recipes/[id] - Update with Strict Validation', () => {
             name: '',  // Will be normalized to "Imported Section"
             order: 0,
             items: [
-              { id: '123e4567-e89b-12d3-a456-426614174000', name: 'Flour', amount: 1, unit: 'cup' }
+              { id: '123e4567-e89b-12d3-a456-426614174000', name: 'Flour', amount: 1, unit: 'cup' , position: 0 }
             ]
           }
         ]
@@ -316,10 +316,10 @@ describe('PUT /api/recipes/[id] - Update with Strict Validation', () => {
       const validRecipe = {
         title: 'Test Recipe',
         ingredients: [
-          { id: '123e4567-e89b-12d3-a456-426614174000', name: 'Flour', amount: 1, unit: 'cup' }
+          { id: '123e4567-e89b-12d3-a456-426614174000', name: 'Flour', amount: 1, unit: 'cup' , position: 0 }
         ],
         instructions: [
-          { id: '123e4567-e89b-12d3-a456-426614174001', step: 1, content: 'Mix ingredients' }
+          { id: '123e4567-e89b-12d3-a456-426614174001', step: 1, content: 'Mix ingredients' , position: 0 }
         ],
         ingredientSections: [
           {
@@ -327,7 +327,7 @@ describe('PUT /api/recipes/[id] - Update with Strict Validation', () => {
             name: 'Dry Ingredients',
             order: 0,
             items: [
-              { id: '123e4567-e89b-12d3-a456-426614174000', name: 'Flour', amount: 1, unit: 'cup' }
+              { id: '123e4567-e89b-12d3-a456-426614174000', name: 'Flour', amount: 1, unit: 'cup' , position: 0 }
             ]
           }
         ]
@@ -382,10 +382,10 @@ describe('PUT /api/recipes/[id] - Update with Strict Validation', () => {
         title: 'Test Recipe',
         authorId: 'new-author-id',
         ingredients: [
-          { id: '123e4567-e89b-12d3-a456-426614174000', name: 'Flour', amount: 1, unit: 'cup' }
+          { id: '123e4567-e89b-12d3-a456-426614174000', name: 'Flour', amount: 1, unit: 'cup' , position: 0 }
         ],
         instructions: [
-          { id: '123e4567-e89b-12d3-a456-426614174001', step: 1, content: 'Mix ingredients' }
+          { id: '123e4567-e89b-12d3-a456-426614174001', step: 1, content: 'Mix ingredients' , position: 0 }
         ]
       };
 

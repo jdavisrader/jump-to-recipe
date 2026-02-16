@@ -44,6 +44,7 @@ const mockRecipe: Recipe = {
       unit: 'cup',
       displayAmount: '2',
       notes: '',
+      position: 0,
     },
   ],
   instructions: [
@@ -52,6 +53,7 @@ const mockRecipe: Recipe = {
       step: 1,
       content: 'Mix ingredients',
       duration: 5,
+      position: 0,
     },
   ],
   prepTime: 10,

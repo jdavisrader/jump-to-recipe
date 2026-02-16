@@ -196,6 +196,12 @@ export async function GET(req: NextRequest) {
  * Creates a new recipe with strict validation
  * Requires authentication (handled on client side)
  * Enforces unique IDs and resolves position conflicts
+ * 
+ * Position Validation (Requirement 7.1):
+ * - All ingredients must have a valid position property (non-negative integer)
+ * - All instructions must have a valid position property (non-negative integer)
+ * - Position conflicts are auto-corrected to sequential values
+ * - Missing positions will result in validation error (400 Bad Request)
  */
 export async function POST(req: NextRequest) {
     try {

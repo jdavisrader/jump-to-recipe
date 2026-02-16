@@ -49,7 +49,7 @@ describe('Recipe API Server-Side Validation', () => {
             { id: uuidv4(), name: 'Flour', amount: 1, unit: 'cup', step: 1 }
           ],
           instructions: [
-            { id: uuidv4(), step: 1, content: 'Mix ingredients' }
+            { id: uuidv4(), step: 1, content: 'Mix ingredients' , position: 0 }
           ],
           ingredientSections: [
             {
@@ -57,7 +57,7 @@ describe('Recipe API Server-Side Validation', () => {
               name: '',  // Empty name - should fail
               order: 0,
               items: [
-                { id: uuidv4(), name: 'Flour', amount: 1, unit: 'cup' }
+                { id: uuidv4(), name: 'Flour', amount: 1, unit: 'cup' , position: 0 }
               ]
             }
           ],
@@ -81,7 +81,7 @@ describe('Recipe API Server-Side Validation', () => {
             { id: uuidv4(), name: 'Flour', amount: 1, unit: 'cup', step: 1 }
           ],
           instructions: [
-            { id: uuidv4(), step: 1, content: 'Mix ingredients' }
+            { id: uuidv4(), step: 1, content: 'Mix ingredients' , position: 0 }
           ],
           ingredientSections: [
             {
@@ -89,7 +89,7 @@ describe('Recipe API Server-Side Validation', () => {
               name: '   ',  // Whitespace only - should fail
               order: 0,
               items: [
-                { id: uuidv4(), name: 'Flour', amount: 1, unit: 'cup' }
+                { id: uuidv4(), name: 'Flour', amount: 1, unit: 'cup' , position: 0 }
               ]
             }
           ],
@@ -112,7 +112,7 @@ describe('Recipe API Server-Side Validation', () => {
           title: 'Test Recipe',
           ingredients: [],
           instructions: [
-            { id: uuidv4(), step: 1, content: 'Mix ingredients' }
+            { id: uuidv4(), step: 1, content: 'Mix ingredients' , position: 0 }
           ],
           ingredientSections: [
             {
@@ -168,7 +168,7 @@ describe('Recipe API Server-Side Validation', () => {
           title: 'Test Recipe',
           ingredients: [],  // No ingredients - should fail
           instructions: [
-            { id: uuidv4(), step: 1, content: 'Mix ingredients' }
+            { id: uuidv4(), step: 1, content: 'Mix ingredients' , position: 0 }
           ],
           tags: [],
           visibility: 'private' as const,
@@ -187,7 +187,7 @@ describe('Recipe API Server-Side Validation', () => {
           title: 'Test Recipe',
           ingredients: [],
           instructions: [
-            { id: uuidv4(), step: 1, content: 'Mix ingredients' }
+            { id: uuidv4(), step: 1, content: 'Mix ingredients' , position: 0 }
           ],
           ingredientSections: [],  // No sections with ingredients
           tags: [],
@@ -205,7 +205,7 @@ describe('Recipe API Server-Side Validation', () => {
         const invalidRecipe = {
           title: 'Test Recipe',
           ingredients: [
-            { id: 'invalid-uuid', name: 'Flour', amount: 1, unit: 'cup' }  // Invalid UUID
+            { id: 'invalid-uuid', name: 'Flour', amount: 1, unit: 'cup' , position: 0 }  // Invalid UUID
           ],
           instructions: [
             { id: uuidv4(), step: 1, content: 'Mix ingredients' }
@@ -268,10 +268,10 @@ describe('Recipe API Server-Side Validation', () => {
           title: 'Test Recipe',
           description: 'A test recipe',
           ingredients: [
-            { id: uuidv4(), name: 'Flour', amount: 2, unit: 'cups', step: 1 }
+            { id: uuidv4(), name: 'Flour', amount: 2, unit: 'cups', position: 0 }
           ],
           instructions: [
-            { id: uuidv4(), step: 1, content: 'Mix ingredients' }
+            { id: uuidv4(), step: 1, content: 'Mix ingredients' , position: 0 }
           ],
           ingredientSections: [
             {
@@ -279,7 +279,7 @@ describe('Recipe API Server-Side Validation', () => {
               name: 'Dry Ingredients',
               order: 0,
               items: [
-                { id: uuidv4(), name: 'Flour', amount: 2, unit: 'cups' }
+                { id: uuidv4(), name: 'Flour', amount: 2, unit: 'cups' , position: 0 }
               ]
             }
           ],
@@ -289,7 +289,7 @@ describe('Recipe API Server-Side Validation', () => {
               name: 'Preparation',
               order: 0,
               items: [
-                { id: uuidv4(), step: 1, content: 'Mix ingredients' }
+                { id: uuidv4(), step: 1, content: 'Mix ingredients' , position: 0 }
               ]
             }
           ],
@@ -311,10 +311,10 @@ describe('Recipe API Server-Side Validation', () => {
         const validRecipe = {
           title: 'Simple Recipe',
           ingredients: [
-            { id: uuidv4(), name: 'Flour', amount: 1, unit: 'cup', step: 1 }
+            { id: uuidv4(), name: 'Flour', amount: 1, unit: 'cup', position: 0 }
           ],
           instructions: [
-            { id: uuidv4(), step: 1, content: 'Mix ingredients' }
+            { id: uuidv4(), step: 1, content: 'Mix ingredients' , position: 0 }
           ],
           tags: [],
           visibility: 'private' as const,
@@ -335,7 +335,7 @@ describe('Recipe API Server-Side Validation', () => {
             { id: uuidv4(), name: 'Flour', amount: 1, unit: 'cup', step: 1 }
           ],
           instructions: [
-            { id: uuidv4(), step: 1, content: 'Mix ingredients' }
+            { id: uuidv4(), step: 1, content: 'Mix ingredients' , position: 0 }
           ],
           ingredientSections: [
             {
@@ -343,7 +343,7 @@ describe('Recipe API Server-Side Validation', () => {
               name: 'Section 1',
               order: 0,
               items: [
-                { id: uuidv4(), name: 'Flour', amount: 1, unit: 'cup' }
+                { id: uuidv4(), name: 'Flour', amount: 1, unit: 'cup' , position: 0 }
               ]
             },
             {
@@ -351,7 +351,7 @@ describe('Recipe API Server-Side Validation', () => {
               name: 'Section 2',
               order: 1,
               items: [
-                { id: uuidv4(), name: 'Sugar', amount: 1, unit: 'cup' }
+                { id: uuidv4(), name: 'Sugar', amount: 1, unit: 'cup' , position: 0 }
               ]
             }
           ],
@@ -373,7 +373,7 @@ describe('Recipe API Server-Side Validation', () => {
             { id: duplicateId, name: 'Sugar', amount: 1, unit: 'cup', step: 2 }
           ],
           instructions: [
-            { id: uuidv4(), step: 1, content: 'Mix ingredients' }
+            { id: uuidv4(), step: 1, content: 'Mix ingredients' , position: 0 }
           ],
           ingredientSections: [
             {
@@ -381,8 +381,8 @@ describe('Recipe API Server-Side Validation', () => {
               name: 'Ingredients',
               order: 0,
               items: [
-                { id: duplicateId, name: 'Flour', amount: 1, unit: 'cup' },
-                { id: duplicateId, name: 'Sugar', amount: 1, unit: 'cup' }
+                { id: duplicateId, name: 'Flour', amount: 1, unit: 'cup' , position: 0 },
+                { id: duplicateId, name: 'Sugar', amount: 1, unit: 'cup' , position: 0 }
               ]
             }
           ],
@@ -493,7 +493,7 @@ describe('Recipe API Server-Side Validation', () => {
             { id: uuidv4(), name: 'Flour', amount: 1, unit: 'cup', step: 1 }
           ],
           instructions: [
-            { id: uuidv4(), step: 1, content: 'Mix ingredients' }
+            { id: uuidv4(), step: 1, content: 'Mix ingredients' , position: 0 }
           ],
           ingredientSections: [
             {
@@ -501,7 +501,7 @@ describe('Recipe API Server-Side Validation', () => {
               name: '',  // Empty name - should fail
               order: 0,
               items: [
-                { id: uuidv4(), name: 'Flour', amount: 1, unit: 'cup' }
+                { id: uuidv4(), name: 'Flour', amount: 1, unit: 'cup' , position: 0 }
               ]
             }
           ]
@@ -517,7 +517,7 @@ describe('Recipe API Server-Side Validation', () => {
           title: 'Test Recipe',
           ingredients: [],
           instructions: [
-            { id: uuidv4(), step: 1, content: 'Mix ingredients' }
+            { id: uuidv4(), step: 1, content: 'Mix ingredients' , position: 0 }
           ]
         };
 
@@ -530,10 +530,10 @@ describe('Recipe API Server-Side Validation', () => {
         const validRecipe = {
           title: 'Updated Recipe',
           ingredients: [
-            { id: uuidv4(), name: 'Flour', amount: 2, unit: 'cups', step: 1 }
+            { id: uuidv4(), name: 'Flour', amount: 2, unit: 'cups', position: 0 }
           ],
           instructions: [
-            { id: uuidv4(), step: 1, content: 'Mix ingredients' }
+            { id: uuidv4(), step: 1, content: 'Mix ingredients' , position: 0 }
           ],
           ingredientSections: [
             {
@@ -541,7 +541,7 @@ describe('Recipe API Server-Side Validation', () => {
               name: 'Dry Ingredients',
               order: 0,
               items: [
-                { id: uuidv4(), name: 'Flour', amount: 2, unit: 'cups' }
+                { id: uuidv4(), name: 'Flour', amount: 2, unit: 'cups' , position: 0 }
               ]
             }
           ]
@@ -584,7 +584,7 @@ describe('Recipe API Server-Side Validation', () => {
               name: 'Ingredients',
               // order is missing - will be normalized
               items: [
-                { name: 'Flour', amount: 1, unit: 'cup' }
+                { name: 'Flour', amount: 1, unit: 'cup' , position: 0 }
               ]
             }
           ]
@@ -661,7 +661,7 @@ describe('Recipe API Server-Side Validation', () => {
             { id: uuidv4(), name: 'Flour', amount: 1, unit: 'cup', step: 1 }
           ],
           instructions: [
-            { id: uuidv4(), step: 1, content: 'Mix ingredients' }
+            { id: uuidv4(), step: 1, content: 'Mix ingredients' , position: 0 }
           ],
           ingredientSections: [
             {
@@ -669,7 +669,7 @@ describe('Recipe API Server-Side Validation', () => {
               name: 'Section 1',
               order: 0,
               items: [
-                { id: uuidv4(), name: 'Flour', amount: 1, unit: 'cup' }
+                { id: uuidv4(), name: 'Flour', amount: 1, unit: 'cup' , position: 0 }
               ]
             },
             {
@@ -677,7 +677,7 @@ describe('Recipe API Server-Side Validation', () => {
               name: 'Section 2',
               order: 1,
               items: [
-                { id: uuidv4(), name: 'Sugar', amount: 1, unit: 'cup' }
+                { id: uuidv4(), name: 'Sugar', amount: 1, unit: 'cup' , position: 0 }
               ]
             }
           ]

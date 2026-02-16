@@ -13,6 +13,9 @@ export const ingredientSchema = z.object({
   displayAmount: z.string().optional(), // Original fraction format for display
   notes: z.string().optional(),
   category: z.string().optional(),
+  position: z.number()
+    .int('Position must be an integer')
+    .nonnegative('Position must be non-negative'),
 });
 
 // Instruction validation
@@ -21,6 +24,9 @@ export const instructionSchema = z.object({
   step: z.number().int().positive('Step number must be positive'),
   content: z.string().min(1, 'Instruction content is required'),
   duration: z.number().int().positive().optional(),
+  position: z.number()
+    .int('Position must be an integer')
+    .nonnegative('Position must be non-negative'),
 });
 
 // Extended ingredient with section reference
@@ -55,7 +61,7 @@ export const sectionValidationErrorSchema = z.object({
   message: z.string(),
 });
 
-// Base recipe validation (backward compatible)
+// Base recipe validation schema
 export const baseRecipeSchema = z.object({
   title: z.string().min(1, 'Title is required').max(500, 'Title is too long'),
   description: z.string().nullable().optional(),
@@ -106,7 +112,7 @@ export const recipeWithSectionsSchema = baseRecipeSchema.extend({
   }
 );
 
-// Main recipe schema (maintains backward compatibility)
+// Main recipe schema with sections support
 export const recipeSchema = recipeWithSectionsSchema;
 
 // Schema for creating a new recipe

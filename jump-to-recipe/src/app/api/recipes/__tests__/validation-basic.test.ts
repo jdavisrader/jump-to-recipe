@@ -25,6 +25,7 @@ describe('Recipe API POST Validation', () => {
             id: '123e4567-e89b-12d3-a456-426614174001',
             step: 1,
             content: 'Mix ingredients',
+            position: 0,
           },
         ],
         ingredientSections: [
@@ -52,6 +53,7 @@ describe('Recipe API POST Validation', () => {
                 id: '123e4567-e89b-12d3-a456-426614174001',
                 step: 1,
                 content: 'Mix ingredients',
+                position: 0,
               },
             ],
           },
@@ -87,6 +89,7 @@ describe('Recipe API POST Validation', () => {
             id: '123e4567-e89b-12d3-a456-426614174001',
             step: 1,
             content: 'Mix ingredients',
+            position: 0,
           },
         ],
         ingredientSections: [
@@ -130,6 +133,7 @@ describe('Recipe API POST Validation', () => {
             id: '123e4567-e89b-12d3-a456-426614174001',
             step: 1,
             content: 'Mix ingredients',
+            position: 0,
           },
         ],
         ingredientSections: [
@@ -159,6 +163,7 @@ describe('Recipe API POST Validation', () => {
             id: '123e4567-e89b-12d3-a456-426614174001',
             step: 1,
             content: 'Mix ingredients',
+            position: 0,
           },
         ],
         tags: [],
@@ -187,6 +192,7 @@ describe('Recipe API POST Validation', () => {
             id: '123e4567-e89b-12d3-a456-426614174001',
             step: 1,
             content: 'Mix ingredients',
+            position: 0,
           },
         ],
         tags: [],
@@ -215,6 +221,7 @@ describe('Recipe API POST Validation', () => {
             id: '123e4567-e89b-12d3-a456-426614174001',
             step: 1,
             content: 'Mix ingredients',
+            position: 0,
           },
         ],
         tags: [],
@@ -238,6 +245,7 @@ describe('Recipe API POST Validation', () => {
             id: '123e4567-e89b-12d3-a456-426614174001',
             step: 1,
             content: 'Mix ingredients',
+            position: 0,
           },
         ],
         ingredientSections: [

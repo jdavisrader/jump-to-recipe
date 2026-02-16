@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { v4 as uuidv4 } from 'uuid';
 import * as cheerio from 'cheerio';
-import type { Recipe } from '@/types/recipe';
+import type { Recipe, Ingredient, Instruction } from '@/types/recipe';
 import { createRecipeSchema } from '@/lib/validations/recipe';
 
 // Define Unit type if it's not imported
@@ -94,8 +94,12 @@ export async function POST(request: NextRequest) {
     }
 
     // Ensure we have at least one ingredient and instruction
+    // Also ensure all items have position property assigned (Requirement 1.1)
     const ingredients = recipeData.ingredients && recipeData.ingredients.length > 0
-      ? recipeData.ingredients
+      ? recipeData.ingredients.map((item, index): Ingredient => ({
+          ...item,
+          position: (item as any).position ?? index,
+        }))
       : [{
         id: uuidv4(),
         name: 'Ingredient information not available',
@@ -103,19 +107,41 @@ export async function POST(request: NextRequest) {
         unit: '' as Unit,
         displayAmount: '1',
         notes: 'Please edit this recipe to add proper ingredients',
+        position: 0,
       }];
 
     const instructions = recipeData.instructions && recipeData.instructions.length > 0
-      ? recipeData.instructions
+      ? recipeData.instructions.map((item, index): Instruction => ({
+          ...item,
+          position: (item as any).position ?? index,
+        }))
       : [{
         id: uuidv4(),
         step: 1,
         content: 'Instructions not available. Please edit this recipe to add proper instructions.',
         duration: undefined,
+        position: 0,
       }];
 
     // Validate and sanitize the image URL
     const validatedImageUrl = await validateImageUrl(recipeData.imageUrl || '');
+
+    // Ensure sections have position in their items (Requirement 1.1)
+    const ingredientSections = recipeData.ingredientSections?.map(section => ({
+      ...section,
+      items: section.items.map((item, index): Ingredient => ({
+        ...item,
+        position: (item as any).position ?? index,
+      })),
+    }));
+
+    const instructionSections = recipeData.instructionSections?.map(section => ({
+      ...section,
+      items: section.items.map((item, index): Instruction => ({
+        ...item,
+        position: (item as any).position ?? index,
+      })),
+    }));
 
     // Create a recipe object that matches our Recipe type
     const recipe: Recipe = {
@@ -124,8 +150,8 @@ export async function POST(request: NextRequest) {
       description: recipeData.description || null,
       ingredients,
       instructions,
-      ingredientSections: recipeData.ingredientSections,
-      instructionSections: recipeData.instructionSections,
+      ingredientSections,
+      instructionSections,
       prepTime: recipeData.prepTime || null,
       cookTime: recipeData.cookTime || null,
       servings: recipeData.servings || null,

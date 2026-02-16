@@ -184,11 +184,12 @@ export function normalizeImportedRecipe(
     stats
   );
 
-  // Build flat arrays from sections for backward compatibility
+  // Build flat arrays from sections to maintain dual representation
   // Strategy:
   // - If sections exist AND flat arrays are explicitly provided (even if empty): Use what was provided
-  // - If sections exist AND no flat arrays in input: Build flat arrays from sections (legacy support)
+  // - If sections exist AND no flat arrays in input: Build flat arrays from sections
   // - If no sections: Use flat arrays from input
+  // Note: Position property is now explicitly persisted in all items
   const hasIngredientSections = data.ingredientSections && Array.isArray(data.ingredientSections) && data.ingredientSections.length > 0;
   const hasInstructionSections = data.instructionSections && Array.isArray(data.instructionSections) && data.instructionSections.length > 0;
   
@@ -208,7 +209,7 @@ export function normalizeImportedRecipe(
     }
     // else: keep empty (sections-only mode)
   } else if (normalizedIngredientSections && normalizedIngredientSections.length > 0) {
-    // Sections exist but no flat array provided - build for backward compatibility
+    // Sections exist but no flat array provided - build from sections
     flatIngredients = buildFlatIngredientArray(normalizedIngredientSections);
   } else if (data.ingredients && data.ingredients.length > 0) {
     // No sections - use flat array from input
@@ -224,7 +225,7 @@ export function normalizeImportedRecipe(
     }
     // else: keep empty (sections-only mode)
   } else if (normalizedInstructionSections && normalizedInstructionSections.length > 0) {
-    // Sections exist but no flat array provided - build for backward compatibility
+    // Sections exist but no flat array provided - build from sections
     flatInstructions = buildFlatInstructionArray(normalizedInstructionSections);
   } else if (data.instructions && data.instructions.length > 0) {
     // No sections - use flat array from input
@@ -460,10 +461,13 @@ function normalizeInstructionItems(
 }
 
 /**
- * Builds a flat ingredient array from sections for backward compatibility.
+ * Builds a flat ingredient array from sections.
+ * 
+ * Creates a flattened representation of sectioned ingredients while preserving
+ * section references and explicit position values.
  * 
  * @param sections - Normalized ingredient sections
- * @returns Flat array of all ingredients with section references
+ * @returns Flat array of all ingredients with section references and positions
  */
 function buildFlatIngredientArray(
   sections: NormalizedSection<NormalizedIngredientItem>[] | undefined
@@ -487,10 +491,13 @@ function buildFlatIngredientArray(
 }
 
 /**
- * Builds a flat instruction array from sections for backward compatibility.
+ * Builds a flat instruction array from sections.
+ * 
+ * Creates a flattened representation of sectioned instructions while preserving
+ * section references and explicit position values.
  * 
  * @param sections - Normalized instruction sections
- * @returns Flat array of all instructions with section references
+ * @returns Flat array of all instructions with section references and positions
  */
 function buildFlatInstructionArray(
   sections: NormalizedSection<NormalizedInstructionItem>[] | undefined
@@ -514,27 +521,27 @@ function buildFlatInstructionArray(
 }
 
 // ============================================================================
-// Backward Compatibility Functions
+// Recipe Data Normalization Functions
 // ============================================================================
 
 /**
- * Normalizes existing recipe data for backward compatibility.
+ * Normalizes existing recipe data from the database.
  * 
- * This function is used when loading existing recipes for editing to ensure
- * they meet current validation requirements. It applies the same normalization
- * rules as imported recipes but is more lenient with existing data.
+ * This function ensures existing recipes meet current validation requirements,
+ * including explicit position properties. It applies the same normalization
+ * rules as imported recipes, ensuring consistency across all data sources.
  * 
  * Requirements: 11.1, 11.2, 11.3, 11.4, 11.5
  * 
  * @param data - Existing recipe data from database
  * @param summary - Optional summary object to track normalization statistics
- * @returns Normalized recipe data ready for editing
+ * @returns Normalized recipe data with explicit positions
  * 
  * @example
  * ```typescript
  * const existingRecipe = await db.getRecipe(id);
  * const normalized = normalizeExistingRecipe(existingRecipe);
- * // Recipe is now ready for editing with current validation rules
+ * // Recipe now has explicit position properties on all items
  * ```
  */
 export function normalizeExistingRecipe(
@@ -542,7 +549,7 @@ export function normalizeExistingRecipe(
   summary?: NormalizationSummary
 ): any {
   // Use the same normalization logic as imported recipes
-  // This ensures backward compatibility with legacy data
+  // This ensures all recipes have explicit position properties
   return normalizeImportedRecipe(data, summary);
 }
 

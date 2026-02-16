@@ -41,6 +41,9 @@ export const strictIngredientItemSchema = z.object({
   displayAmount: z.string().optional(),
   notes: z.string().optional(),
   category: z.string().optional(),
+  position: z.number()
+    .int('Position must be an integer')
+    .nonnegative('Position must be non-negative'),
 });
 
 /**
@@ -60,6 +63,9 @@ export const strictInstructionItemSchema = z.object({
       message: 'Instruction content cannot be only whitespace',
     }),
   duration: z.number().int().positive().optional(),
+  position: z.number()
+    .int('Position must be an integer')
+    .nonnegative('Position must be non-negative'),
 });
 
 // ============================================================================
@@ -166,8 +172,8 @@ export const strictRecipeWithSectionsSchema = z.object({
   title: z.string().min(1, 'Title is required').max(500, 'Title is too long'),
   description: z.string().nullable().optional(),
   
-  // Flat arrays (for backward compatibility)
-  // These can be empty when sections are used
+  // Flat arrays (dual representation with sections)
+  // These maintain a flattened view when sections are used
   ingredients: z.array(strictExtendedIngredientSchema),
   instructions: z.array(strictExtendedInstructionSchema),
   

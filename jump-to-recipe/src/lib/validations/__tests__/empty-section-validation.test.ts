@@ -6,10 +6,10 @@ describe('Empty Section Validation', () => {
       title: 'Test Recipe',
       description: 'A test recipe',
       ingredients: [
-        { id: '1', name: 'Flour', amount: 2, unit: 'cups' },
+        { id: '1', name: 'Flour', amount: 2, unit: 'cups' , position: 0 },
       ],
       instructions: [
-        { id: '1', step: 1, content: 'Mix ingredients' },
+        { id: '1', step: 1, content: 'Mix ingredients' , position: 0 },
       ],
       tags: [],
       visibility: 'private' as const,
@@ -32,7 +32,7 @@ describe('Empty Section Validation', () => {
             name: 'Dry Ingredients',
             order: 0,
             items: [
-              { id: '1', name: 'Flour', amount: 2, unit: 'cups' },
+              { id: '1', name: 'Flour', amount: 2, unit: 'cups' , position: 0 },
             ],
           },
         ],
@@ -42,7 +42,7 @@ describe('Empty Section Validation', () => {
             name: 'Mixing',
             order: 0,
             items: [
-              { id: '1', step: 1, content: 'Mix ingredients' },
+              { id: '1', step: 1, content: 'Mix ingredients' , position: 0 },
             ],
           },
         ],
@@ -70,7 +70,7 @@ describe('Empty Section Validation', () => {
             name: 'Wet Ingredients',
             order: 1,
             items: [
-              { id: '1', name: 'Milk', amount: 1, unit: 'cup' },
+              { id: '1', name: 'Milk', amount: 1, unit: 'cup' , position: 0 },
             ],
           },
         ],
@@ -102,7 +102,7 @@ describe('Empty Section Validation', () => {
             name: 'Cooking',
             order: 1,
             items: [
-              { id: '1', step: 1, content: 'Cook for 30 minutes' },
+              { id: '1', step: 1, content: 'Cook for 30 minutes' , position: 0 },
             ],
           },
         ],
@@ -175,10 +175,10 @@ describe('Empty Section Validation', () => {
       const invalidRecipeWithEmptySections = {
         title: '', // Invalid: empty title
         ingredients: [
-          { id: '1', name: 'Flour', amount: 2, unit: 'cups' },
+          { id: '1', name: 'Flour', amount: 2, unit: 'cups' , position: 0 },
         ],
         instructions: [
-          { id: '1', step: 1, content: 'Mix ingredients' },
+          { id: '1', step: 1, content: 'Mix ingredients' , position: 0 },
         ],
         ingredientSections: [
           {

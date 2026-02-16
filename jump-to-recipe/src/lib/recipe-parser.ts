@@ -217,7 +217,7 @@ export function parseIngredientText(text: string): Partial<Ingredient> {
  */
 export function parseJsonLdRecipe(jsonLd: JsonLdRecipe, authorId: string): NewRecipeInput {
     // Parse ingredients
-    const ingredients: Ingredient[] = (jsonLd.recipeIngredient || []).map((text) => {
+    const ingredients: Ingredient[] = (jsonLd.recipeIngredient || []).map((text, index) => {
         const parsed = parseIngredientText(text);
         return {
             id: uuidv4(),
@@ -226,6 +226,7 @@ export function parseJsonLdRecipe(jsonLd: JsonLdRecipe, authorId: string): NewRe
             unit: parsed.unit || '',
             notes: '',
             category: '',
+            position: index,
         };
     });
 
@@ -236,6 +237,7 @@ export function parseJsonLdRecipe(jsonLd: JsonLdRecipe, authorId: string): NewRe
             id: uuidv4(),
             step: index + 1,
             content: text,
+            position: index,
         };
     });
 

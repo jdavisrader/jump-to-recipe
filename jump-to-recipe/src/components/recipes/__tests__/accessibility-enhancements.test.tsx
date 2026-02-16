@@ -45,8 +45,8 @@ function TestWrapper() {
   const { control, watch } = useForm({
     defaultValues: {
       ingredients: [
-        { id: '1', name: 'Flour', amount: 2, unit: 'cup', displayAmount: '2', notes: '' },
-        { id: '2', name: 'Sugar', amount: 1, unit: 'cup', displayAmount: '1', notes: '' },
+        { id: '1', name: 'Flour', amount: 2, unit: 'cup', displayAmount: '2', notes: '', position: 0 },
+        { id: '2', name: 'Sugar', amount: 1, unit: 'cup', displayAmount: '1', notes: '', position: 0 },
       ],
       ingredientSections: [],
     },
@@ -294,7 +294,7 @@ describe('Accessibility Enhancements', () => {
       const { control, watch } = useForm({
         defaultValues: {
           ingredients: [
-            { id: '1', name: 'Flour', amount: 2, unit: 'cup', displayAmount: '2', notes: '' },
+            { id: '1', name: 'Flour', amount: 2, unit: 'cup', displayAmount: '2', notes: '', position: 0 },
           ],
           ingredientSections: [],
         },

@@ -20,6 +20,7 @@ describe('Recipe Sections Validation', () => {
         name: 'Flour',
         amount: 2,
         unit: 'cups',
+        position: 0,
       };
 
       const result = extendedIngredientSchema.safeParse(ingredient);
@@ -32,6 +33,7 @@ describe('Recipe Sections Validation', () => {
         name: 'Flour',
         amount: 2,
         unit: 'cups',
+        position: 0,
         sectionId: 'section-1',
       };
 
@@ -49,6 +51,7 @@ describe('Recipe Sections Validation', () => {
         id: '1',
         step: 1,
         content: 'Mix ingredients',
+        position: 0,
       };
 
       const result = extendedInstructionSchema.safeParse(instruction);
@@ -60,6 +63,7 @@ describe('Recipe Sections Validation', () => {
         id: '1',
         step: 1,
         content: 'Mix ingredients',
+        position: 0,
         sectionId: 'section-1',
       };
 
@@ -83,6 +87,7 @@ describe('Recipe Sections Validation', () => {
             name: 'Flour',
             amount: 2,
             unit: 'cups',
+            position: 0,
           },
         ],
       };
@@ -130,6 +135,7 @@ describe('Recipe Sections Validation', () => {
             id: '1',
             step: 1,
             content: 'Preheat oven',
+            position: 0,
           },
         ],
       };
@@ -164,6 +170,7 @@ describe('Recipe Sections Validation', () => {
           name: 'Flour',
           amount: 2,
           unit: 'cups',
+          position: 0,
         },
       ],
       instructions: [
@@ -171,6 +178,7 @@ describe('Recipe Sections Validation', () => {
           id: '1',
           step: 1,
           content: 'Mix ingredients',
+          position: 0,
         },
       ],
       tags: [],
@@ -199,6 +207,7 @@ describe('Recipe Sections Validation', () => {
                 name: 'Flour',
                 amount: 2,
                 unit: 'cups',
+                position: 0,
               },
             ],
           },
@@ -222,6 +231,7 @@ describe('Recipe Sections Validation', () => {
                 id: '1',
                 step: 1,
                 content: 'Preheat oven',
+                position: 0,
               },
             ],
           },
@@ -246,6 +256,7 @@ describe('Recipe Sections Validation', () => {
                 name: 'Flour',
                 amount: 2,
                 unit: 'cups',
+                position: 0,
               },
             ],
           },
@@ -260,6 +271,7 @@ describe('Recipe Sections Validation', () => {
                 id: '1',
                 step: 1,
                 content: 'Preheat oven',
+                position: 0,
               },
             ],
           },
@@ -281,6 +293,7 @@ describe('Recipe Sections Validation', () => {
           name: 'Flour',
           amount: 2,
           unit: 'cups',
+          position: 0,
         },
       ],
       instructions: [
@@ -288,6 +301,7 @@ describe('Recipe Sections Validation', () => {
           id: '1',
           step: 1,
           content: 'Mix ingredients',
+          position: 0,
         },
       ],
       tags: [],
@@ -323,6 +337,7 @@ describe('Recipe Sections Validation', () => {
                 name: 'Flour',
                 amount: 2,
                 unit: 'cups',
+                position: 0,
               },
             ],
           },
@@ -451,8 +466,8 @@ describe('Recipe Sections Validation', () => {
   describe('validateRecipeStructure', () => {
     it('should validate recipe without sections', () => {
       const recipe = {
-        ingredients: [{ id: '1', name: 'Flour', amount: 2, unit: 'cups' }],
-        instructions: [{ id: '1', step: 1, content: 'Mix' }],
+        ingredients: [{ id: '1', name: 'Flour', amount: 2, unit: 'cups' , position: 0 }],
+        instructions: [{ id: '1', step: 1, content: 'Mix' , position: 0 }],
       };
 
       const result = validateRecipeStructure(recipe);
@@ -461,14 +476,14 @@ describe('Recipe Sections Validation', () => {
 
     it('should validate recipe with consistent sections', () => {
       const recipe = {
-        ingredients: [{ id: '1', name: 'Flour', amount: 2, unit: 'cups' }],
-        instructions: [{ id: '1', step: 1, content: 'Mix' }],
+        ingredients: [{ id: '1', name: 'Flour', amount: 2, unit: 'cups' , position: 0 }],
+        instructions: [{ id: '1', step: 1, content: 'Mix' , position: 0 }],
         ingredientSections: [
           {
             id: 'section-1',
             name: 'Dry',
             order: 0,
-            items: [{ id: '1', name: 'Flour', amount: 2, unit: 'cups' }],
+            items: [{ id: '1', name: 'Flour', amount: 2, unit: 'cups' , position: 0 }],
           },
         ],
         instructionSections: [
@@ -476,7 +491,7 @@ describe('Recipe Sections Validation', () => {
             id: 'section-1',
             name: 'Prep',
             order: 0,
-            items: [{ id: '1', step: 1, content: 'Mix' }],
+            items: [{ id: '1', step: 1, content: 'Mix' , position: 0 }],
           },
         ],
       };
@@ -488,15 +503,15 @@ describe('Recipe Sections Validation', () => {
     it('should reject inconsistent ingredient counts', () => {
       const recipe = {
         ingredients: [
-          { id: '1', name: 'Flour', amount: 2, unit: 'cups' },
-          { id: '2', name: 'Sugar', amount: 1, unit: 'cup' },
+          { id: '1', name: 'Flour', amount: 2, unit: 'cups' , position: 0 },
+          { id: '2', name: 'Sugar', amount: 1, unit: 'cup' , position: 0 },
         ],
         ingredientSections: [
           {
             id: 'section-1',
             name: 'Dry',
             order: 0,
-            items: [{ id: '1', name: 'Flour', amount: 2, unit: 'cups' }], // Only 1 item
+            items: [{ id: '1', name: 'Flour', amount: 2, unit: 'cups' , position: 0 }], // Only 1 item
           },
         ],
       };
@@ -509,15 +524,15 @@ describe('Recipe Sections Validation', () => {
     it('should reject inconsistent instruction counts', () => {
       const recipe = {
         instructions: [
-          { id: '1', step: 1, content: 'Mix' },
-          { id: '2', step: 2, content: 'Bake' },
+          { id: '1', step: 1, content: 'Mix' , position: 0 },
+          { id: '2', step: 2, content: 'Bake' , position: 0 },
         ],
         instructionSections: [
           {
             id: 'section-1',
             name: 'Prep',
             order: 0,
-            items: [{ id: '1', step: 1, content: 'Mix' }], // Only 1 item
+            items: [{ id: '1', step: 1, content: 'Mix' , position: 0 }], // Only 1 item
           },
         ],
       };
@@ -536,7 +551,7 @@ describe('Recipe Sections Validation', () => {
             id: 'section-1',
             name: 'Dry',
             order: 0,
-            items: [{ id: '1', name: 'Flour', amount: 2, unit: 'cups' }],
+            items: [{ id: '1', name: 'Flour', amount: 2, unit: 'cups' , position: 0 }],
           },
         ],
         instructionSections: [
@@ -544,7 +559,7 @@ describe('Recipe Sections Validation', () => {
             id: 'section-1',
             name: 'Prep',
             order: 0,
-            items: [{ id: '1', step: 1, content: 'Mix' }],
+            items: [{ id: '1', step: 1, content: 'Mix' , position: 0 }],
           },
         ],
       };

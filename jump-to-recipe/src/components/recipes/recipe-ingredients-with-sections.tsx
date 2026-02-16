@@ -167,7 +167,7 @@ export function RecipeIngredientsWithSections({
       );
 
       // Flatten ingredients while preserving order
-      const allIngredients = sortedSections.flatMap((section: IngredientSection) => {
+      const allIngredients = sortedSections.flatMap((section: IngredientSection, sectionIndex: number) => {
         // Sort items within each section by position (if available) or array index
         const sortedItems = [...section.items].sort((a: any, b: any) => {
           const posA = typeof a.position === 'number' ? a.position : section.items.indexOf(a);
@@ -175,21 +175,24 @@ export function RecipeIngredientsWithSections({
           return posA - posB;
         });
         
-        // Create copies and remove position property if it exists (not needed in flat mode)
-        return sortedItems.map((item: any) => {
-          const { position, ...itemWithoutPosition } = item;
-          return itemWithoutPosition;
-        });
+        // Keep all properties including position (Requirement 3.1, 3.2, 4.4)
+        return sortedItems;
       });
+      
+      // Reindex positions for flat list (global scope)
+      const reindexedIngredients = allIngredients.map((item: any, index: number) => ({
+        ...item,
+        position: index,
+      }));
 
       // Clear sections using replace method
       replaceSections([]);
 
       // Replace flat ingredients with all ingredients from sections
-      if (allIngredients.length > 0) {
-        replaceIngredients(allIngredients);
+      if (reindexedIngredients.length > 0) {
+        replaceIngredients(reindexedIngredients);
       } else {
-        // Ensure at least one empty ingredient exists
+        // Ensure at least one empty ingredient exists with position
         replaceIngredients([{
           id: uuidv4(),
           name: '',
@@ -197,6 +200,7 @@ export function RecipeIngredientsWithSections({
           unit: '',
           displayAmount: '',
           notes: '',
+          position: 0,
         }]);
       }
 
@@ -316,7 +320,7 @@ export function RecipeIngredientsWithSections({
       // Reindex positions to maintain sequential order
       const reindexedItems = remainingItems.map((item: Ingredient, index: number) => ({
         ...item,
-        // Position is implicit in array order, but we track it for drag-and-drop
+        position: index,
       }));
       
       const updatedSection = {
@@ -416,13 +420,11 @@ export function RecipeIngredientsWithSections({
         console.warn('Position conflicts detected, auto-correcting:', conflicts);
         const corrected = autoCorrectPositions(reorderedIngredients);
         
-        // Remove position property before updating form
-        const ingredientsWithoutPosition = corrected.map(({ position, ...ing }) => ing);
-        replaceIngredients(ingredientsWithoutPosition);
+        // Keep position property in form state (Requirement 3.1, 3.2, 3.4)
+        replaceIngredients(corrected);
       } else {
-        // Remove position property before updating form (it's implicit in array order)
-        const ingredientsWithoutPosition = reorderedIngredients.map(({ position, ...ing }) => ing);
-        replaceIngredients(ingredientsWithoutPosition);
+        // Keep position property in form state (Requirement 3.1, 3.2, 3.4)
+        replaceIngredients(reorderedIngredients);
       }
 
       // Announce the change
@@ -570,13 +572,11 @@ export function RecipeIngredientsWithSections({
           finalItems = autoCorrectPositions(reorderedItems);
         }
 
-        // Remove position property before updating form (it's implicit in array order)
-        const itemsWithoutPosition = finalItems.map(({ position, ...item }) => item);
-
+        // Keep position property in form state (Requirement 3.1, 3.2, 3.4)
         // Update the section with reordered items
         const updatedSection = {
           ...sourceSection,
-          items: itemsWithoutPosition,
+          items: finalItems,
         };
 
         updateSection(sourceSectionIndex, updatedSection);
@@ -626,18 +626,15 @@ export function RecipeIngredientsWithSections({
           finalDestItems = autoCorrectPositions(updatedDestItems);
         }
 
-        // Remove position property before updating form (it's implicit in array order)
-        const sourceItemsWithoutPosition = finalSourceItems.map(({ position, ...item }) => item);
-        const destItemsWithoutPosition = finalDestItems.map(({ position, ...item }) => item);
-
+        // Keep position property in form state (Requirement 3.1, 3.2, 3.4)
         // Update both sections
         const updatedSourceSection = {
           ...sourceSection,
-          items: sourceItemsWithoutPosition,
+          items: finalSourceItems,
         };
         const updatedDestSection = {
           ...destSection,
-          items: destItemsWithoutPosition,
+          items: finalDestItems,
         };
 
         // Update both sections in the form

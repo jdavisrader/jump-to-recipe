@@ -20,7 +20,7 @@ describe('recipe-import-normalizer', () => {
         title: 'Test Recipe',
         ingredientSections: [
           {
-            items: [{ name: 'Flour', amount: 2, unit: 'cups' }],
+            items: [{ name: 'Flour', amount: 2, unit: 'cups' , position: 0 }],
           },
         ],
       };
@@ -39,7 +39,7 @@ describe('recipe-import-normalizer', () => {
         ingredientSections: [
           {
             name: '',
-            items: [{ name: 'Sugar', amount: 1, unit: 'cup' }],
+            items: [{ name: 'Sugar', amount: 1, unit: 'cup' , position: 0 }],
           },
         ],
       };
@@ -57,7 +57,7 @@ describe('recipe-import-normalizer', () => {
         ingredientSections: [
           {
             name: '   ',
-            items: [{ name: 'Salt', amount: 1, unit: 'tsp' }],
+            items: [{ name: 'Salt', amount: 1, unit: 'tsp' , position: 0 }],
           },
         ],
       };
@@ -75,7 +75,7 @@ describe('recipe-import-normalizer', () => {
         ingredientSections: [
           {
             name: 'Valid Section',
-            items: [{ name: 'Flour', amount: 2, unit: 'cups' }],
+            items: [{ name: 'Flour', amount: 2, unit: 'cups' , position: 0 }],
           },
           {
             name: 'Empty Section',
@@ -98,11 +98,11 @@ describe('recipe-import-normalizer', () => {
         ingredientSections: [
           {
             name: 'Section 1',
-            items: [{ name: 'Flour', amount: 2, unit: 'cups' }],
+            items: [{ name: 'Flour', amount: 2, unit: 'cups' , position: 0 }],
           },
           {
             name: 'Section 2',
-            items: [{ name: 'Sugar', amount: 1, unit: 'cup' }],
+            items: [{ name: 'Sugar', amount: 1, unit: 'cup' , position: 0 }],
           },
         ],
       };
@@ -122,9 +122,9 @@ describe('recipe-import-normalizer', () => {
           {
             name: 'Ingredients',
             items: [
-              { name: 'Flour', amount: 2, unit: 'cups' },
-              { name: '', amount: 1, unit: 'cup' },
-              { name: '   ', amount: 1, unit: 'tsp' },
+              { name: 'Flour', amount: 2, unit: 'cups' , position: 0 },
+              { name: '', amount: 1, unit: 'cup' , position: 0 },
+              { name: '   ', amount: 1, unit: 'tsp' , position: 0 },
             ],
           },
         ],
@@ -168,8 +168,8 @@ describe('recipe-import-normalizer', () => {
           {
             name: 'Ingredients',
             items: [
-              { name: 'Flour', amount: 2, unit: 'cups' },
-              { name: 'Sugar', amount: 1, unit: 'cup' },
+              { name: 'Flour', amount: 2, unit: 'cups' , position: 0 },
+              { name: 'Sugar', amount: 1, unit: 'cup' , position: 0 },
             ],
           },
         ],
@@ -204,14 +204,14 @@ describe('recipe-import-normalizer', () => {
           {
             name: 'Dry Ingredients',
             items: [
-              { name: 'Flour', amount: 2, unit: 'cups' },
-              { name: 'Sugar', amount: 1, unit: 'cup' },
+              { name: 'Flour', amount: 2, unit: 'cups' , position: 0 },
+              { name: 'Sugar', amount: 1, unit: 'cup' , position: 0 },
             ],
           },
           {
             name: 'Wet Ingredients',
             items: [
-              { name: 'Milk', amount: 1, unit: 'cup' },
+              { name: 'Milk', amount: 1, unit: 'cup' , position: 0 },
             ],
           },
         ],
@@ -233,13 +233,13 @@ describe('recipe-import-normalizer', () => {
         ingredientSections: [
           {
             name: '',
-            items: [{ name: 'Flour', amount: 2, unit: 'cups' }],
+            items: [{ name: 'Flour', amount: 2, unit: 'cups' , position: 0 }],
           },
           {
             name: 'Valid Section',
             items: [
-              { name: 'Sugar', amount: 1, unit: 'cup' },
-              { name: '', amount: 1, unit: 'tsp' },
+              { name: 'Sugar', amount: 1, unit: 'cup' , position: 0 },
+              { name: '', amount: 1, unit: 'tsp' , position: 0 },
             ],
           },
           {
@@ -295,7 +295,7 @@ describe('recipe-import-normalizer', () => {
         ingredientSections: [
           {
             name: '',
-            items: [{ name: 'Flour', amount: 2, unit: 'cups' }],
+            items: [{ name: 'Flour', amount: 2, unit: 'cups' , position: 0 }],
           },
         ],
       };
@@ -312,8 +312,8 @@ describe('recipe-import-normalizer', () => {
         ingredientSections: [
           {
             items: [
-              { name: 'Flour', amount: 2, unit: 'cups' },
-              { name: '', amount: 1, unit: 'cup' },
+              { name: 'Flour', amount: 2, unit: 'cups' , position: 0 },
+              { name: '', amount: 1, unit: 'cup' , position: 0 },
             ],
           },
           {
@@ -433,8 +433,8 @@ describe('recipe-import-normalizer', () => {
           {
             name: 'Section',
             items: [
-              { name: '', amount: 1, unit: 'cup' },
-              { name: '   ', amount: 2, unit: 'tsp' },
+              { name: '', amount: 1, unit: 'cup' , position: 0 },
+              { name: '   ', amount: 2, unit: 'tsp' , position: 0 },
             ],
           },
         ],
@@ -454,7 +454,7 @@ describe('recipe-import-normalizer', () => {
           {
             name: '  Ingredients  ',
             items: [
-              { name: '  Flour  ', amount: 2, unit: 'cups' },
+              { name: '  Flour  ', amount: 2, unit: 'cups' , position: 0 },
             ],
           },
         ],
@@ -524,8 +524,8 @@ describe('recipe-import-normalizer', () => {
           {
             name: 'Section 1',
             items: [
-              { name: 'Flour', amount: 2, unit: 'cups' },
-              { name: 'Sugar', amount: 1, unit: 'cup' },
+              { name: 'Flour', amount: 2, unit: 'cups' , position: 0 },
+              { name: 'Sugar', amount: 1, unit: 'cup' , position: 0 },
             ],
           },
         ],

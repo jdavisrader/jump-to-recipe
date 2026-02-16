@@ -56,7 +56,7 @@ describe('Cross-Section Drag-and-Drop Integration', () => {
       ];
 
       const destItems = [
-        { id: 'ing2', name: 'Milk', amount: 1, unit: 'cup', position: 0, displayAmount: '1 cup', notes: '' },
+        { id: 'ing2', name: 'Milk', amount: 1, unit: 'cup', displayAmount: '1 cup', notes: '', position: 0 },
       ];
 
       const result = moveBetweenSections(sourceItems, destItems, 0, 0);
@@ -74,8 +74,8 @@ describe('Cross-Section Drag-and-Drop Integration', () => {
 
     it('should handle moving to empty destination section', () => {
       const sourceItems = [
-        { id: 'ing1', name: 'Flour', amount: 2, unit: 'cups', position: 0, displayAmount: '2 cups', notes: '' },
-        { id: 'ing2', name: 'Sugar', amount: 1, unit: 'cup', position: 1, displayAmount: '1 cup', notes: '' },
+        { id: 'ing1', name: 'Flour', amount: 2, unit: 'cups', displayAmount: '2 cups', notes: '', position: 0 },
+        { id: 'ing2', name: 'Sugar', amount: 1, unit: 'cup', displayAmount: '1 cup', notes: '', position: 1 },
       ];
 
       const destItems: any[] = [];

@@ -25,21 +25,24 @@ describe('SectionDataTransformer', () => {
           name: 'Flour',
           amount: 2,
           unit: 'cup',
-          sectionId: 'section-1'
+          sectionId: 'section-1',
+          position: 0,
         },
         {
           id: '2',
           name: 'Sugar',
           amount: 1,
           unit: 'cup',
-          sectionId: 'section-1'
+          sectionId: 'section-1',
+          position: 1,
         },
         {
           id: '3',
           name: 'Butter',
           amount: 0.5,
           unit: 'cup',
-          sectionId: 'section-2'
+          sectionId: 'section-2',
+          position: 0,
         }
       ];
 
@@ -59,13 +62,13 @@ describe('SectionDataTransformer', () => {
           name: 'Flour',
           amount: 2,
           unit: 'cup'
-        },
+        , position: 0 },
         {
           id: '2',
           name: 'Sugar',
           amount: 1,
           unit: 'cup'
-        }
+        , position: 0 }
       ];
 
       const sections = SectionDataTransformer.ingredientsToSections(ingredients);
@@ -83,14 +86,16 @@ describe('SectionDataTransformer', () => {
           id: '1',
           name: 'Flour',
           amount: 2,
-          unit: 'cup'
+          unit: 'cup',
+          position: 0,
         },
         {
           id: '2',
           name: 'Sugar',
           amount: 1,
           unit: 'cup',
-          sectionId: 'section-1'
+          sectionId: 'section-1',
+          position: 0,
         }
       ];
 
@@ -116,19 +121,22 @@ describe('SectionDataTransformer', () => {
           id: '1',
           step: 1,
           content: 'Mix dry ingredients',
-          sectionId: 'section-1'
+          sectionId: 'section-1',
+          position: 0,
         },
         {
           id: '2',
           step: 2,
           content: 'Add wet ingredients',
-          sectionId: 'section-1'
+          sectionId: 'section-1',
+          position: 1,
         },
         {
           id: '3',
           step: 3,
           content: 'Bake for 30 minutes',
-          sectionId: 'section-2'
+          sectionId: 'section-2',
+          position: 0,
         }
       ];
 
@@ -147,12 +155,12 @@ describe('SectionDataTransformer', () => {
           id: '1',
           step: 1,
           content: 'Mix ingredients'
-        },
+        , position: 0 },
         {
           id: '2',
           step: 2,
           content: 'Bake'
-        }
+        , position: 0 }
       ];
 
       const sections = SectionDataTransformer.instructionsToSections(instructions);
@@ -176,7 +184,7 @@ describe('SectionDataTransformer', () => {
               name: 'Flour',
               amount: 2,
               unit: 'cup'
-            }
+            , position: 0 }
           ]
         },
         {
@@ -189,7 +197,7 @@ describe('SectionDataTransformer', () => {
               name: 'Milk',
               amount: 1,
               unit: 'cup'
-            }
+            , position: 0 }
           ]
         }
       ];
@@ -214,7 +222,7 @@ describe('SectionDataTransformer', () => {
               id: '1',
               step: 1,
               content: 'Preheat oven'
-            }
+            , position: 0 }
           ]
         }
       ];
@@ -239,7 +247,7 @@ describe('SectionDataTransformer', () => {
               name: 'Flour',
               amount: 2,
               unit: 'cup'
-            }
+            , position: 0 }
           ]
         }
       ];
@@ -271,7 +279,7 @@ describe('SectionDataTransformer', () => {
             id: '1',
             step: 1,
             content: 'Mix ingredients'
-          }
+          , position: 0 }
         ],
         prepTime: null,
         cookTime: null,

@@ -113,6 +113,7 @@ export function parseIngredientText(text: string, orderNumber: number): ParsedIn
       displayAmount: parsed.displayAmount,
       notes: parsed.notes,
       category: parsed.category,
+      position: 0, // Will be set during normalization
       parseSuccess: true,
       originalText,
     };
@@ -367,6 +368,7 @@ function createFallbackIngredient(text: string, orderNumber: number): ParsedIngr
     displayAmount: undefined,
     notes: `Original text: ${text}`,
     category: undefined,
+    position: 0, // Will be set during normalization
     parseSuccess: false,
     originalText: text,
   };

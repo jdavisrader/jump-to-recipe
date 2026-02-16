@@ -15,7 +15,7 @@ jest.mock('../../sections/section-manager', () => ({
 
 // Simple test wrapper
 function TestWrapper({ 
-  defaultInstructions = [{ id: '1', step: 1, content: 'Test instruction', duration: undefined }],
+  defaultInstructions = [{ id: '1', step: 1, content: 'Test instruction', duration: undefined , position: 0 }],
   defaultSections = []
 }: { 
   defaultInstructions?: any[];
@@ -60,7 +60,7 @@ describe('RecipeInstructionsWithSections', () => {
         name: 'Preparation',
         order: 0,
         items: [
-          { id: '1', step: 1, content: 'Preheat oven', duration: 5 }
+          { id: '1', step: 1, content: 'Preheat oven', duration: 5 , position: 0 }
         ]
       }
     ];
@@ -108,9 +108,9 @@ describe('RecipeInstructionsWithSections', () => {
 
   it('displays step numbers correctly', () => {
     const instructions = [
-      { id: '1', step: 1, content: 'First step', duration: undefined },
-      { id: '2', step: 2, content: 'Second step', duration: 10 },
-      { id: '3', step: 3, content: 'Third step', duration: undefined }
+      { id: '1', step: 1, content: 'First step', duration: undefined , position: 0 },
+      { id: '2', step: 2, content: 'Second step', duration: 10 , position: 0 },
+      { id: '3', step: 3, content: 'Third step', duration: undefined , position: 0 }
     ];
     
     render(<TestWrapper defaultInstructions={instructions} />);
@@ -122,7 +122,7 @@ describe('RecipeInstructionsWithSections', () => {
 
   it('handles duration field correctly', () => {
     const instructions = [
-      { id: '1', step: 1, content: 'Test step', duration: 15 }
+      { id: '1', step: 1, content: 'Test step', duration: 15 , position: 0 }
     ];
     
     render(<TestWrapper defaultInstructions={instructions} />);
@@ -134,8 +134,8 @@ describe('RecipeInstructionsWithSections', () => {
 
   it('renders remove button for instructions', () => {
     const instructions = [
-      { id: '1', step: 1, content: 'First step', duration: undefined },
-      { id: '2', step: 2, content: 'Second step', duration: undefined }
+      { id: '1', step: 1, content: 'First step', duration: undefined , position: 0 },
+      { id: '2', step: 2, content: 'Second step', duration: undefined , position: 0 }
     ];
     
     render(<TestWrapper defaultInstructions={instructions} />);
@@ -154,7 +154,7 @@ describe('RecipeInstructionsWithSections', () => {
   it('handles loading state correctly', () => {
     const form = useForm({
       defaultValues: {
-        instructions: [{ id: '1', step: 1, content: 'Test', duration: undefined }],
+        instructions: [{ id: '1', step: 1, content: 'Test', duration: undefined , position: 0 }],
         instructionSections: [],
       },
     });
@@ -213,7 +213,7 @@ describe('RecipeInstructionsWithSections', () => {
       const form = useForm({
         defaultValues: {
           instructions: [
-            { id: '1', step: 1, content: 'Test instruction', duration: 10 }
+            { id: '1', step: 1, content: 'Test instruction', duration: 10 , position: 0 }
           ],
           instructionSections: [],
         },
@@ -241,7 +241,7 @@ describe('RecipeInstructionsWithSections', () => {
           name: 'Preparation',
           order: 0,
           items: [
-            { id: '1', step: 1, content: 'Prep step', duration: 5 }
+            { id: '1', step: 1, content: 'Prep step', duration: 5 , position: 0 }
           ]
         }
       ];
@@ -270,7 +270,7 @@ describe('RecipeInstructionsWithSections', () => {
     it('handles form validation errors', () => {
       const form = useForm({
         defaultValues: {
-          instructions: [{ id: '1', step: 1, content: '', duration: undefined }],
+          instructions: [{ id: '1', step: 1, content: '', duration: undefined , position: 0 }],
           instructionSections: [],
         },
       });
