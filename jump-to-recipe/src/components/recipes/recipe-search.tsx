@@ -2,13 +2,13 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Search, Filter, X, Clock, ChefHat } from 'lucide-react';
+import { Search, Filter, X, Clock, ChefHat, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useDebounce } from '@/hooks/useDebounce';
+
 
 interface RecipeSearchProps {
   onSearch: (params: SearchParams) => void;
@@ -45,9 +45,9 @@ export function RecipeSearch({ onSearch, isLoading, disabled = false }: RecipeSe
   const [sortBy, setSortBy] = useState(searchParams.get('sortBy') || 'newest');
   const [showFilters, setShowFilters] = useState(false);
   const [tagInput, setTagInput] = useState('');
+  const [isSearching, setIsSearching] = useState(false);
+  const [lastExecutedParams, setLastExecutedParams] = useState<string>('');
 
-  // Debounce search query
-  const debouncedQuery = useDebounce(query, 650);
   
   // Track last search parameters to prevent infinite loops
   const lastSearchParamsRef = useRef<string>('');
@@ -65,7 +65,7 @@ export function RecipeSearch({ onSearch, isLoading, disabled = false }: RecipeSe
       sortBy: sortBy as SearchParams['sortBy']
     };
 
-    if (debouncedQuery.trim()) params.query = debouncedQuery.trim();
+    if (query.trim()) params.query = query.trim();
     if (tags.length > 0) params.tags = tags;
     if (difficulty) params.difficulty = difficulty as SearchParams['difficulty'];
     if (maxCookTime) params.maxCookTime = parseInt(maxCookTime);
@@ -74,18 +74,48 @@ export function RecipeSearch({ onSearch, isLoading, disabled = false }: RecipeSe
     if (minPrepTime) params.minPrepTime = parseInt(minPrepTime);
 
     return params;
-  }, [debouncedQuery, tags, difficulty, maxCookTime, minCookTime, maxPrepTime, minPrepTime, sortBy]);
+  }, [query, tags, difficulty, maxCookTime, minCookTime, maxPrepTime, minPrepTime, sortBy]);
 
-  // Update URL and trigger search when parameters change
+  // Track previous filter state to detect when filters are cleared
+  const prevFilterCriteriaRef = useRef(false);
+
+  // Auto-trigger search when filters change (tags, difficulty, time ranges, sortBy)
+  // BUT NOT when query text changes - query requires manual search button click
   useEffect(() => {
-    const params = buildSearchParams();
+    // Build search params inline to avoid dependency on buildSearchParams callback
+    const params: SearchParams = {
+      sortBy: sortBy as SearchParams['sortBy']
+    };
+
+    if (query.trim()) params.query = query.trim();
+    if (tags.length > 0) params.tags = tags;
+    if (difficulty) params.difficulty = difficulty as SearchParams['difficulty'];
+    if (maxCookTime) params.maxCookTime = parseInt(maxCookTime);
+    if (minCookTime) params.minCookTime = parseInt(minCookTime);
+    if (maxPrepTime) params.maxPrepTime = parseInt(maxPrepTime);
+    if (minPrepTime) params.minPrepTime = parseInt(minPrepTime);
     
     // Create a string representation of the current search parameters
     const paramsString = JSON.stringify(params);
     
-    // Only trigger search if parameters have actually changed
-    if (paramsString !== lastSearchParamsRef.current) {
+    // Check if there are any FILTER criteria (excluding query text)
+    const hasFilterCriteria = tags.length > 0 || difficulty || maxCookTime || minCookTime || maxPrepTime || minPrepTime;
+    
+    // Detect if filters were just cleared (had filters before, now don't)
+    const filtersWereCleared = prevFilterCriteriaRef.current && !hasFilterCriteria;
+    
+    // Only trigger automatic search if:
+    // 1. Parameters have changed
+    // 2. There are filter criteria (not just query text) OR filters were just cleared
+    // This means query text changes won't trigger auto-search, but filter changes will
+    if (paramsString !== lastSearchParamsRef.current && (hasFilterCriteria || filtersWereCleared)) {
       lastSearchParamsRef.current = paramsString;
+      
+      // Set searching state to true when search starts
+      setIsSearching(true);
+      
+      // Update last executed params
+      setLastExecutedParams(paramsString);
       
       onSearch(params);
 
@@ -109,8 +139,21 @@ export function RecipeSearch({ onSearch, isLoading, disabled = false }: RecipeSe
         url.search = newUrl;
         window.history.replaceState({}, '', url.toString());
       }
+    } else if (paramsString !== lastSearchParamsRef.current) {
+      // Update the ref even if we don't trigger search, to prevent future duplicate searches
+      lastSearchParamsRef.current = paramsString;
     }
-  }, [debouncedQuery, tags, difficulty, maxCookTime, minCookTime, maxPrepTime, minPrepTime, sortBy, onSearch, buildSearchParams]);
+    
+    // Update previous filter state for next comparison
+    prevFilterCriteriaRef.current = hasFilterCriteria;
+  }, [tags, difficulty, maxCookTime, minCookTime, maxPrepTime, minPrepTime, sortBy, onSearch]);
+
+  // Reset isSearching when loading completes
+  useEffect(() => {
+    if (!isLoading) {
+      setIsSearching(false);
+    }
+  }, [isLoading]);
 
   const handleAddTag = (tag: string) => {
     const trimmedTag = tag.trim().toLowerCase();
@@ -131,6 +174,46 @@ export function RecipeSearch({ onSearch, isLoading, disabled = false }: RecipeSe
     }
   };
 
+  const handleSearchClick = useCallback(() => {
+    const params = buildSearchParams();
+    const paramsString = JSON.stringify(params);
+    
+    // Prevent duplicate searches - only execute if parameters have changed
+    if (paramsString === lastExecutedParams) {
+      return;
+    }
+    
+    // Set searching state to true
+    setIsSearching(true);
+    
+    // Update last executed params
+    setLastExecutedParams(paramsString);
+    
+    // Call the onSearch callback
+    onSearch(params);
+    
+    // Update URL parameters
+    const urlParams = new URLSearchParams();
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        if (Array.isArray(value)) {
+          urlParams.set(key, value.join(','));
+        } else {
+          urlParams.set(key, value.toString());
+        }
+      }
+    });
+    
+    const newUrl = urlParams.toString() ? `?${urlParams.toString()}` : '';
+    
+    // Use window.history.replaceState to update URL without causing re-renders
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href);
+      url.search = newUrl;
+      window.history.replaceState({}, '', url.toString());
+    }
+  }, [buildSearchParams, lastExecutedParams, onSearch]);
+
   const clearAllFilters = () => {
     setQuery('');
     setTags([]);
@@ -141,12 +224,43 @@ export function RecipeSearch({ onSearch, isLoading, disabled = false }: RecipeSe
     setMinPrepTime('');
     setSortBy('newest');
     setTagInput('');
+    
+    // Trigger search with empty params to show all recipes
+    onSearch({ sortBy: 'newest' });
+    
+    // Clear URL parameters
+    if (typeof window !== 'undefined') {
+      window.history.replaceState({}, '', window.location.pathname);
+    }
   };
 
   const hasActiveFilters = query || tags.length > 0 || difficulty || maxCookTime || minCookTime || maxPrepTime || minPrepTime;
 
+  // Determine if search button should be disabled
+  // Disable when: query is empty AND no filters are applied, OR during loading state
+  const isButtonDisabled = 
+    disabled || 
+    isLoading || 
+    isSearching || 
+    (!query.trim() && tags.length === 0 && !difficulty && !maxCookTime && !minCookTime && !maxPrepTime && !minPrepTime);
+
+  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault(); // Prevent default form submission behavior
+      // Only trigger search if button is not disabled
+      if (!isButtonDisabled) {
+        handleSearchClick(); // Call same search execution logic as button click
+      }
+    }
+  }, [handleSearchClick, isButtonDisabled]);
+
   return (
     <div className="space-y-4" role="search" aria-label="Recipe search">
+      {/* Live region for search status announcements */}
+      <div role="status" aria-live="polite" aria-atomic="true" className="sr-only">
+        {isSearching || isLoading ? "Searching recipes..." : ""}
+      </div>
+      
       {/* Main search bar */}
       <div className="flex flex-col sm:flex-row gap-2 sm:gap-2">
         <div className="relative flex-1">
@@ -157,19 +271,52 @@ export function RecipeSearch({ onSearch, isLoading, disabled = false }: RecipeSe
             placeholder="Search recipes, ingredients, or instructions..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            className="pl-10"
+            onKeyDown={handleKeyDown}
+            className="pl-10 pr-10 h-10"
             disabled={isLoading || disabled}
             aria-label="Search recipes"
             aria-describedby="search-help"
           />
+          {query && (
+            <button
+              onClick={() => setQuery('')}
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-1 rounded-full hover:bg-muted focus:outline-none focus:ring-2 focus:ring-ring"
+              aria-label="Clear search"
+              type="button"
+            >
+              <X className="h-4 w-4" aria-hidden="true" />
+            </button>
+          )}
           <div id="search-help" className="sr-only">
             Search through your recipes by title, ingredients, or instructions
           </div>
         </div>
         <Button
+          onClick={handleSearchClick}
+          className="h-10 w-full sm:w-auto"
+          disabled={isButtonDisabled}
+          aria-label="Search recipes"
+          aria-describedby="search-button-help"
+        >
+          {isSearching || isLoading ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" />
+              <span className="ml-2 hidden sm:inline">Searching...</span>
+            </>
+          ) : (
+            <>
+              <Search className="h-4 w-4" />
+              <span className="ml-2 hidden sm:inline">Search</span>
+            </>
+          )}
+        </Button>
+        <span id="search-button-help" className="sr-only">
+          Press to search recipes with current filters
+        </span>
+        <Button
           variant="outline"
           onClick={() => setShowFilters(!showFilters)}
-          className="flex items-center gap-2 w-full sm:w-auto justify-center"
+          className="h-10 flex items-center gap-2 w-full sm:w-auto justify-center"
           disabled={disabled}
           aria-expanded={showFilters}
           aria-controls="advanced-filters"
@@ -210,19 +357,29 @@ export function RecipeSearch({ onSearch, isLoading, disabled = false }: RecipeSe
       {showFilters && (
         <Card id="advanced-filters" role="region" aria-labelledby="filters-title">
           <CardHeader className="pb-4">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+            <div className="flex items-start justify-between gap-4">
               <CardTitle id="filters-title" className="text-lg">Advanced Filters</CardTitle>
-              {hasActiveFilters && (
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={clearAllFilters}
-                  className="w-full sm:w-auto"
+              <div className="flex items-center gap-2">
+                {hasActiveFilters && (
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={clearAllFilters}
+                    className="h-8"
+                  >
+                    <X className="h-4 w-4 mr-1" aria-hidden="true" />
+                    Clear All
+                  </Button>
+                )}
+                <button
+                  onClick={() => setShowFilters(false)}
+                  className="text-muted-foreground hover:text-foreground transition-colors p-1 rounded-full hover:bg-muted focus:outline-none focus:ring-2 focus:ring-ring"
+                  aria-label="Close filters"
+                  type="button"
                 >
-                  <X className="h-4 w-4 mr-1" aria-hidden="true" />
-                  Clear All Filters
-                </Button>
-              )}
+                  <X className="h-5 w-5" aria-hidden="true" />
+                </button>
+              </div>
             </div>
           </CardHeader>
           <CardContent className="space-y-6">

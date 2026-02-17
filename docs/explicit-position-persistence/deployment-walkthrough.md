@@ -439,7 +439,7 @@ docker-compose exec db psql -U jumptorecipe jump_to_recipe -c "
 **Additional verification**:
 ```bash
 # Check that all ingredients have position property
-docker-compose exec db psql -U jumptorecipe jump_to_recipe -c "
+docker compose exec db psql -U jumptorecipe jump_to_recipe -c "
   SELECT 
     COUNT(*) as total_recipes,
     COUNT(*) FILTER (
@@ -468,7 +468,7 @@ docker-compose exec db psql -U jumptorecipe jump_to_recipe -c "
 **Commands**:
 ```bash
 # Build new application image
-docker-compose build app
+docker compose build app
 
 # Verify build succeeded
 docker images | grep jump-to-recipe
@@ -547,7 +547,7 @@ docker-compose logs app | tail -50
 **Commands**:
 ```bash
 # Follow application logs
-docker-compose logs -f app
+docker compose logs -f app
 ```
 
 **Expected outcome**:

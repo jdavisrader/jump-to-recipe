@@ -101,10 +101,21 @@ export async function GET(req: NextRequest) {
             );
         }
 
-        // Filter by tags if provided
+        // Filter by tags if provided (case-insensitive)
         if (tags && tags.length > 0) {
             const tagsArray = tags.map(tag => String(tag).toLowerCase());
-            whereConditions.push(sql`${recipes.tags} && ${tagsArray}::text[]`);
+            // Use case-insensitive comparison by converting stored tags to lowercase
+            // Check if the lowercased recipe tags contain ALL specified tags
+            // COALESCE handles NULL case when tags array is empty
+            whereConditions.push(
+                sql`COALESCE(
+                    (
+                        SELECT array_agg(lower(tag)) 
+                        FROM unnest(${recipes.tags}) AS tag
+                    ) @> ARRAY[${sql.join(tagsArray.map(tag => sql`${tag}`), sql`, `)}]::text[],
+                    false
+                )`
+            );
         }
 
         // Filter by difficulty if provided
