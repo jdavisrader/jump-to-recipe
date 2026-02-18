@@ -34,20 +34,24 @@ export async function GET(
         // Get current user from session
         const session = await getServerSession(authOptions);
         const currentUserId = session?.user?.id;
+        const isAdmin = session?.user?.role === 'admin';
 
         // Build where conditions
         const whereConditions = [eq(recipes.id, id)];
 
         // Add visibility check - users can see public recipes or their own private recipes
-        if (currentUserId) {
-            // For authenticated users, they can see public recipes or their own private recipes
-            // Use a more explicit approach to avoid type issues
-            whereConditions.push(
-                sql`(${recipes.visibility} = 'public' OR ${recipes.authorId} = ${currentUserId})`
-            );
-        } else {
-            // Non-authenticated users can only see public recipes
-            whereConditions.push(eq(recipes.visibility, 'public'));
+        // Admins can see all recipes
+        if (!isAdmin) {
+            if (currentUserId) {
+                // For authenticated users, they can see public recipes or their own private recipes
+                // Use a more explicit approach to avoid type issues
+                whereConditions.push(
+                    sql`(${recipes.visibility} = 'public' OR ${recipes.authorId} = ${currentUserId})`
+                );
+            } else {
+                // Non-authenticated users can only see public recipes
+                whereConditions.push(eq(recipes.visibility, 'public'));
+            }
         }
 
         // Find recipe with visibility check

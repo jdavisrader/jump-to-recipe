@@ -314,7 +314,7 @@ export function RecipeForm({
       notes: normalizedInitialData?.notes || "",
       imageUrl: normalizedInitialData?.imageUrl || "",
       sourceUrl: normalizedInitialData?.sourceUrl || "",
-      visibility: normalizedInitialData?.visibility || "private",
+      visibility: normalizedInitialData?.visibility || "public",
     },
   });
 
