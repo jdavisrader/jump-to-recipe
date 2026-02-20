@@ -294,8 +294,8 @@ class RecipeCache {
         }
 
         // Prefetch common sort variations
-        const commonSorts: Array<SearchParams['sortBy']> = ['newest', 'oldest', 'popular', 'title'];
-        const currentSort = currentParams.sortBy || 'newest';
+        const commonSorts: Array<SearchParams['sortBy']> = ['newest', 'oldest', 'popular', 'title', 'random'];
+        const currentSort = currentParams.sortBy || 'random';
 
         for (const sortBy of commonSorts) {
             if (sortBy !== currentSort) {

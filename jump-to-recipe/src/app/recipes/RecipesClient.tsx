@@ -29,7 +29,7 @@ export default function RecipesClient() {
   const [searchInfo, setSearchInfo] = useState({
     query: '',
     hasQuery: false,
-    sortBy: 'newest',
+    sortBy: 'random',
     appliedFilters: {
       tags: 0,
       difficulty: false,
@@ -114,7 +114,7 @@ export default function RecipesClient() {
       minCookTime: currentParams.get('minCookTime') ? parseInt(currentParams.get('minCookTime')!) : undefined,
       maxPrepTime: currentParams.get('maxPrepTime') ? parseInt(currentParams.get('maxPrepTime')!) : undefined,
       minPrepTime: currentParams.get('minPrepTime') ? parseInt(currentParams.get('minPrepTime')!) : undefined,
-      sortBy: (currentParams.get('sortBy') as 'newest' | 'oldest' | 'popular' | 'title' | 'cookTime' | 'prepTime') || 'newest',
+      sortBy: (currentParams.get('sortBy') as 'newest' | 'oldest' | 'popular' | 'title' | 'cookTime' | 'prepTime' | 'random') || 'random',
       page: nextPage,
     }, true); // true for append mode
   };

@@ -138,7 +138,7 @@ export const recipeFilterSchema = z.object({
   maxPrepTime: z.number().int().positive().optional(),
   minPrepTime: z.number().int().positive().optional(),
   authorId: z.string().optional(),
-  sortBy: z.enum(['newest', 'oldest', 'popular', 'title', 'cookTime', 'prepTime']).default('newest'),
+  sortBy: z.enum(['newest', 'oldest', 'popular', 'title', 'cookTime', 'prepTime', 'random']).default('random'),
   page: z.number().int().positive().default(1),
   limit: z.number().int().positive().max(100).default(10),
 });

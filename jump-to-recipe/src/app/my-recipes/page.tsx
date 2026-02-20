@@ -95,7 +95,7 @@ function MyRecipesContent() {
       }
 
       const sortBy = searchParams.get('sortBy');
-      if (sortBy && ['newest', 'oldest', 'popular', 'title', 'cookTime', 'prepTime'].includes(sortBy)) {
+      if (sortBy && ['newest', 'oldest', 'popular', 'title', 'cookTime', 'prepTime', 'random'].includes(sortBy)) {
         initialSearchParams.sortBy = sortBy as SearchParams['sortBy'];
       }
 

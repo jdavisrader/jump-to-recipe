@@ -62,7 +62,7 @@ export async function GET(req: NextRequest) {
             maxPrepTime,
             minPrepTime,
             authorId,
-            sortBy = 'newest',
+            sortBy = 'random',
             page = 1,
             limit = 10
         } = validationResult.data;
@@ -143,6 +143,9 @@ export async function GET(req: NextRequest) {
                 break;
             case 'prepTime':
                 orderBy = [asc(recipes.prepTime), asc(recipes.cookTime)];
+                break;
+            case 'random':
+                orderBy = [sql`RANDOM()`];
                 break;
             case 'newest':
             default:
