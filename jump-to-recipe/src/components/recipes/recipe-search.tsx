@@ -24,7 +24,7 @@ export interface SearchParams {
   minCookTime?: number;
   maxPrepTime?: number;
   minPrepTime?: number;
-  sortBy?: 'newest' | 'oldest' | 'popular' | 'title' | 'cookTime' | 'prepTime';
+  sortBy?: 'newest' | 'oldest' | 'popular' | 'title' | 'cookTime' | 'prepTime' | 'random';
   page?: number;
 }
 
@@ -42,7 +42,7 @@ export function RecipeSearch({ onSearch, isLoading, disabled = false }: RecipeSe
   const [minCookTime, setMinCookTime] = useState(searchParams.get('minCookTime') || '');
   const [maxPrepTime, setMaxPrepTime] = useState(searchParams.get('maxPrepTime') || '');
   const [minPrepTime, setMinPrepTime] = useState(searchParams.get('minPrepTime') || '');
-  const [sortBy, setSortBy] = useState(searchParams.get('sortBy') || 'newest');
+  const [sortBy, setSortBy] = useState(searchParams.get('sortBy') || 'random');
   const [showFilters, setShowFilters] = useState(false);
   const [tagInput, setTagInput] = useState('');
   const [isSearching, setIsSearching] = useState(false);
@@ -104,11 +104,15 @@ export function RecipeSearch({ onSearch, isLoading, disabled = false }: RecipeSe
     // Detect if filters were just cleared (had filters before, now don't)
     const filtersWereCleared = prevFilterCriteriaRef.current && !hasFilterCriteria;
     
+    // Detect if sortBy changed (compare current sortBy with the one in lastSearchParamsRef)
+    const lastParams = lastSearchParamsRef.current ? JSON.parse(lastSearchParamsRef.current) : {};
+    const sortByChanged = lastParams.sortBy !== sortBy;
+    
     // Only trigger automatic search if:
     // 1. Parameters have changed
-    // 2. There are filter criteria (not just query text) OR filters were just cleared
-    // This means query text changes won't trigger auto-search, but filter changes will
-    if (paramsString !== lastSearchParamsRef.current && (hasFilterCriteria || filtersWereCleared)) {
+    // 2. There are filter criteria (not just query text) OR filters were just cleared OR sortBy changed
+    // This means query text changes won't trigger auto-search, but filter and sortBy changes will
+    if (paramsString !== lastSearchParamsRef.current && (hasFilterCriteria || filtersWereCleared || sortByChanged)) {
       lastSearchParamsRef.current = paramsString;
       
       // Set searching state to true when search starts
@@ -222,11 +226,11 @@ export function RecipeSearch({ onSearch, isLoading, disabled = false }: RecipeSe
     setMinCookTime('');
     setMaxPrepTime('');
     setMinPrepTime('');
-    setSortBy('newest');
+    setSortBy('random');
     setTagInput('');
     
     // Trigger search with empty params to show all recipes
-    onSearch({ sortBy: 'newest' });
+    onSearch({ sortBy: 'random' });
     
     // Clear URL parameters
     if (typeof window !== 'undefined') {
@@ -349,6 +353,7 @@ export function RecipeSearch({ onSearch, isLoading, disabled = false }: RecipeSe
             <SelectItem value="title">Title A-Z</SelectItem>
             <SelectItem value="cookTime">Cook Time</SelectItem>
             <SelectItem value="prepTime">Prep Time</SelectItem>
+            <SelectItem value="random">Random</SelectItem>
           </SelectContent>
         </Select>
       </div>

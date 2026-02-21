@@ -45,6 +45,7 @@ export async function GET(req: NextRequest) {
             minCookTime: queryParams.minCookTime ? parseInt(queryParams.minCookTime as string) : undefined,
             maxPrepTime: queryParams.maxPrepTime ? parseInt(queryParams.maxPrepTime as string) : undefined,
             minPrepTime: queryParams.minPrepTime ? parseInt(queryParams.minPrepTime as string) : undefined,
+            randomSeed: queryParams.randomSeed ? parseFloat(queryParams.randomSeed as string) : undefined,
         };
 
         // Parse and validate query parameters
@@ -66,7 +67,8 @@ export async function GET(req: NextRequest) {
             maxPrepTime,
             minPrepTime,
             authorId,
-            sortBy = 'newest',
+            sortBy = 'random',
+            randomSeed,
             page = 1,
             limit = 10
         } = validationResult.data;
@@ -163,7 +165,16 @@ export async function GET(req: NextRequest) {
 
         // Determine sort order with relevance scoring for search queries
         let orderBy;
-        if (query && sortBy === 'newest') {
+        
+        // For random sorting with pagination, use a deterministic hash-based approach
+        if (sortBy === 'random') {
+            // Use provided seed or generate one based on current date (changes daily)
+            const seed = randomSeed ?? (Math.floor(Date.now() / 86400000) % 1000) / 1000;
+            
+            // Use MD5 hash of (recipe_id + seed) for deterministic random ordering
+            // This ensures the same order across pagination requests with the same seed
+            orderBy = [sql`md5(${recipes.id}::text || ${seed.toString()})::uuid`];
+        } else if (query && sortBy === 'newest') {
             // For search queries, prioritize relevance
             orderBy = [
                 sql`CASE 

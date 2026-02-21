@@ -43,8 +43,20 @@ export async function GET(req: NextRequest) {
             }
         }
 
+        // Convert string parameters to appropriate types
+        const processedParams = {
+            ...queryParams,
+            page: queryParams.page ? parseInt(queryParams.page as string) : 1,
+            limit: queryParams.limit ? parseInt(queryParams.limit as string) : 10,
+            maxCookTime: queryParams.maxCookTime ? parseInt(queryParams.maxCookTime as string) : undefined,
+            minCookTime: queryParams.minCookTime ? parseInt(queryParams.minCookTime as string) : undefined,
+            maxPrepTime: queryParams.maxPrepTime ? parseInt(queryParams.maxPrepTime as string) : undefined,
+            minPrepTime: queryParams.minPrepTime ? parseInt(queryParams.minPrepTime as string) : undefined,
+            randomSeed: queryParams.randomSeed ? parseFloat(queryParams.randomSeed as string) : undefined,
+        };
+
         // Parse and validate query parameters
-        const validationResult = recipeFilterSchema.safeParse(queryParams);
+        const validationResult = recipeFilterSchema.safeParse(processedParams);
 
         if (!validationResult.success) {
             return NextResponse.json(
@@ -62,7 +74,8 @@ export async function GET(req: NextRequest) {
             maxPrepTime,
             minPrepTime,
             authorId,
-            sortBy = 'newest',
+            sortBy = 'random',
+            randomSeed,
             page = 1,
             limit = 10
         } = validationResult.data;
@@ -128,26 +141,37 @@ export async function GET(req: NextRequest) {
 
         // Determine sort order
         let orderBy;
-        switch (sortBy) {
-            case 'oldest':
-                orderBy = [asc(recipes.createdAt)];
-                break;
-            case 'popular':
-                orderBy = [desc(recipes.viewCount), desc(recipes.likeCount), desc(recipes.createdAt)];
-                break;
-            case 'title':
-                orderBy = [asc(recipes.title)];
-                break;
-            case 'cookTime':
-                orderBy = [asc(recipes.cookTime), asc(recipes.prepTime)];
-                break;
-            case 'prepTime':
-                orderBy = [asc(recipes.prepTime), asc(recipes.cookTime)];
-                break;
-            case 'newest':
-            default:
-                orderBy = [desc(recipes.createdAt)];
-                break;
+        
+        // For random sorting with pagination, use a deterministic hash-based approach
+        if (sortBy === 'random') {
+            // Use provided seed or generate one based on current date (changes daily)
+            const seed = randomSeed ?? (Math.floor(Date.now() / 86400000) % 1000) / 1000;
+            
+            // Use MD5 hash of (recipe_id + seed) for deterministic random ordering
+            // This ensures the same order across pagination requests with the same seed
+            orderBy = [sql`md5(${recipes.id}::text || ${seed.toString()})::uuid`];
+        } else {
+            switch (sortBy) {
+                case 'oldest':
+                    orderBy = [asc(recipes.createdAt)];
+                    break;
+                case 'popular':
+                    orderBy = [desc(recipes.viewCount), desc(recipes.likeCount), desc(recipes.createdAt)];
+                    break;
+                case 'title':
+                    orderBy = [asc(recipes.title)];
+                    break;
+                case 'cookTime':
+                    orderBy = [asc(recipes.cookTime), asc(recipes.prepTime)];
+                    break;
+                case 'prepTime':
+                    orderBy = [asc(recipes.prepTime), asc(recipes.cookTime)];
+                    break;
+                case 'newest':
+                default:
+                    orderBy = [desc(recipes.createdAt)];
+                    break;
+            }
         }
 
         // Calculate pagination

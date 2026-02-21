@@ -17,10 +17,12 @@ export default function RecipesClient() {
   const [recipes, setRecipes] = useState<RecipeWithAuthor[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [randomSeed] = useState(() => Math.random()); // Generate seed once on mount
+  const [currentSearchParams, setCurrentSearchParams] = useState<SearchParams>({}); // Track current search params
   const [pagination, setPagination] = useState({
     total: 0,
     page: 1,
-    limit: 12,
+    limit: 24,
     totalPages: 0,
     hasNextPage: false,
     hasPrevPage: false,
@@ -29,7 +31,7 @@ export default function RecipesClient() {
   const [searchInfo, setSearchInfo] = useState({
     query: '',
     hasQuery: false,
-    sortBy: 'newest',
+    sortBy: 'random',
     appliedFilters: {
       tags: 0,
       difficulty: false,
@@ -44,6 +46,8 @@ export default function RecipesClient() {
       if (!append) {
         setLoading(true);
         setError(null);
+        // Store search params for pagination
+        setCurrentSearchParams(searchParams);
       } else {
         setLoadingMore(true);
       }
@@ -63,7 +67,12 @@ export default function RecipesClient() {
 
       // Set default limit
       if (!params.has('limit')) {
-        params.set('limit', '12');
+        params.set('limit', '24');
+      }
+
+      // Add random seed for consistent pagination when using random sort
+      if (searchParams.sortBy === 'random' || (!searchParams.sortBy && searchInfo.sortBy === 'random')) {
+        params.set('randomSeed', randomSeed.toString());
       }
 
       const response = await fetch(`/api/recipes/search?${params.toString()}`);
@@ -103,18 +112,11 @@ export default function RecipesClient() {
   };
 
   const handleLoadMore = () => {
-    const currentParams = new URLSearchParams(window.location.search);
     const nextPage = pagination.page + 1;
     
+    // Use stored search params with updated page number
     fetchRecipes({
-      query: currentParams.get('query') || undefined,
-      tags: currentParams.get('tags') ? JSON.parse(currentParams.get('tags')!) : undefined,
-      difficulty: (currentParams.get('difficulty') as 'easy' | 'medium' | 'hard') || undefined,
-      maxCookTime: currentParams.get('maxCookTime') ? parseInt(currentParams.get('maxCookTime')!) : undefined,
-      minCookTime: currentParams.get('minCookTime') ? parseInt(currentParams.get('minCookTime')!) : undefined,
-      maxPrepTime: currentParams.get('maxPrepTime') ? parseInt(currentParams.get('maxPrepTime')!) : undefined,
-      minPrepTime: currentParams.get('minPrepTime') ? parseInt(currentParams.get('minPrepTime')!) : undefined,
-      sortBy: (currentParams.get('sortBy') as 'newest' | 'oldest' | 'popular' | 'title' | 'cookTime' | 'prepTime') || 'newest',
+      ...currentSearchParams,
       page: nextPage,
     }, true); // true for append mode
   };
