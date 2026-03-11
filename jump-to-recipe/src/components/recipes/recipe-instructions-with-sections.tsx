@@ -444,14 +444,17 @@ export function RecipeInstructionsWithSections({
       <Button
         type="button"
         variant="outline"
-        onClick={() =>
+        onClick={() => {
+          // Calculate next position based on current instructions
+          const nextPosition = instructionFields.length;
           appendInstruction({
             id: uuidv4(),
             step: instructionFields.length + 1,
             content: '',
             duration: undefined,
-          })
-        }
+            position: nextPosition,
+          });
+        }}
         disabled={isLoading}
       >
         <Plus className="h-4 w-4 mr-2" />
