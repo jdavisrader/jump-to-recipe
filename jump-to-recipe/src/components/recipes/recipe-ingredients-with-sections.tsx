@@ -995,8 +995,8 @@ export function RecipeIngredientsWithSections({
               type="button"
               variant="outline"
               onClick={() => {
-                // Position is implicit in array order for flat lists
-                // It will be assigned during form submission if needed
+                // Calculate next position based on current ingredients
+                const nextPosition = ingredients.length;
                 appendIngredient({
                   id: uuidv4(),
                   name: '',
@@ -1004,6 +1004,7 @@ export function RecipeIngredientsWithSections({
                   unit: '',
                   displayAmount: '',
                   notes: '',
+                  position: nextPosition,
                 });
               }}
               disabled={isLoading}
