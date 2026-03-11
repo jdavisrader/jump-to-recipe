@@ -299,10 +299,10 @@ export function RecipeForm({
       title: normalizedInitialData?.title || "",
       description: normalizedInitialData?.description || "",
       ingredients: normalizedInitialData?.ingredients || [
-        { id: uuidv4(), name: "", amount: 0, unit: "", notes: "" },
+        { id: uuidv4(), name: "", amount: 0, unit: "", notes: "", position: 0 },
       ],
       instructions: normalizedInitialData?.instructions || [
-        { id: uuidv4(), step: 1, content: "", duration: undefined },
+        { id: uuidv4(), step: 1, content: "", duration: undefined, position: 0 },
       ],
       ingredientSections: normalizedInitialData?.ingredientSections || [],
       instructionSections: normalizedInitialData?.instructionSections || [],
@@ -363,10 +363,10 @@ export function RecipeForm({
     // Debug logging
     console.log('Validating form data:', {
       hasIngredients: formData.ingredients?.length > 0,
-      hasIngredientSections: formData.ingredientSections?.length > 0,
+      hasIngredientSections: (formData.ingredientSections?.length ?? 0) > 0,
       ingredientSectionItemCount: formData.ingredientSections?.reduce((total: number, section: any) => total + section.items.length, 0) ?? 0,
       hasInstructions: formData.instructions?.length > 0,
-      hasInstructionSections: formData.instructionSections?.length > 0,
+      hasInstructionSections: (formData.instructionSections?.length ?? 0) > 0,
       instructionSectionItemCount: formData.instructionSections?.reduce((total: number, section: any) => total + section.items.length, 0) ?? 0,
     });
     

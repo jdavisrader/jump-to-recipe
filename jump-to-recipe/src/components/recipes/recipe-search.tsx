@@ -99,7 +99,7 @@ export function RecipeSearch({ onSearch, isLoading, disabled = false }: RecipeSe
     const paramsString = JSON.stringify(params);
     
     // Check if there are any FILTER criteria (excluding query text)
-    const hasFilterCriteria = tags.length > 0 || difficulty || maxCookTime || minCookTime || maxPrepTime || minPrepTime;
+    const hasFilterCriteria = Boolean(tags.length > 0 || difficulty || maxCookTime || minCookTime || maxPrepTime || minPrepTime);
     
     // Detect if filters were just cleared (had filters before, now don't)
     const filtersWereCleared = prevFilterCriteriaRef.current && !hasFilterCriteria;
