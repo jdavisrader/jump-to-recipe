@@ -16,12 +16,14 @@ Effort: **S** (minutes) · **M** (hours) · **L** (multi-session refactor) · �
 - `authorId` comes from the request body and is inserted directly → unauthenticated users can create recipes AND forge `authorId` as any user.
 - PUT/DELETE on the same resource already check session + ownership correctly.
 - **Fix:** require session, override `authorId = session.user.id` server-side (ignore body value).
+- **Done 2026-06-16 (PR #82):** added 401 guard + forced `body.authorId = session.user.id`.
 
 ### ✅ 2. Middleware skips auth for ALL of `/api/recipes/*`, every method — Effort S
 `src/middleware.ts:19-28`
 - `publicApiRoutes` uses `startsWith('/api/recipes')` with no method check → matches POST/PUT/DELETE and every subroute.
 - Middleware also does not protect any API route except `/admin` (allow-by-default for APIs).
 - **Fix:** gate the `/api/recipes` public entry on `req.method === 'GET'`.
+- **Done 2026-06-16 (PR #82):** public exemption now GET-only; mutations fall through to handler auth.
 
 ### ⬜ 3. Unauthenticated SSRF in recipe import — Effort M
 `src/app/api/recipes/import/route.ts:9`
@@ -34,6 +36,7 @@ Effort: **S** (minutes) · **M** (hours) · **L** (multi-session refactor) · �
 - `console.log` of `credentials.email` (PII) and password-match outcome on every login.
 - 22 non-test files contain `console.log`; API routes dump full request bodies (`import/route.ts:16`, `recipes/route.ts:236-241`).
 - **Fix:** delete credential logs now; strip/route the rest through a leveled logger later.
+- **Done 2026-06-16 (PR #82):** removed the 5 credential `console.log`s in `authorize()`. Broader log cleanup (request-body dumps) still open under #13/Later.
 
 ---
 
