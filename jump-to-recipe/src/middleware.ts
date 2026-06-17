@@ -15,15 +15,20 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // API routes that don't require authentication
+  // API routes that don't require authentication regardless of method
   const publicApiRoutes = [
     '/api/auth',
     '/api/recipes/search',
     '/api/recipes/discover',
-    '/api/recipes' // Allow GET requests to browse public recipes
   ];
 
   if (publicApiRoutes.some(route => pathname.startsWith(route))) {
+    return NextResponse.next();
+  }
+
+  // Public recipe browsing: only GET requests to /api/recipes are public.
+  // Mutations (POST/PUT/DELETE) must be authenticated by their route handlers.
+  if (pathname.startsWith('/api/recipes') && request.method === 'GET') {
     return NextResponse.next();
   }
 

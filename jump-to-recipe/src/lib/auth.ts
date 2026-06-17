@@ -27,10 +27,7 @@ export const authOptions: AuthOptions = {
         password: { label: "Password", type: "password" }
       },
       async authorize(credentials) {
-        console.log('Authorize function called with credentials:', credentials?.email);
-
         if (!credentials?.email || !credentials?.password) {
-          console.log('Missing email or password');
           return null;
         }
 
@@ -40,17 +37,13 @@ export const authOptions: AuthOptions = {
             where: eq(users.email, credentials.email),
           });
 
-          console.log('User found:', user ? 'Yes' : 'No');
-
           // If no user or no password (OAuth user), return null
           if (!user || !user.password) {
-            console.log('No user or no password');
             return null;
           }
 
           // Compare passwords
           const passwordMatch = await bcrypt.compare(credentials.password, user.password);
-          console.log('Password match:', passwordMatch ? 'Yes' : 'No');
 
           if (!passwordMatch) {
             return null;
