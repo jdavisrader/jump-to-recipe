@@ -218,7 +218,8 @@ export async function GET(req: NextRequest) {
  * POST /api/recipes
  * 
  * Creates a new recipe with strict validation
- * Requires authentication (handled on client side)
+ * Requires authentication - the recipe author is taken from the session,
+ * never from the request body
  * Enforces unique IDs and resolves position conflicts
  * 
  * Position Validation (Requirement 7.1):
@@ -229,8 +230,23 @@ export async function GET(req: NextRequest) {
  */
 export async function POST(req: NextRequest) {
     try {
+        // Require authentication - only logged-in users can create recipes
+        const session = await getServerSession(authOptions);
+        if (!session?.user?.id) {
+            return NextResponse.json(
+                {
+                    error: 'Authentication required',
+                    message: 'You must be logged in to create a recipe.',
+                },
+                { status: 401 }
+            );
+        }
+
         // Parse request body
         const body = await req.json();
+
+        // Author is always the authenticated user - never trust a client-supplied authorId
+        body.authorId = session.user.id;
 
         // Log the incoming data for debugging
         console.log('📝 Received recipe data for creation:');
