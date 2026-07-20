@@ -129,24 +129,34 @@ standing risk, and recoverable via git if ever required again.
 
 ## Phase 3 — SSRF guard on the import/scrape fetch path
 
-**Priority: High. Effort: 1–2 hrs.**
-Files: `src/app/api/recipes/import/route.ts`, `src/lib/recipe-scraper.ts`
-(`fetchHtmlContent`).
+**Priority: High. Status: DONE.**
+Files: `src/lib/safe-fetch.ts` (new), `src/app/api/recipes/import/route.ts`,
+`src/lib/recipe-scraper.ts` (`fetchHtmlContent`).
 
-The import endpoint fetches a user-supplied URL after validating only that it
-parses, and the handler is **unauthenticated** (middleware `protectedRoutes` are
-page paths; no API route is gated by middleware and this handler never calls
-`getServerSession`). This allows requests to cloud metadata (169.254.169.254),
-`localhost`, sibling containers, and `file://`/`gopher://`.
+The import endpoint fetched a user-supplied URL after validating only that it
+parses, and the handler was **unauthenticated**. This allowed requests to cloud
+metadata (169.254.169.254), `localhost`, sibling containers, and
+`file://`/`gopher://`.
 
-- [ ] Require an authenticated session on `POST /api/recipes/import`.
-- [ ] Create one shared guarded-fetch helper (both fetch paths must use it):
-  - [ ] Allow only `http`/`https` schemes.
-  - [ ] Resolve the hostname and reject private/loopback/link-local ranges
-        (127/8, 10/8, 172.16/12, 192.168/16, 169.254/16, `::1`, `fc00::/7`, `0.0.0.0`).
-  - [ ] `redirect: 'manual'` (or re-validate each hop against the same rules).
-  - [ ] Enforce a response-size cap and keep the existing timeout.
-- [ ] Add tests: private-IP URL, protocol-relative, redirect-to-internal, oversize body.
+- [x] Require an authenticated session on `POST /api/recipes/import` (401 via
+      `getServerSession`, same pattern as `images/delete`).
+- [x] Created one shared guarded-fetch helper `src/lib/safe-fetch.ts` (both fetch
+      paths use it):
+  - [x] Allow only `http`/`https` schemes.
+  - [x] Resolve the hostname (`dns.lookup({all:true})`) and reject if **any**
+        address is private/loopback/link-local (0/8, 10/8, 100.64/10, 127/8,
+        169.254/16, 172.16/12, 192.168/16, 198.18/15, `::`, `::1`, `fc00::/7`,
+        `fe80::/10`, plus IPv4-mapped `::ffff:*`). Literal-IP hosts checked directly.
+  - [x] `redirect: 'manual'`, re-validating each hop (up to 5).
+  - [x] Response-size cap (`readCappedText`, 5 MB) + AbortController timeout
+        (15s default; scraper keeps its 30s).
+- [x] Tests in `src/lib/__tests__/safe-fetch.test.ts` (14 cases): private/metadata/
+      mapped IPs, non-http scheme, literal private IP, DNS-resolves-to-private,
+      mixed-resolution rebinding, oversize body (Content-Length + streamed).
+
+**Residual risk noted in code:** DNS rebinding (fetch re-resolves after the check).
+Full pinning isn't supported cleanly by platform `fetch`; the lookup check +
+per-hop re-validation is the pragmatic mitigation for this app's threat model.
 
 ---
 
