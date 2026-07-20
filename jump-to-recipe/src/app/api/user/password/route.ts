@@ -6,6 +6,9 @@ import { users, accounts } from "@/db/schema/users";
 import { eq, and } from "drizzle-orm";
 import { z } from "zod";
 import bcrypt from "bcrypt";
+import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
+
+const WINDOW_MS = 15 * 60 * 1000; // 15 minutes
 
 const passwordChangeSchema = z.object({
   currentPassword: z.string().min(1, "Current password is required"),
@@ -42,6 +45,18 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json(
         { error: "Unauthorized" },
         { status: 401 }
+      );
+    }
+
+    // Throttle password-change attempts per user and per IP.
+    const ip = getClientIp(request);
+    const userLimit = checkRateLimit(`pwchange:user:${session.user.id}`, 5, WINDOW_MS);
+    const ipLimit = checkRateLimit(`pwchange:ip:${ip}`, 10, WINDOW_MS);
+    if (!userLimit.allowed || !ipLimit.allowed) {
+      const retryAfter = Math.max(userLimit.retryAfter, ipLimit.retryAfter);
+      return NextResponse.json(
+        { error: "Too many requests. Please try again later." },
+        { status: 429, headers: { "Retry-After": String(retryAfter) } }
       );
     }
 
