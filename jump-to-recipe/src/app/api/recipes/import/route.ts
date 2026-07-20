@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
 import { v4 as uuidv4 } from 'uuid';
 import * as cheerio from 'cheerio';
 import type { Recipe, Ingredient, Instruction } from '@/types/recipe';
 import { createRecipeSchema } from '@/lib/validations/recipe';
+import { authOptions } from '@/lib/auth';
+import { safeFetch, readCappedText, SsrfError } from '@/lib/safe-fetch';
 
 // Define Unit type if it's not imported
 type Unit = '' | 'tsp' | 'tbsp' | 'cup' | 'oz' | 'lb' | 'g' | 'kg' | 'ml' | 'l' | 'pinch' | 'pint' | 'quart' | 'gallon';
@@ -10,6 +13,13 @@ type Unit = '' | 'tsp' | 'tbsp' | 'cup' | 'oz' | 'lb' | 'g' | 'kg' | 'ml' | 'l' 
 export async function POST(request: NextRequest) {
   try {
     console.log('Recipe import API called');
+
+    // Require an authenticated session — this endpoint makes outbound fetches
+    // on the user's behalf and must not be usable anonymously.
+    const session = await getServerSession(authOptions);
+    if (!session?.user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
 
     // Parse the request body
     let requestBody;
@@ -34,31 +44,37 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate URL format
+    // Fetch the webpage through the SSRF-guarded fetch (validates scheme,
+    // blocks private/loopback/link-local hosts, re-validates redirects, caps size).
+    let html: string;
     try {
-      new URL(url);
-    } catch {
-      return NextResponse.json(
-        { error: 'Invalid URL format' },
-        { status: 400 }
-      );
-    }
+      const response = await safeFetch(url, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (compatible; JumpToRecipe/1.0; +https://jumptorecipe.com)',
+        },
+      });
 
-    // Fetch the webpage
-    const response = await fetch(url, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (compatible; JumpToRecipe/1.0; +https://jumptorecipe.com)',
-      },
-    });
+      if (!response.ok) {
+        return NextResponse.json(
+          { error: 'Failed to fetch the webpage' },
+          { status: 400 }
+        );
+      }
 
-    if (!response.ok) {
+      html = await readCappedText(response);
+    } catch (fetchError) {
+      if (fetchError instanceof SsrfError) {
+        return NextResponse.json(
+          { error: 'The provided URL is not allowed' },
+          { status: 400 }
+        );
+      }
       return NextResponse.json(
         { error: 'Failed to fetch the webpage' },
         { status: 400 }
       );
     }
 
-    const html = await response.text();
     const $ = cheerio.load(html);
 
     // Try to extract recipe data using JSON-LD structured data first
