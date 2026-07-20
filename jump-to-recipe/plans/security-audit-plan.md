@@ -89,21 +89,22 @@ dependency-maintenance pass or whenever the import/scraper (cheerio) code is tou
 ## Phase 2 — Quick, self-contained wins
 
 ### 2a. Open redirect on login — `src/app/auth/login/page.tsx:29,66`
-**Priority: High. Effort: ~15 min.**
+**Priority: High. Status: DONE.**
 
 `callbackUrl` comes from the query string and is passed straight to
 `router.push(callbackUrl)` after login, allowing
 `/auth/login?callbackUrl=https://evil.com` to bounce an authenticated user off-site.
 
-- [ ] Accept only same-origin relative paths: reject any value that does not start
-      with a single `/` (block `//host` and `/\host`), or validate
-      `new URL(cb, window.location.origin).origin === window.location.origin`.
-- [ ] Fall back to `/` when invalid. Apply the same guard to the
-      `signIn(provider, { callbackUrl })` call.
-- [ ] Add a unit test for the sanitizer (external URL, protocol-relative, valid path).
+- [x] Accept only same-origin relative paths: reject any value that does not start
+      with a single `/` (block `//host` and `/\host`). Implemented as
+      `sanitizeCallbackUrl()` in `src/lib/safe-redirect.ts`.
+- [x] Fall back to `/` when invalid. Sanitized once at the source (line 29) so both
+      `router.push(callbackUrl)` and the `signIn(provider, { callbackUrl })` call are covered.
+- [x] Unit test added: `src/lib/__tests__/safe-redirect.test.ts` (external URL,
+      protocol-relative, backslash bypass, non-slash, valid path — 6 cases, passing).
 
 ### 2b. Remove legacy migration endpoints — `src/app/api/migration/users/route.ts`, `.../recipes/route.ts`
-**Priority: High. Effort: ~15 min.**
+**Priority: High. Status: DONE.**
 
 Guarded only by a static bearer token, but `POST /api/migration/users` accepts an
 arbitrary `id`, `role: 'admin'`, and a pre-computed password hash → instant admin
@@ -113,14 +114,16 @@ creation/takeover if the token leaks or is unset.
 endpoints are no longer needed. **Delete them** rather than gate them — least
 standing risk, and recoverable via git if ever required again.
 
-- [ ] Delete `src/app/api/migration/users/route.ts` and
+- [x] Deleted `src/app/api/migration/users/route.ts` and
       `src/app/api/migration/recipes/route.ts` (and the now-empty
       `src/app/api/migration/` dir).
-- [ ] Leave the `src/migration/` CLI pipeline in place — it's separate tooling and
-      only these HTTP endpoints are being removed.
-- [ ] Remove `MIGRATION_AUTH_TOKEN` from deployed env/secrets (no longer used).
-- [ ] Grep for other references to the deleted routes (docs, `.env.migration`,
-      migration CLI import target) and clean up.
+- [x] Left the `src/migration/` CLI pipeline in place — separate tooling; only the
+      HTTP endpoints were removed. (Note: the CLI's `batch-importer` / `user-importer`
+      still POST to these now-gone routes; the one-time import is complete, so this is
+      dead-but-harmless client code. Not touched per the decision above.)
+- [ ] **Ops action (not code):** remove `MIGRATION_AUTH_TOKEN` from deployed env/secrets.
+- [x] Grepped for references: remaining hits are all in `src/migration/**` docs and CLI
+      code (left intentionally) and `plans/`. No app/runtime code references the deleted routes.
 
 ---
 
