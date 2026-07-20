@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Mail } from 'lucide-react';
+import { sanitizeCallbackUrl } from '@/lib/safe-redirect';
 
 // Schema for login form validation
 const loginSchema = z.object({
@@ -26,7 +27,7 @@ function LoginForm() {
   const [oauthLoading, setOAuthLoading] = useState<boolean>(false);
   const router = useRouter();
   const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get('callbackUrl') || '/';
+  const callbackUrl = sanitizeCallbackUrl(searchParams.get('callbackUrl'));
   const error = searchParams.get('error');
   const registered = searchParams.get('registered');
   
