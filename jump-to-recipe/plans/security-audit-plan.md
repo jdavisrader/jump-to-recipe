@@ -102,20 +102,25 @@ dependency-maintenance pass or whenever the import/scraper (cheerio) code is tou
       `signIn(provider, { callbackUrl })` call.
 - [ ] Add a unit test for the sanitizer (external URL, protocol-relative, valid path).
 
-### 2b. Gate/remove legacy migration endpoints — `src/app/api/migration/users/route.ts`, `.../recipes/route.ts`
-**Priority: High. Effort: ~30 min.**
+### 2b. Remove legacy migration endpoints — `src/app/api/migration/users/route.ts`, `.../recipes/route.ts`
+**Priority: High. Effort: ~15 min.**
 
 Guarded only by a static bearer token, but `POST /api/migration/users` accepts an
 arbitrary `id`, `role: 'admin'`, and a pre-computed password hash → instant admin
-creation/takeover if the token leaks or is unset. This one-time ETVI pipeline
-should not be reachable in the deployed image.
+creation/takeover if the token leaks or is unset.
 
-- [ ] Hard-gate both routes behind `NODE_ENV !== 'production'` (return 404 in prod),
-      or exclude them from the production build entirely.
-- [ ] Use a constant-time token comparison (`crypto.timingSafeEqual`) and reject when
-      `MIGRATION_AUTH_TOKEN` is unset/empty.
-- [ ] Stop returning raw `error.message` to the client (info leak).
-- [ ] Rotate `MIGRATION_AUTH_TOKEN`.
+**Decision (confirmed by owner):** the legacy site was migrated once and these
+endpoints are no longer needed. **Delete them** rather than gate them — least
+standing risk, and recoverable via git if ever required again.
+
+- [ ] Delete `src/app/api/migration/users/route.ts` and
+      `src/app/api/migration/recipes/route.ts` (and the now-empty
+      `src/app/api/migration/` dir).
+- [ ] Leave the `src/migration/` CLI pipeline in place — it's separate tooling and
+      only these HTTP endpoints are being removed.
+- [ ] Remove `MIGRATION_AUTH_TOKEN` from deployed env/secrets (no longer used).
+- [ ] Grep for other references to the deleted routes (docs, `.env.migration`,
+      migration CLI import target) and clean up.
 
 ---
 
