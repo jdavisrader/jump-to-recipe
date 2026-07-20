@@ -25,7 +25,6 @@ export async function POST(request: NextRequest) {
     let requestBody;
     try {
       requestBody = await request.json();
-      console.log('Request body:', requestBody);
     } catch (parseError) {
       console.error('Error parsing request body:', parseError);
       return NextResponse.json(
@@ -187,39 +186,24 @@ export async function POST(request: NextRequest) {
 
     // Validate the recipe data before returning it
     try {
-      // Log recipe structure for debugging
-      console.log('🔍 Recipe structure before validation:');
-      console.log('- Title:', recipe.title);
-      console.log('- Ingredients count:', recipe.ingredients?.length || 0);
-      console.log('- Instructions count:', recipe.instructions?.length || 0);
-      console.log('- Ingredient sections:', recipe.ingredientSections ? `${recipe.ingredientSections.length} sections` : 'none');
-      console.log('- Instruction sections:', recipe.instructionSections ? `${recipe.instructionSections.length} sections` : 'none');
-      
-      if (recipe.instructionSections) {
-        recipe.instructionSections.forEach((section: any, index: number) => {
-          console.log(`  Section ${index + 1}: "${section.name}" with ${section.items?.length || 0} items`);
-        });
-      }
-
       // Validate with schema
       const validationResult = createRecipeSchema.safeParse(recipe);
 
       if (!validationResult.success) {
         console.error('Recipe validation failed:', validationResult.error.issues);
+        // Only expose validation internals in development.
+        const isDev = process.env.NODE_ENV === 'development';
         return NextResponse.json(
           {
             error: 'Invalid recipe data',
-            details: validationResult.error.issues,
-            recipe: recipe // Include the recipe for debugging
+            ...(isDev && {
+              details: validationResult.error.issues,
+              recipe,
+            }),
           },
           { status: 400 }
         );
       }
-
-      // Log validated recipe structure
-      console.log('✅ Recipe structure after validation:');
-      console.log('- Ingredient sections:', validationResult.data.ingredientSections ? `${validationResult.data.ingredientSections.length} sections` : 'none');
-      console.log('- Instruction sections:', validationResult.data.instructionSections ? `${validationResult.data.instructionSections.length} sections` : 'none');
 
       // Return the validated recipe
       return NextResponse.json(validationResult.data);
