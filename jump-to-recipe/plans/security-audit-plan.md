@@ -163,18 +163,30 @@ per-hop re-validation is the pragmatic mitigation for this app's threat model.
 ## Phase 4 — Abuse resistance & info leakage
 
 ### 4a. User enumeration + rate limiting
-**Priority: Medium. Effort: ~half day.**
-Files: `src/app/api/auth/register/route.ts`, credentials login, `src/app/api/user/password/route.ts`.
+**Priority: Medium. Status: DONE.**
+Files: `src/lib/rate-limit.ts` (new), `src/app/api/auth/register/route.ts`,
+`src/lib/auth.ts` (credentials login), `src/app/api/user/password/route.ts`.
 
-- [ ] Add per-IP + per-email rate limiting to register, login, and password change.
-- [ ] Reduce enumeration signal on register where UX allows (generic messaging).
+- [x] Added in-memory fixed-window limiter `src/lib/rate-limit.ts` (`checkRateLimit`,
+      `getClientIp`, `clientIpFromXff`). Backend decision: **in-memory** — single
+      Docker container, no new deps; resets on restart, swap to Redis if scaled.
+- [x] Register: per-IP (10/hr) + per-email (5/hr) → 429 + `Retry-After`.
+- [x] Login (`authorize`): per-IP (30/15min) + per-email (10/15min); on limit returns
+      `null` (stays generic/enumeration-safe). Reads IP from `x-forwarded-for`.
+- [x] Password change: per-user (5/15min) + per-IP (10/15min) → 429 + `Retry-After`.
+- [x] Enumeration on register: **generic message** ("Unable to create an account with
+      the provided details.") instead of "email already exists" (owner chose generic).
+      Login was already generic. Unit tests in `src/lib/__tests__/rate-limit.test.ts`.
+- Note: register's existing-user path still skips bcrypt, so a timing oracle remains
+  (not closed here — pragmatic scope for a family app).
 
 ### 4b. Log & error hygiene — `src/app/api/recipes/import/route.ts`
-**Priority: Medium. Effort: ~30 min.**
+**Priority: Medium. Status: DONE.**
 
-- [ ] Remove `console.log('Request body:', requestBody)` and the verbose recipe dumps.
-- [ ] Gate stack traces / `error.message` behind `NODE_ENV === 'development'`
-      everywhere (the reorder route already does this — reuse that pattern).
+- [x] Removed `console.log('Request body:', requestBody)` and the verbose recipe
+      structure dumps (🔍/✅ blocks + section logs).
+- [x] Gated debug fields (`details`, `recipe`) in the 400 validation response behind
+      `NODE_ENV === 'development'`.
 
 ---
 
