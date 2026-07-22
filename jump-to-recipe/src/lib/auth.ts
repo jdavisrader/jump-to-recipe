@@ -7,6 +7,9 @@ import { env } from '@/lib/env';
 import { eq } from 'drizzle-orm';
 import bcrypt from 'bcrypt';
 import type { AuthOptions, User } from 'next-auth';
+import { checkRateLimit, clientIpFromXff } from '@/lib/rate-limit';
+
+const LOGIN_WINDOW_MS = 15 * 60 * 1000; // 15 minutes
 
 /**
  * NextAuth configuration with Google provider and credentials
@@ -26,8 +29,19 @@ export const authOptions: AuthOptions = {
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" }
       },
-      async authorize(credentials) {
+      async authorize(credentials, req) {
         if (!credentials?.email || !credentials?.password) {
+          return null;
+        }
+
+        // Throttle credential attempts per IP and per email. On limit we fail
+        // closed by returning null, which surfaces as the generic
+        // "Invalid email or password" and keeps the endpoint enumeration-safe.
+        const ip = clientIpFromXff(req?.headers?.['x-forwarded-for']);
+        const email = credentials.email.toLowerCase();
+        const ipLimited = !checkRateLimit(`login:ip:${ip}`, 30, LOGIN_WINDOW_MS).allowed;
+        const emailLimited = !checkRateLimit(`login:email:${email}`, 10, LOGIN_WINDOW_MS).allowed;
+        if (ipLimited || emailLimited) {
           return null;
         }
 

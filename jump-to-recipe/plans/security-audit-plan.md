@@ -89,21 +89,22 @@ dependency-maintenance pass or whenever the import/scraper (cheerio) code is tou
 ## Phase 2 — Quick, self-contained wins
 
 ### 2a. Open redirect on login — `src/app/auth/login/page.tsx:29,66`
-**Priority: High. Effort: ~15 min.**
+**Priority: High. Status: DONE.**
 
 `callbackUrl` comes from the query string and is passed straight to
 `router.push(callbackUrl)` after login, allowing
 `/auth/login?callbackUrl=https://evil.com` to bounce an authenticated user off-site.
 
-- [ ] Accept only same-origin relative paths: reject any value that does not start
-      with a single `/` (block `//host` and `/\host`), or validate
-      `new URL(cb, window.location.origin).origin === window.location.origin`.
-- [ ] Fall back to `/` when invalid. Apply the same guard to the
-      `signIn(provider, { callbackUrl })` call.
-- [ ] Add a unit test for the sanitizer (external URL, protocol-relative, valid path).
+- [x] Accept only same-origin relative paths: reject any value that does not start
+      with a single `/` (block `//host` and `/\host`). Implemented as
+      `sanitizeCallbackUrl()` in `src/lib/safe-redirect.ts`.
+- [x] Fall back to `/` when invalid. Sanitized once at the source (line 29) so both
+      `router.push(callbackUrl)` and the `signIn(provider, { callbackUrl })` call are covered.
+- [x] Unit test added: `src/lib/__tests__/safe-redirect.test.ts` (external URL,
+      protocol-relative, backslash bypass, non-slash, valid path — 6 cases, passing).
 
 ### 2b. Remove legacy migration endpoints — `src/app/api/migration/users/route.ts`, `.../recipes/route.ts`
-**Priority: High. Effort: ~15 min.**
+**Priority: High. Status: DONE.**
 
 Guarded only by a static bearer token, but `POST /api/migration/users` accepts an
 arbitrary `id`, `role: 'admin'`, and a pre-computed password hash → instant admin
@@ -113,55 +114,79 @@ creation/takeover if the token leaks or is unset.
 endpoints are no longer needed. **Delete them** rather than gate them — least
 standing risk, and recoverable via git if ever required again.
 
-- [ ] Delete `src/app/api/migration/users/route.ts` and
+- [x] Deleted `src/app/api/migration/users/route.ts` and
       `src/app/api/migration/recipes/route.ts` (and the now-empty
       `src/app/api/migration/` dir).
-- [ ] Leave the `src/migration/` CLI pipeline in place — it's separate tooling and
-      only these HTTP endpoints are being removed.
-- [ ] Remove `MIGRATION_AUTH_TOKEN` from deployed env/secrets (no longer used).
-- [ ] Grep for other references to the deleted routes (docs, `.env.migration`,
-      migration CLI import target) and clean up.
+- [x] Left the `src/migration/` CLI pipeline in place — separate tooling; only the
+      HTTP endpoints were removed. (Note: the CLI's `batch-importer` / `user-importer`
+      still POST to these now-gone routes; the one-time import is complete, so this is
+      dead-but-harmless client code. Not touched per the decision above.)
+- [ ] **Ops action (not code):** remove `MIGRATION_AUTH_TOKEN` from deployed env/secrets.
+- [x] Grepped for references: remaining hits are all in `src/migration/**` docs and CLI
+      code (left intentionally) and `plans/`. No app/runtime code references the deleted routes.
 
 ---
 
 ## Phase 3 — SSRF guard on the import/scrape fetch path
 
-**Priority: High. Effort: 1–2 hrs.**
-Files: `src/app/api/recipes/import/route.ts`, `src/lib/recipe-scraper.ts`
-(`fetchHtmlContent`).
+**Priority: High. Status: DONE.**
+Files: `src/lib/safe-fetch.ts` (new), `src/app/api/recipes/import/route.ts`,
+`src/lib/recipe-scraper.ts` (`fetchHtmlContent`).
 
-The import endpoint fetches a user-supplied URL after validating only that it
-parses, and the handler is **unauthenticated** (middleware `protectedRoutes` are
-page paths; no API route is gated by middleware and this handler never calls
-`getServerSession`). This allows requests to cloud metadata (169.254.169.254),
-`localhost`, sibling containers, and `file://`/`gopher://`.
+The import endpoint fetched a user-supplied URL after validating only that it
+parses, and the handler was **unauthenticated**. This allowed requests to cloud
+metadata (169.254.169.254), `localhost`, sibling containers, and
+`file://`/`gopher://`.
 
-- [ ] Require an authenticated session on `POST /api/recipes/import`.
-- [ ] Create one shared guarded-fetch helper (both fetch paths must use it):
-  - [ ] Allow only `http`/`https` schemes.
-  - [ ] Resolve the hostname and reject private/loopback/link-local ranges
-        (127/8, 10/8, 172.16/12, 192.168/16, 169.254/16, `::1`, `fc00::/7`, `0.0.0.0`).
-  - [ ] `redirect: 'manual'` (or re-validate each hop against the same rules).
-  - [ ] Enforce a response-size cap and keep the existing timeout.
-- [ ] Add tests: private-IP URL, protocol-relative, redirect-to-internal, oversize body.
+- [x] Require an authenticated session on `POST /api/recipes/import` (401 via
+      `getServerSession`, same pattern as `images/delete`).
+- [x] Created one shared guarded-fetch helper `src/lib/safe-fetch.ts` (both fetch
+      paths use it):
+  - [x] Allow only `http`/`https` schemes.
+  - [x] Resolve the hostname (`dns.lookup({all:true})`) and reject if **any**
+        address is private/loopback/link-local (0/8, 10/8, 100.64/10, 127/8,
+        169.254/16, 172.16/12, 192.168/16, 198.18/15, `::`, `::1`, `fc00::/7`,
+        `fe80::/10`, plus IPv4-mapped `::ffff:*`). Literal-IP hosts checked directly.
+  - [x] `redirect: 'manual'`, re-validating each hop (up to 5).
+  - [x] Response-size cap (`readCappedText`, 5 MB) + AbortController timeout
+        (15s default; scraper keeps its 30s).
+- [x] Tests in `src/lib/__tests__/safe-fetch.test.ts` (14 cases): private/metadata/
+      mapped IPs, non-http scheme, literal private IP, DNS-resolves-to-private,
+      mixed-resolution rebinding, oversize body (Content-Length + streamed).
+
+**Residual risk noted in code:** DNS rebinding (fetch re-resolves after the check).
+Full pinning isn't supported cleanly by platform `fetch`; the lookup check +
+per-hop re-validation is the pragmatic mitigation for this app's threat model.
 
 ---
 
 ## Phase 4 — Abuse resistance & info leakage
 
 ### 4a. User enumeration + rate limiting
-**Priority: Medium. Effort: ~half day.**
-Files: `src/app/api/auth/register/route.ts`, credentials login, `src/app/api/user/password/route.ts`.
+**Priority: Medium. Status: DONE.**
+Files: `src/lib/rate-limit.ts` (new), `src/app/api/auth/register/route.ts`,
+`src/lib/auth.ts` (credentials login), `src/app/api/user/password/route.ts`.
 
-- [ ] Add per-IP + per-email rate limiting to register, login, and password change.
-- [ ] Reduce enumeration signal on register where UX allows (generic messaging).
+- [x] Added in-memory fixed-window limiter `src/lib/rate-limit.ts` (`checkRateLimit`,
+      `getClientIp`, `clientIpFromXff`). Backend decision: **in-memory** — single
+      Docker container, no new deps; resets on restart, swap to Redis if scaled.
+- [x] Register: per-IP (10/hr) + per-email (5/hr) → 429 + `Retry-After`.
+- [x] Login (`authorize`): per-IP (30/15min) + per-email (10/15min); on limit returns
+      `null` (stays generic/enumeration-safe). Reads IP from `x-forwarded-for`.
+- [x] Password change: per-user (5/15min) + per-IP (10/15min) → 429 + `Retry-After`.
+- [x] Enumeration on register: **generic message** ("Unable to create an account with
+      the provided details.") instead of "email already exists" (owner chose generic).
+      Login was already generic. Unit tests in `src/lib/__tests__/rate-limit.test.ts`.
+- Note: register's existing-user path still skips bcrypt, so a timing oracle remains
+  (not closed here — pragmatic scope for a family app).
 
 ### 4b. Log & error hygiene — `src/app/api/recipes/import/route.ts`
-**Priority: Medium. Effort: ~30 min.**
+**Priority: Medium. Status: DONE.**
 
-- [ ] Remove `console.log('Request body:', requestBody)` and the verbose recipe dumps.
-- [ ] Gate stack traces / `error.message` behind `NODE_ENV === 'development'`
-      everywhere (the reorder route already does this — reuse that pattern).
+- [x] Removed `console.log('Request body:', requestBody)` and the verbose recipe
+      structure dumps (🔍/✅ blocks + section logs).
+- [x] Gated debug fields (`details`, `recipe`) in the 400 validation response behind
+      `NODE_ENV === 'development'`.
 
 ---
 

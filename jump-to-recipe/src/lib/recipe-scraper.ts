@@ -1,6 +1,7 @@
 import * as cheerio from 'cheerio';
 import { extractJsonLdFromHtml, parseJsonLdRecipe } from './recipe-parser';
 import { NewRecipeInput } from '@/types/recipe';
+import { safeFetch, readCappedText } from './safe-fetch';
 
 /**
  * Interface for scraped recipe data with metadata
@@ -16,11 +17,11 @@ export interface ScrapedRecipeData {
  * Fetch HTML content from a URL with proper headers and error handling
  */
 async function fetchHtmlContent(url: string): Promise<string> {
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
-
   try {
-    const response = await fetch(url, {
+    // SSRF-guarded fetch: validates scheme, blocks private/loopback/link-local
+    // hosts, re-validates redirects, and caps the response size.
+    const response = await safeFetch(url, {
+      timeoutMs: 30000, // 30 second timeout
       headers: {
         'User-Agent': 'Mozilla/5.0 (compatible; JumpToRecipe/1.0; +https://jumptorecipe.com)',
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
@@ -30,10 +31,7 @@ async function fetchHtmlContent(url: string): Promise<string> {
         'Connection': 'keep-alive',
         'Upgrade-Insecure-Requests': '1',
       },
-      signal: controller.signal,
     });
-
-    clearTimeout(timeoutId);
 
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -44,10 +42,8 @@ async function fetchHtmlContent(url: string): Promise<string> {
       throw new Error('URL does not return HTML content');
     }
 
-    return await response.text();
+    return await readCappedText(response);
   } catch (error) {
-    clearTimeout(timeoutId);
-    
     if (error instanceof Error) {
       if (error.name === 'AbortError') {
         throw new Error('Request timeout - the website took too long to respond');
