@@ -192,16 +192,29 @@ Files: `src/lib/rate-limit.ts` (new), `src/app/api/auth/register/route.ts`,
 
 ## Phase 5 — Config hardening
 
-**Priority: Low. Effort: ~1 hr.**
+**Priority: Low. Status: PARTIAL** (branch `security/phase5-config-hardening`).
 
-- [ ] Make `NEXTAUTH_URL` required in production (`src/lib/env.ts:13`) to remove the
-      host-header-injection surface from NextAuth callback derivation.
-- [ ] Add a `headers()` block in `next.config.ts`: CSP, HSTS,
-      `X-Content-Type-Options: nosniff`, `X-Frame-Options`/frame-ancestors.
-- [ ] Tighten `remotePatterns` wildcards (`*.amazonaws.com`, `*.cloudfront.net`,
-      `*.wp.com`) if specific hosts can be enumerated.
-- [ ] Enforce `npm run type-check` + `npm run lint` in CI so security regressions
-      aren't hidden by `ignoreBuildErrors`/`ignoreDuringBuilds` in production builds.
+- [x] Make `NEXTAUTH_URL` required in production (`src/lib/env.ts`) to remove the
+      host-header-injection surface from NextAuth callback derivation. Implemented via
+      `superRefine`: errors when `NODE_ENV==='production'` and unset, but skips the
+      Next build phase (`NEXT_PHASE==='phase-production-build'`) so builds don't fail.
+      **Deploy note:** the prod runtime env MUST set `NEXTAUTH_URL` or the app will
+      refuse to boot.
+- [x] Added a `headers()` block in `next.config.ts` with baseline headers, verified
+      live via the dev server: `X-Content-Type-Options: nosniff`,
+      `X-Frame-Options: SAMEORIGIN`, `Referrer-Policy: strict-origin-when-cross-origin`,
+      `Permissions-Policy: camera=(), microphone=(), geolocation=()`.
+- [ ] **Deferred — HSTS.** Add `Strict-Transport-Security` once HTTPS is set up
+      (browsers ignore it over HTTP, and setting it prematurely risks lockout when
+      HTTPS lands). One-liner to add to the headers block at that point.
+- [ ] **Deferred — CSP.** Needs nonce handling for Next.js inline scripts to enforce
+      without breaking hydration; do as a dedicated effort (consider Report-Only first).
+- [ ] **Deferred — tighten `remotePatterns`** (`*.amazonaws.com`, `*.cloudfront.net`,
+      `*.wp.com`). The S3 host is env-dependent (`${AWS_S3_BUCKET}.s3.${region}.amazonaws.com`)
+      and recipe images come from varied CDNs; low value / real breakage risk for now.
+- [ ] **Deferred — CI enforcement** of `type-check` + `lint`. No CI exists yet and there
+      are pre-existing type/lint errors; owner is not setting up CI right now. Revisit as
+      a separate cleanup that fixes the existing errors first.
 
 ---
 

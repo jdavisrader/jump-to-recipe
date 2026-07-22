@@ -118,6 +118,23 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  // Baseline security headers (transport-agnostic, safe over HTTP).
+  // Deferred until HTTPS is set up: Strict-Transport-Security (HSTS).
+  // Deferred to a dedicated effort: Content-Security-Policy (needs nonce
+  // handling for Next.js inline scripts to enforce without breaking hydration).
+  async headers() {
+    return [
+      {
+        source: '/:path*',
+        headers: [
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+          { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
+          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+          { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
+        ],
+      },
+    ];
+  },
 };
 
 export default nextConfig;
