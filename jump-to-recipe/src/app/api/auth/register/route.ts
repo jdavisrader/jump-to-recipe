@@ -44,9 +44,13 @@ export async function POST(request: NextRequest) {
 
     const validatedData = validationResult.data;
 
+    // Normalize email to lowercase so casing can't create duplicate accounts or
+    // cause phantom "invalid password" failures at sign in.
+    const email = validatedData.email.toLowerCase();
+
     // Throttle per email to blunt targeted abuse/enumeration.
     const emailLimit = checkRateLimit(
-      `register:email:${validatedData.email.toLowerCase()}`,
+      `register:email:${email}`,
       5,
       WINDOW_MS
     );
@@ -57,7 +61,7 @@ export async function POST(request: NextRequest) {
     // Check if user already exists. Return a generic message either way so the
     // response does not reveal whether an email is registered (enumeration).
     const existingUser = await db.query.users.findFirst({
-      where: (users, { eq }) => eq(users.email, validatedData.email),
+      where: (users, { eq }) => eq(users.email, email),
     });
 
     if (existingUser) {
@@ -73,7 +77,7 @@ export async function POST(request: NextRequest) {
     // Create user
     await db.insert(users).values({
       name: validatedData.name,
-      email: validatedData.email,
+      email,
       password: hashedPassword,
       role: 'user',
     });
