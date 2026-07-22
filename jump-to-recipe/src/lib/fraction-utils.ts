@@ -41,11 +41,18 @@ export function fractionToDecimal(input: string): number {
   };
   
   // Handle mixed numbers (e.g., "1½" or "1 1/2")
-  const mixedMatch = input.match(/^(\d+)[½¼¾⅓⅔⅛⅜⅝⅞]$/) || 
-                     input.match(/^(\d+)\s+(\d+\/\d+)$/);
+  const mixedMatch = input.match(/^(\d+)[½¼¾⅓⅔⅛⅜⅝⅞]$/) ||
+                     input.match(/^(\d+)\s+(\d+)\/(\d+)$/);
   if (mixedMatch) {
     const whole = parseInt(mixedMatch[1]);
-    const fractionPart = mixedMatch[2] || input.slice(mixedMatch[1].length);
+    if (mixedMatch[2] && mixedMatch[3]) {
+      // Generic "W N/D" — compute the fractional part directly so
+      // uncommon denominators (e.g. "1 2/5") aren't silently dropped.
+      const numerator = parseInt(mixedMatch[2]);
+      const denominator = parseInt(mixedMatch[3]);
+      return whole + numerator / denominator;
+    }
+    const fractionPart = input.slice(mixedMatch[1].length);
     const fractionValue = fractionMap[fractionPart] || 0;
     return whole + fractionValue;
   }
@@ -102,4 +109,49 @@ export function decimalToFraction(decimal: number): string {
   
   // Return decimal as string if no fraction match
   return decimal.toString();
+}
+
+// Parse free-text quantity input (e.g. "1 3/4", "1/2", "2", "1.5") entered by
+// a user into a canonical decimal amount plus a display string. Returns null
+// for input that can't be parsed as a non-negative quantity.
+export function parseQuantityInput(input: string): { amount: number; displayAmount: string } | null {
+  const trimmed = input.trim();
+
+  if (trimmed === '') {
+    return { amount: 0, displayAmount: '' };
+  }
+
+  const mixedMatch = trimmed.match(/^(\d+)\s+(\d+)\/(\d+)$/);
+  const simpleMatch = trimmed.match(/^(\d+)\/(\d+)$/);
+
+  if (mixedMatch || simpleMatch) {
+    const whole = mixedMatch ? parseInt(mixedMatch[1], 10) : 0;
+    const numerator = parseInt((mixedMatch ? mixedMatch[2] : simpleMatch![1]), 10);
+    const denominator = parseInt((mixedMatch ? mixedMatch[3] : simpleMatch![2]), 10);
+
+    if (denominator === 0) {
+      return null;
+    }
+
+    // Format only the fractional part so uncommon denominators (not in the
+    // unicode map) stay as "1 2/5" instead of concatenating into "12/5".
+    const fractionText = `${numerator}/${denominator}`;
+    const formattedFraction = formatFractionForDisplay(fractionText);
+    const isUnicodeGlyph = formattedFraction !== fractionText;
+    const displayAmount = whole === 0
+      ? formattedFraction
+      : isUnicodeGlyph
+        ? `${whole}${formattedFraction}`
+        : `${whole} ${formattedFraction}`;
+
+    return { amount: whole + numerator / denominator, displayAmount };
+  }
+
+  const plainNumberPattern = /^(\d+(\.\d+)?|\.\d+)$/;
+  if (!plainNumberPattern.test(trimmed)) {
+    return null;
+  }
+
+  const amount = parseFloat(trimmed);
+  return isNaN(amount) ? null : { amount, displayAmount: trimmed };
 }

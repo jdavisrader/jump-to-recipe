@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { useFieldArray, Control, UseFormWatch, FieldErrors, UseFormSetError, UseFormClearErrors } from 'react-hook-form';
+import { useFieldArray, Control, UseFormWatch, FieldErrors, UseFormSetError, UseFormClearErrors, UseFormSetValue } from 'react-hook-form';
 import { Plus } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 import { DragDropContext, Droppable, Draggable, DropResult, DragStart } from '@hello-pangea/dnd';
@@ -30,6 +30,7 @@ import type { Ingredient } from '@/types/recipe';
 import type { IngredientSection } from '@/types/sections';
 import { validateSectionName } from '@/lib/validations/recipe';
 import { reorderWithinSection, moveBetweenSections, getNextPosition } from '@/lib/section-position-utils';
+import { parseQuantityInput } from '@/lib/fraction-utils';
 import {
   SnapshotManager,
   validateDragDestination,
@@ -52,6 +53,7 @@ interface RecipeIngredientsWithSectionsProps {
   errors?: FieldErrors<any>;
   setError?: UseFormSetError<any>;
   clearErrors?: UseFormClearErrors<any>;
+  setValue?: UseFormSetValue<any>;
   isLoading?: boolean;
   validationErrors?: Map<string, string>;
   onValidate?: () => void;
@@ -64,6 +66,7 @@ export function RecipeIngredientsWithSections({
   errors,
   setError,
   clearErrors,
+  setValue,
   isLoading = false,
   validationErrors,
   onValidate,
@@ -728,28 +731,41 @@ export function RecipeIngredientsWithSections({
               {/* Field order: Quantity, Unit, Ingredient Name, Notes */}
               <FormField
                 control={control}
-                name={`${fieldBaseName}.amount`}
-                render={({ field }) => (
+                name={`${fieldBaseName}.displayAmount`}
+                render={({ field }) => {
+                  // Legacy ingredients may only have a decimal `amount` with no
+                  // `displayAmount` yet — fall back to it so the field isn't blank.
+                  const fallbackAmount = watch(`${fieldBaseName}.amount`);
+                  const displayValue = field.value || (fallbackAmount ? String(fallbackAmount) : '');
+                  return (
                   <FormItem>
                     <FormControl>
                       <Input
-                        type="number"
-                        step="0.1"
-                        placeholder="Quantity"
-                        {...field}
-                        onChange={(e) => {
-                          const value = e.target.value ? parseFloat(e.target.value) : 0;
-                          field.onChange(value);
-                          // Clear error if value becomes valid
-                          if (value >= 0 && clearErrors) {
-                            clearErrors(`${fieldBaseName}.amount`);
+                        type="text"
+                        placeholder="e.g. 1 3/4"
+                        name={field.name}
+                        ref={field.ref}
+                        value={displayValue}
+                        onChange={(e) => field.onChange(e.target.value)}
+                        onBlur={(e) => {
+                          field.onBlur();
+                          const parsed = parseQuantityInput(e.target.value);
+                          if (parsed) {
+                            setValue?.(`${fieldBaseName}.amount`, parsed.amount);
+                            setValue?.(`${fieldBaseName}.displayAmount`, parsed.displayAmount);
+                            clearErrors?.(`${fieldBaseName}.displayAmount`);
+                          } else {
+                            setError?.(`${fieldBaseName}.displayAmount`, {
+                              message: 'Enter a number or fraction, like 1/2 or 1 3/4',
+                            });
                           }
                         }}
                       />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
-                )}
+                  );
+                }}
               />
 
               <FormField
@@ -898,25 +914,41 @@ export function RecipeIngredientsWithSections({
                       {/* Field order: Quantity, Unit, Ingredient Name, Notes */}
                       <FormField
                         control={control}
-                        name={`ingredients.${index}.amount`}
-                        render={({ field }) => (
+                        name={`ingredients.${index}.displayAmount`}
+                        render={({ field }) => {
+                          // Legacy ingredients may only have a decimal `amount` with no
+                          // `displayAmount` yet — fall back to it so the field isn't blank.
+                          const fallbackAmount = watch(`ingredients.${index}.amount`);
+                          const displayValue = field.value || (fallbackAmount ? String(fallbackAmount) : '');
+                          return (
                           <FormItem>
                             <FormControl>
                               <Input
-                                type="number"
-                                step="0.1"
-                                placeholder="Quantity"
-                                {...field}
-                                onChange={(e) =>
-                                  field.onChange(
-                                    e.target.value ? parseFloat(e.target.value) : 0
-                                  )
-                                }
+                                type="text"
+                                placeholder="e.g. 1 3/4"
+                                name={field.name}
+                                ref={field.ref}
+                                value={displayValue}
+                                onChange={(e) => field.onChange(e.target.value)}
+                                onBlur={(e) => {
+                                  field.onBlur();
+                                  const parsed = parseQuantityInput(e.target.value);
+                                  if (parsed) {
+                                    setValue?.(`ingredients.${index}.amount`, parsed.amount);
+                                    setValue?.(`ingredients.${index}.displayAmount`, parsed.displayAmount);
+                                    clearErrors?.(`ingredients.${index}.displayAmount`);
+                                  } else {
+                                    setError?.(`ingredients.${index}.displayAmount`, {
+                                      message: 'Enter a number or fraction, like 1/2 or 1 3/4',
+                                    });
+                                  }
+                                }}
                               />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
-                        )}
+                          );
+                        }}
                       />
 
                       <FormField
