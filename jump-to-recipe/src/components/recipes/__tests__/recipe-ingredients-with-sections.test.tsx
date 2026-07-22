@@ -14,10 +14,10 @@ jest.mock('../../sections/section-manager', () => ({
 }));
 
 // Simple test wrapper
-function TestWrapper({ 
+function TestWrapper({
   defaultIngredients = [{ id: '1', name: 'Test Ingredient', amount: 1, unit: 'cup', notes: '', position: 0 }],
-  defaultSections = []
-}: { 
+  defaultSections = [],
+}: {
   defaultIngredients?: any[];
   defaultSections?: any[];
 }) {
@@ -27,15 +27,18 @@ function TestWrapper({
       ingredientSections: defaultSections,
     },
   });
+  const watchedAmount = form.watch('ingredients.0.amount');
 
   return (
     <FormProvider {...form}>
+      <div data-testid="debug-amount">{watchedAmount}</div>
       <RecipeIngredientsWithSections
         control={form.control}
         watch={form.watch}
         errors={form.formState.errors}
         setError={form.setError}
         clearErrors={form.clearErrors}
+        setValue={form.setValue}
       />
     </FormProvider>
   );
@@ -98,13 +101,51 @@ describe('RecipeIngredientsWithSections', () => {
     render(<TestWrapper />);
     
     expect(screen.getByPlaceholderText('Ingredient name')).toBeInTheDocument();
-    expect(screen.getByPlaceholderText('Quantity')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('e.g. 1 3/4')).toBeInTheDocument();
     expect(screen.getByPlaceholderText('Notes (optional)')).toBeInTheDocument();
   });
 
   it('renders add ingredient button in flat mode', () => {
     render(<TestWrapper />);
-    
+
     expect(screen.getByText('Add Ingredient')).toBeInTheDocument();
+  });
+
+  it('falls back to displaying the decimal amount for legacy ingredients with no displayAmount', () => {
+    render(<TestWrapper defaultIngredients={[
+      { id: '1', name: 'Sugar', amount: 1.5, unit: 'cup', notes: '', position: 0 },
+    ]} />);
+
+    expect(screen.getByDisplayValue('1.5')).toBeInTheDocument();
+  });
+
+  it('parses a typed mixed fraction into amount and displayAmount on blur', async () => {
+    const user = userEvent.setup();
+    render(<TestWrapper defaultIngredients={[
+      { id: '1', name: 'Flour', amount: 0, unit: 'cup', displayAmount: '', notes: '', position: 0 },
+    ]} />);
+
+    const quantityInput = screen.getByPlaceholderText('e.g. 1 3/4');
+    await user.clear(quantityInput);
+    await user.type(quantityInput, '1 3/4');
+    await user.tab();
+
+    expect(quantityInput).toHaveValue('1¾');
+    expect(screen.getByTestId('debug-amount')).toHaveTextContent('1.75');
+    expect(screen.queryByText(/enter a number or fraction/i)).not.toBeInTheDocument();
+  });
+
+  it('shows a validation error for unparseable quantity input', async () => {
+    const user = userEvent.setup();
+    render(<TestWrapper defaultIngredients={[
+      { id: '1', name: 'Flour', amount: 1, unit: 'cup', displayAmount: '1', notes: '', position: 0 },
+    ]} />);
+
+    const quantityInput = screen.getByPlaceholderText('e.g. 1 3/4');
+    await user.clear(quantityInput);
+    await user.type(quantityInput, 'abc');
+    await user.tab();
+
+    expect(await screen.findByText(/enter a number or fraction/i)).toBeInTheDocument();
   });
 });

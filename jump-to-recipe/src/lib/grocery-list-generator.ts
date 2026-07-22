@@ -5,6 +5,7 @@ import {
   INGREDIENT_CATEGORIES
 } from '@/types/grocery-list';
 import { convertUnit } from './unit-conversion';
+import { formatAmountDisplay } from './recipe-scaling';
 
 /**
  * Categorizes an ingredient based on its name
@@ -126,13 +127,15 @@ function scaleIngredient(ingredient: Ingredient, originalServings: number, newSe
   }
   
   const scaleFactor = newServings / originalServings;
-  
+  const scaledAmount = ingredient.amount * scaleFactor;
+
   return {
     ...ingredient,
-    amount: ingredient.amount * scaleFactor,
-    displayAmount: ingredient.displayAmount 
-      ? `${(parseFloat(ingredient.displayAmount) * scaleFactor).toString()}` 
-      : undefined,
+    amount: scaledAmount,
+    // Recompute from the scaled decimal rather than re-parsing displayAmount
+    // text — that text can be a unicode fraction (e.g. "½"), which
+    // parseFloat silently mangles (NaN, or truncates "1½" to 1).
+    displayAmount: ingredient.displayAmount ? formatAmountDisplay(scaledAmount) : undefined,
   };
 }
 

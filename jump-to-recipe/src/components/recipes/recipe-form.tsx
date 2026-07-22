@@ -727,6 +727,7 @@ export function RecipeForm({
           errors={form.formState.errors as any}
           setError={form.setError as any}
           clearErrors={form.clearErrors as any}
+          setValue={form.setValue as any}
           isLoading={isLoading}
           validationErrors={validationErrors}
           onValidate={handleValidation}

@@ -534,6 +534,7 @@ export function RecipeEditor({
                   errors={form.formState.errors}
                   setError={form.setError}
                   clearErrors={form.clearErrors}
+                  setValue={form.setValue}
                   isLoading={isLoading}
                 />
                 <div className="flex gap-2">
