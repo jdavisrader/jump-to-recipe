@@ -14,6 +14,8 @@ import { RecipeImage } from "./recipe-image";
 import { RecipeComments } from "./recipe-comments";
 import { AddToCookbookModal } from "./add-to-cookbook-modal";
 import { RecipePhotosViewer } from "./recipe-photos-viewer";
+import { RecipeScaler } from "./recipe-scaler";
+import { scaleIngredient } from "@/lib/recipe-scaling";
 import type { Recipe } from "@/types/recipe";
 import type { RecipePhoto } from "@/types/recipe-photos";
 import { useSession } from "next-auth/react";
@@ -31,9 +33,10 @@ export function RecipeDisplay({ recipe, onEdit, canEdit = false, showComments = 
   const [commentsEnabled, setCommentsEnabled] = useState(recipe.commentsEnabled ?? true);
   const [photos, setPhotos] = useState<RecipePhoto[]>([]);
   const [photosLoading, setPhotosLoading] = useState(true);
-  const [servings, setServings] = useState(recipe.servings || 4);
+  const [scale, setScale] = useState(1);
   const [showAddToCookbook, setShowAddToCookbook] = useState(false);
   const totalTime = (recipe.prepTime || 0) + (recipe.cookTime || 0);
+  const displayedServings = Math.round((recipe.servings || 4) * scale);
   
   const isRecipeOwner = session?.user?.id === recipe.authorId;
 
@@ -165,7 +168,7 @@ export function RecipeDisplay({ recipe, onEdit, canEdit = false, showComments = 
               <Users className="h-3 w-3 sm:h-4 sm:w-4" />
               <span className="text-xs sm:text-sm font-medium">Servings</span>
             </div>
-            <div className="text-sm sm:text-lg font-semibold">{servings}</div>
+            <div className="text-sm sm:text-lg font-semibold">{displayedServings}</div>
           </div>
         </div>
         
@@ -190,7 +193,10 @@ export function RecipeDisplay({ recipe, onEdit, canEdit = false, showComments = 
         <div className="lg:col-span-2">
           <Card className="lg:sticky lg:top-6">
             <CardHeader>
-              <CardTitle>INGREDIENTS</CardTitle>
+              <div className="flex items-center justify-between gap-2">
+                <CardTitle>INGREDIENTS</CardTitle>
+                <RecipeScaler scale={scale} onChange={setScale} />
+              </div>
             </CardHeader>
             <CardContent>
               {recipe.ingredientSections && recipe.ingredientSections.length > 0 ? (
@@ -204,10 +210,12 @@ export function RecipeDisplay({ recipe, onEdit, canEdit = false, showComments = 
                           {section.name}
                         </h4>
                         <ul className="space-y-3">
-                          {section.items.map((ingredient) => (
+                          {section.items.map((ingredient) => {
+                            const scaled = scaleIngredient(ingredient, scale);
+                            return (
                             <li key={ingredient.id} className="flex items-start gap-2">
-                              <input 
-                                type="checkbox" 
+                              <input
+                                type="checkbox"
                                 className="mt-1 h-4 w-4 rounded border-input bg-background text-primary focus:ring-2 focus:ring-ring focus:ring-offset-2"
                                 aria-label={`Check off ${ingredient.name}`}
                               />
@@ -215,7 +223,7 @@ export function RecipeDisplay({ recipe, onEdit, canEdit = false, showComments = 
                                 <div className="font-medium">
                                   {ingredient.amount > 0 && (
                                     <span className="text-muted-foreground mr-2">
-                                      {ingredient.displayAmount || ingredient.amount} {ingredient.unit}
+                                      {scaled.displayAmount || scaled.amount} {scaled.unit}
                                     </span>
                                   )}
                                   {ingredient.name}
@@ -227,7 +235,8 @@ export function RecipeDisplay({ recipe, onEdit, canEdit = false, showComments = 
                                 )}
                               </div>
                             </li>
-                          ))}
+                            );
+                          })}
                         </ul>
                       </div>
                     ))}
@@ -235,10 +244,12 @@ export function RecipeDisplay({ recipe, onEdit, canEdit = false, showComments = 
               ) : (
                 // Display flat ingredients (backward compatible)
                 <ul className="space-y-3">
-                  {recipe.ingredients.map((ingredient) => (
+                  {recipe.ingredients.map((ingredient) => {
+                    const scaled = scaleIngredient(ingredient, scale);
+                    return (
                     <li key={ingredient.id} className="flex items-start gap-2">
-                      <input 
-                        type="checkbox" 
+                      <input
+                        type="checkbox"
                         className="mt-1 h-4 w-4 rounded border-input bg-background text-primary focus:ring-2 focus:ring-ring focus:ring-offset-2"
                         aria-label={`Check off ${ingredient.name}`}
                       />
@@ -246,7 +257,7 @@ export function RecipeDisplay({ recipe, onEdit, canEdit = false, showComments = 
                         <div className="font-medium">
                           {ingredient.amount > 0 && (
                             <span className="text-muted-foreground mr-2">
-                              {ingredient.displayAmount || ingredient.amount} {ingredient.unit}
+                              {scaled.displayAmount || scaled.amount} {scaled.unit}
                             </span>
                           )}
                           {ingredient.name}
@@ -258,7 +269,8 @@ export function RecipeDisplay({ recipe, onEdit, canEdit = false, showComments = 
                         )}
                       </div>
                     </li>
-                  ))}
+                    );
+                  })}
                 </ul>
               )}
             </CardContent>
