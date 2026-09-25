@@ -7,8 +7,14 @@ import * as schema from './schema';
 // For migrations
 export const migrationClient = postgres(env.DATABASE_URL, { max: 1 });
 
-// For query purposes
-export const queryClient = postgres(env.DATABASE_URL);
+// For query purposes. Tuned for serverless (Vercel + Neon's PgBouncer pooler):
+// small per-instance pool, release idle connections so Neon can scale to zero,
+// and skip prepared statements, which don't survive transaction-mode pooling.
+export const queryClient = postgres(env.DATABASE_URL, {
+  max: 5,
+  idle_timeout: 20,
+  prepare: false,
+});
 
 export const db = drizzle(queryClient, { schema });
 
