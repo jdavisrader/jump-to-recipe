@@ -66,7 +66,7 @@ Next.js 15 (App Router, React 19 Server Components), TypeScript strict, Tailwind
 All request/form validation goes through Zod schemas in `src/lib/validations/` (recipe, recipe-sections, cookbook-recipes, photo-validation, admin-cookbook). API routes and React Hook Form share the same schemas — when changing a field, update the schema first and both ends follow.
 
 ### File storage
-`src/lib/file-storage.ts` + `file-storage-config.ts` abstract local vs S3 storage, toggled by `USE_S3`. Uploaded images route through `/api/upload` and `/api/images`; Sharp is used for optimization. `next.config.ts` has a long allowlist of remote recipe-site hostnames for `next/image` — add to `remotePatterns` when importing from a new source domain.
+`src/lib/file-storage.ts` + `file-storage-config.ts` abstract storage backends, chosen in this order: **Vercel Blob** (`src/lib/blob-storage.ts`, active when `BLOB_READ_WRITE_TOKEN` or `BLOB_STORE_ID` is set — i.e. on Vercel), then S3 (`USE_S3=true`), then local disk under `public/uploads` (local dev / Docker). Blob keys mirror the local layout (`uploads/<category>/[recipeId/]<file>`). Uploaded images route through `/api/upload` and `/api/images`; Sharp is used for optimization. `next.config.ts` has a long allowlist of remote recipe-site hostnames for `next/image` — add to `remotePatterns` when importing from a new source domain.
 
 ### Recipe import
 `src/lib/recipe-scraper.ts` + `recipe-parser.ts` + `recipe-import-normalizer.ts` form the import pipeline (JSON-LD parsing via cheerio, then normalization into the internal shape). `recipe-normalizer.ts` and `recipe-migration.ts` handle in-app conversions between flat and sectioned formats.

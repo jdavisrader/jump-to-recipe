@@ -116,6 +116,12 @@ const nextConfig: NextConfig = {
         hostname: '*.cloudfront.net',
         pathname: '/**',
       },
+      // Vercel Blob (uploaded photos, covers, avatars)
+      {
+        protocol: 'https',
+        hostname: '*.public.blob.vercel-storage.com',
+        pathname: '/**',
+      },
     ],
   },
   // Baseline security headers (transport-agnostic, safe over HTTP).
