@@ -5,6 +5,7 @@
 
 import { retryRequest, NetworkError } from '@/lib/error-handling';
 import { getNetworkStatus, testConnectivity } from '@/lib/network-utils';
+import { downscaleImageForUpload } from '@/lib/downscale-image';
 
 export interface UploadRetryConfig {
   maxRetries: number;
@@ -37,6 +38,7 @@ export async function uploadPhotoWithRetry(
 ): Promise<UploadResult> {
   const finalConfig = { ...DEFAULT_RETRY_CONFIG, ...config };
   let attempts = 0;
+  const uploadableFile = await downscaleImageForUpload(file);
 
   const uploadFn = async () => {
     attempts++;
@@ -53,7 +55,7 @@ export async function uploadPhotoWithRetry(
     }
 
     const formData = new FormData();
-    formData.append('photos', file);
+    formData.append('photos', uploadableFile);
 
     const response = await fetch(`/api/recipes/${recipeId}/photos`, {
       method: 'POST',

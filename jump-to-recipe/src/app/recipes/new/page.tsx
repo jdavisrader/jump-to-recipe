@@ -6,6 +6,7 @@ import { useSession } from "next-auth/react";
 import { RecipeForm } from "@/components/recipes";
 import type { NewRecipeInput } from "@/types/recipe";
 import type { RecipePhoto } from "@/types/recipe-photos";
+import { downscaleImageForUpload } from "@/lib/downscale-image";
 
 // Extended RecipePhoto type for new recipe uploads
 interface TempRecipePhoto extends RecipePhoto {
@@ -56,7 +57,7 @@ export default function NewRecipePage() {
             const tempPhoto = photo as any;
             if (tempPhoto._tempFile) {
               const formData = new FormData();
-              formData.append('photos', tempPhoto._tempFile);
+              formData.append('photos', await downscaleImageForUpload(tempPhoto._tempFile));
 
               const photoResponse = await fetch(`/api/recipes/${recipe.id}/photos`, {
                 method: "POST",
