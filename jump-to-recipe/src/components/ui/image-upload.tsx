@@ -1,11 +1,26 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { useDropzone } from "react-dropzone";
+import { useDropzone, type FileRejection } from "react-dropzone";
 import Image from "next/image";
 import { Upload, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { downscaleImageForUpload } from "@/lib/downscale-image";
+
+// Large phone photos are downscaled before upload, so the picker can accept more
+// than the server's per-image limit.
+const MAX_SELECTABLE_SIZE_MB = 10;
+
+function describeRejection({ file, errors }: FileRejection): string {
+  if (errors.some((error) => error.code === "file-too-large")) {
+    return `${file.name} is too large. Maximum size is ${MAX_SELECTABLE_SIZE_MB}MB.`;
+  }
+  if (errors.some((error) => error.code === "file-invalid-type")) {
+    return `${file.name} isn't a supported image. Please choose a PNG, JPG, GIF, or WebP file.`;
+  }
+  return errors[0]?.message ?? `${file.name} can't be uploaded.`;
+}
 
 interface ImageUploadProps {
   category: "recipes" | "cookbooks" | "avatars";
@@ -33,7 +48,7 @@ export function ImageUpload({
 
     try {
       const formData = new FormData();
-      formData.append('file', file);
+      formData.append('file', await downscaleImageForUpload(file));
       formData.append('category', category);
 
       const response = await fetch('/api/upload', {
@@ -63,8 +78,15 @@ export function ImageUpload({
   }, [category, onChange]);
 
   const onDrop = useCallback(
-    (acceptedFiles: File[]) => {
-      if (acceptedFiles.length > 0 && !disabled) {
+    (acceptedFiles: File[], fileRejections: FileRejection[]) => {
+      if (disabled) return;
+
+      if (fileRejections.length > 0) {
+        alert(describeRejection(fileRejections[0]));
+        return;
+      }
+
+      if (acceptedFiles.length > 0) {
         uploadFile(acceptedFiles[0]);
       }
     },
@@ -77,7 +99,7 @@ export function ImageUpload({
       "image/*": [".png", ".jpg", ".jpeg", ".gif", ".webp"],
     },
     maxFiles: 1,
-    maxSize: 4 * 1024 * 1024, // 4MB
+    maxSize: MAX_SELECTABLE_SIZE_MB * 1024 * 1024,
     disabled: disabled || isUploading,
   });
 
@@ -134,7 +156,7 @@ export function ImageUpload({
               {isDragActive ? "Drop the image here" : placeholder}
             </p>
             <p className="text-xs text-gray-400">
-              PNG, JPG, GIF up to 4MB
+              PNG, JPG, GIF up to {MAX_SELECTABLE_SIZE_MB}MB
             </p>
           </>
         )}
