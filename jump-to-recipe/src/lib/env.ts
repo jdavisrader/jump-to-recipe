@@ -23,9 +23,12 @@ const envSchema = z.object({
 }).superRefine((data, ctx) => {
   // Require NEXTAUTH_URL at runtime in production so NextAuth does not derive
   // the callback host from a (spoofable) Host header. Skip during the Next.js
-  // build phase, where runtime env vars are not yet present.
+  // build phase, where runtime env vars are not yet present, and on Vercel,
+  // where NextAuth ignores NEXTAUTH_URL and uses Vercel's trusted forwarded host
+  // (which also lets preview deployments with changing URLs boot).
   const isBuildPhase = process.env.NEXT_PHASE === 'phase-production-build';
-  if (data.NODE_ENV === 'production' && !isBuildPhase && !data.NEXTAUTH_URL) {
+  const isVercel = Boolean(process.env.VERCEL);
+  if (data.NODE_ENV === 'production' && !isBuildPhase && !isVercel && !data.NEXTAUTH_URL) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
       path: ['NEXTAUTH_URL'],
