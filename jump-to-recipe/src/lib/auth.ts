@@ -46,9 +46,10 @@ export const authOptions: AuthOptions = {
         }
 
         try {
-          // Find user by email
+          // Find user by email. Normalize to lowercase so casing differences
+          // between sign-up and sign-in don't surface as "invalid password".
           const user = await db.query.users.findFirst({
-            where: eq(users.email, credentials.email),
+            where: eq(users.email, email),
           });
 
           // If no user or no password (OAuth user), return null

@@ -25,6 +25,7 @@ type LoginFormData = z.infer<typeof loginSchema>;
 function LoginForm() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [oauthLoading, setOAuthLoading] = useState<boolean>(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = sanitizeCallbackUrl(searchParams.get('callbackUrl'));
@@ -52,22 +53,29 @@ function LoginForm() {
   
   const onSubmit = async (data: LoginFormData) => {
     setIsLoading(true);
+    setSubmitError(null);
     try {
       const result = await signIn('credentials', {
         redirect: false,
         email: data.email,
         password: data.password,
       });
-      
+
       if (result?.error) {
-        throw new Error(result.error);
+        setSubmitError(
+          result.error === 'CredentialsSignin'
+            ? 'Invalid email or password.'
+            : 'An error occurred during sign in. Please try again.'
+        );
+        return;
       }
-      
+
       if (result?.ok) {
         router.push(callbackUrl);
       }
     } catch (error) {
       console.error('Login error:', error);
+      setSubmitError('An unexpected error occurred. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -81,10 +89,12 @@ function LoginForm() {
           <CardDescription>
             Sign in to your account to continue
           </CardDescription>
-          {error && (
+          {(submitError || error) && (
             <div className="rounded-md bg-red-50 p-4 mt-4">
               <div className="text-sm text-red-700">
-                {error === 'OAuthAccountNotLinked'
+                {submitError
+                  ? submitError
+                  : error === 'OAuthAccountNotLinked'
                   ? 'This email is already associated with another provider.'
                   : error === 'CredentialsSignin'
                   ? 'Invalid email or password.'
