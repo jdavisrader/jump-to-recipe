@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useFieldArray, Control, UseFormWatch, FieldErrors, UseFormSetError, UseFormClearErrors } from 'react-hook-form';
+import { useFieldArray, Control, FieldValues, UseFormWatch, FieldErrors, UseFormSetError, UseFormClearErrors } from 'react-hook-form';
 import { Plus, Minus } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -22,8 +22,8 @@ import type { InstructionSection } from '@/types/sections';
 import { validateSectionName } from '@/lib/validations/recipe';
 import { getNextPosition } from '@/lib/section-position-utils';
 
-interface RecipeInstructionsWithSectionsProps {
-  control: Control<any>;
+interface RecipeInstructionsWithSectionsProps<TFieldValues extends FieldValues, TTransformedValues> {
+  control: Control<TFieldValues, unknown, TTransformedValues>;
   watch: UseFormWatch<any>;
   errors?: FieldErrors<any>;
   setError?: UseFormSetError<any>;
@@ -34,8 +34,10 @@ interface RecipeInstructionsWithSectionsProps {
   onFieldChange?: () => void;
 }
 
-export function RecipeInstructionsWithSections({
-  control,
+// Generic over the caller's form: react-hook-form 7.89's Control is invariant in its
+// field values, so Control<SpecificForm> no longer assigns to Control<any>.
+export function RecipeInstructionsWithSections<TFieldValues extends FieldValues, TTransformedValues = TFieldValues>({
+  control: typedControl,
   watch,
   errors,
   setError,
@@ -44,7 +46,9 @@ export function RecipeInstructionsWithSections({
   validationErrors,
   onValidate,
   onFieldChange,
-}: RecipeInstructionsWithSectionsProps) {
+}: RecipeInstructionsWithSectionsProps<TFieldValues, TTransformedValues>) {
+  // Field paths below are built dynamically, so widen once for the internals.
+  const control = typedControl as unknown as Control<FieldValues>;
   const [useSections, setUseSections] = useState(false);
 
   // Field arrays for both sectioned and non-sectioned modes

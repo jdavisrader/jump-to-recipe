@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { useFieldArray, Control, UseFormWatch, FieldErrors, UseFormSetError, UseFormClearErrors, UseFormSetValue } from 'react-hook-form';
+import { useFieldArray, Control, FieldValues, UseFormWatch, FieldErrors, UseFormSetError, UseFormClearErrors, UseFormSetValue } from 'react-hook-form';
 import { Plus } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 import { DragDropContext, Droppable, Draggable, DropResult, DragStart } from '@hello-pangea/dnd';
@@ -47,8 +47,8 @@ import {
 
 import './drag-feedback.css';
 
-interface RecipeIngredientsWithSectionsProps {
-  control: Control<any>;
+interface RecipeIngredientsWithSectionsProps<TFieldValues extends FieldValues, TTransformedValues> {
+  control: Control<TFieldValues, unknown, TTransformedValues>;
   watch: UseFormWatch<any>;
   errors?: FieldErrors<any>;
   setError?: UseFormSetError<any>;
@@ -60,8 +60,10 @@ interface RecipeIngredientsWithSectionsProps {
   onFieldChange?: () => void;
 }
 
-export function RecipeIngredientsWithSections({
-  control,
+// Generic over the caller's form: react-hook-form 7.89's Control is invariant in its
+// field values, so Control<SpecificForm> no longer assigns to Control<any>.
+export function RecipeIngredientsWithSections<TFieldValues extends FieldValues, TTransformedValues = TFieldValues>({
+  control: typedControl,
   watch,
   errors,
   setError,
@@ -71,7 +73,9 @@ export function RecipeIngredientsWithSections({
   validationErrors,
   onValidate,
   onFieldChange,
-}: RecipeIngredientsWithSectionsProps) {
+}: RecipeIngredientsWithSectionsProps<TFieldValues, TTransformedValues>) {
+  // Field paths below are built dynamically, so widen once for the internals.
+  const control = typedControl as unknown as Control<FieldValues>;
   const [useSections, setUseSections] = useState(false);
   const [dragAnnouncement, setDragAnnouncement] = useState<string>('');
   const [isTouchDevice, setIsTouchDevice] = useState(false);
