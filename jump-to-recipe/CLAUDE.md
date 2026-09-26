@@ -17,6 +17,8 @@ npx jest path/to/file    # Run a single test file
 npx jest -t "test name"  # Run a single test by name
 ```
 
+**Dependencies live in `jump-to-recipe/`** (its own `package.json` + `package-lock.json`; install and add packages from here). The repo-root `package.json` only proxies scripts — it is not an npm workspace, so the `overrides` here apply everywhere (local, Docker, Vercel). On a Mac with Homebrew `vips`, install with `SHARP_IGNORE_GLOBAL_LIBVIPS=1 npm install` or sharp tries to compile from source.
+
 **Production builds do NOT fail on TypeScript or ESLint errors** — `next.config.ts` sets `typescript.ignoreBuildErrors: true` and `eslint.ignoreDuringBuilds: true` so Docker builds complete. Always run `npm run type-check` and `npm run lint` locally before committing; CI-style checks won't catch regressions during `npm run build`.
 
 ### Database (Drizzle ORM, PostgreSQL)
