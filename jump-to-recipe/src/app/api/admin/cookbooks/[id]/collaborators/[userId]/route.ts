@@ -15,7 +15,7 @@ import {
 // DELETE /api/admin/cookbooks/[id]/collaborators/[userId] - Remove collaborator
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string; userId: string }> | { id: string; userId: string } }
+  { params }: { params: Promise<{ id: string; userId: string }> }
 ) {
   try {
     // Validate session and admin role

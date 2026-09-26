@@ -5,7 +5,7 @@ import { db } from '@/db';
 import { recipePhotos } from '@/db/schema/recipe-photos';
 import { uploadRecipePhotos, validateRecipePhotos, FILE_STORAGE_CONFIG } from '@/lib/file-storage';
 import { and, eq, isNull, desc } from 'drizzle-orm';
-import { withRecipePermission, getRecipePermissionForSession } from '@/lib/recipe-permissions';
+import { withRecipePermission, getRecipePermissionForSession, type RecipeRouteContext } from '@/lib/recipe-permissions';
 import { validatePhotoFiles, validatePhotoCount } from '@/lib/validations/photo-validation';
 
 /**
@@ -67,11 +67,11 @@ export async function GET(
  */
 const postHandler = async (
   req: NextRequest,
-  context: { params: Promise<{ id: string }> | Promise<{ photoId: string }> | { id: string } | { photoId: string } }
+  context: RecipeRouteContext
 ) => {
   try {
     // Await params if it's a Promise (Next.js 15)
-    const params = context.params instanceof Promise ? await context.params : context.params;
+    const params = await context.params;
     
     // Extract id from params
     if (!('id' in params)) {

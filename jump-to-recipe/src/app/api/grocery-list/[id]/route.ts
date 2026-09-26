@@ -9,7 +9,7 @@ import { GroceryListUpdateRequest, GroceryItem } from '@/types/grocery-list';
 // GET /api/grocery-list/[id] - Get specific grocery list
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -21,7 +21,7 @@ export async function GET(
       );
     }
 
-    const groceryListId = params.id;
+    const { id: groceryListId } = await params;
 
     // Fetch the grocery list
     const [groceryList] = await db
@@ -66,7 +66,7 @@ export async function GET(
 // PUT /api/grocery-list/[id] - Update grocery list
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -78,7 +78,7 @@ export async function PUT(
       );
     }
 
-    const groceryListId = params.id;
+    const { id: groceryListId } = await params;
     const body: GroceryListUpdateRequest = await request.json();
 
     // Validate that the grocery list exists and belongs to the user
@@ -148,7 +148,7 @@ export async function PUT(
 // DELETE /api/grocery-list/[id] - Delete grocery list
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -160,7 +160,7 @@ export async function DELETE(
       );
     }
 
-    const groceryListId = params.id;
+    const { id: groceryListId } = await params;
 
     // Validate that the grocery list exists and belongs to the user
     const [existingList] = await db

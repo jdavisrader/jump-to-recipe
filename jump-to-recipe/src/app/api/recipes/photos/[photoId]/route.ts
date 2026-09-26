@@ -3,7 +3,7 @@ import { db } from '@/db';
 import { recipePhotos } from '@/db/schema/recipe-photos';
 import { and, eq, isNull } from 'drizzle-orm';
 import { softDeletePhoto } from '@/lib/photo-operations';
-import { withRecipePermission } from '@/lib/recipe-permissions';
+import { withRecipePermission, type RecipeRouteContext } from '@/lib/recipe-permissions';
 
 /**
  * DELETE /api/recipes/photos/[photoId]
@@ -13,11 +13,11 @@ import { withRecipePermission } from '@/lib/recipe-permissions';
  */
 const deleteHandler = async (
   _req: NextRequest,
-  context: { params: Promise<{ id: string }> | Promise<{ photoId: string }> | { id: string } | { photoId: string } }
+  context: RecipeRouteContext
 ) => {
   try {
     // Await params if it's a Promise (Next.js 15)
-    const params = context.params instanceof Promise ? await context.params : context.params;
+    const params = await context.params;
     
     // Extract photoId from params
     if (!('photoId' in params)) {
@@ -120,11 +120,11 @@ export const DELETE = withRecipePermission(deleteHandler, 'edit', {
  */
 const getHandler = async (
   _req: NextRequest,
-  context: { params: Promise<{ id: string }> | Promise<{ photoId: string }> | { id: string } | { photoId: string } }
+  context: RecipeRouteContext
 ) => {
   try {
     // Await params if it's a Promise (Next.js 15)
-    const params = context.params instanceof Promise ? await context.params : context.params;
+    const params = await context.params;
     
     // Extract photoId from params
     if (!('photoId' in params)) {

@@ -8,7 +8,7 @@ import { CookbookDisplay } from '@/components/cookbooks/cookbook-display';
 import { getCookbookPermission, hasAdminCookbookAccess } from '@/lib/cookbook-permissions';
 import type { Ingredient, Instruction } from '@/types/recipe';
 
-export default async function CookbookPage({ params }: { params: Promise<{ id: string }> | { id: string } }) {
+export default async function CookbookPage({ params }: { params: Promise<{ id: string }> }) {
   // Ensure params is resolved
   const resolvedParams = await Promise.resolve(params);
   const session = await getServerSession(authOptions);

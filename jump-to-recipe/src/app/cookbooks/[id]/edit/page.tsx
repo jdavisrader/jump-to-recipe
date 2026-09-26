@@ -13,7 +13,7 @@ import { hasMinimumPermission, hasAdminCookbookAccess } from '@/lib/cookbook-per
 
 // Note: Using standalone components that handle refresh internally
 
-export default async function EditCookbookPage({ params }: { params: Promise<{ id: string }> | { id: string } }) {
+export default async function EditCookbookPage({ params }: { params: Promise<{ id: string }> }) {
   // Ensure params is resolved
   const resolvedParams = await Promise.resolve(params);
   const session = await getServerSession(authOptions);
