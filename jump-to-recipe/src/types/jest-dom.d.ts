@@ -1,15 +1,4 @@
+// Loads @testing-library/jest-dom's matcher types (toBeInTheDocument, toHaveClass, …)
+// for every test file. Don't redeclare matchers here: members declared directly on
+// jest.Matchers override jest-dom's richer signatures.
 import '@testing-library/jest-dom';
-
-declare global {
-  namespace jest {
-    interface Matchers<R> {
-      toBeInTheDocument(): R;
-      toBeChecked(): R;
-      toHaveClass(className: string): R;
-      toHaveTextContent(text: string | RegExp): R;
-      toBeVisible(): R;
-      toBeDisabled(): R;
-      toBeEnabled(): R;
-    }
-  }
-}

@@ -662,12 +662,14 @@ describe('RecipeConversionUtils', () => {
       id: `${i + 1}`,
       name: `Ingredient ${i + 1}`,
       amount: 1,
-      unit: 'cup' as const
+      unit: 'cup' as const,
+      position: i
     })),
     instructions: Array.from({ length: 8 }, (_, i) => ({
       id: `${i + 1}`,
       step: i + 1,
-      content: `Step ${i + 1}`
+      content: `Step ${i + 1}`,
+      position: i
     })),
     prepTime: 15,
     cookTime: 30,
@@ -729,7 +731,8 @@ describe('RecipeConversionUtils', () => {
         instructions: Array.from({ length: 10 }, (_, i) => ({
           id: `${i + 1}`,
           step: i + 1,
-          content: `Step ${i + 1}`
+          content: `Step ${i + 1}`,
+      position: i
         }))
       };
 
@@ -767,12 +770,14 @@ describe('RecipeConversionUtils', () => {
           id: `${i + 1}`,
           name: `Ingredient ${i + 1}`,
           amount: 1,
-          unit: 'cup' as const
+          unit: 'cup' as const,
+      position: i
         })),
         instructions: Array.from({ length: 15 }, (_, i) => ({
           id: `${i + 1}`,
           step: i + 1,
-          content: `Step ${i + 1}`
+          content: `Step ${i + 1}`,
+      position: i
         }))
       };
 
