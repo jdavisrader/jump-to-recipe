@@ -77,12 +77,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-
-// Handle file size limit
-export const config = {
-  api: {
-    bodyParser: {
-      sizeLimit: '5mb',
-    },
-  },
-}

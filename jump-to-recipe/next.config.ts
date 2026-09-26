@@ -125,7 +125,8 @@ const nextConfig: NextConfig = {
     ],
   },
   // Baseline security headers (transport-agnostic, safe over HTTP).
-  // Deferred until HTTPS is set up: Strict-Transport-Security (HSTS).
+  // Strict-Transport-Security (HSTS) is not set here: Vercel adds it on every
+  // deployment (max-age=63072000; includeSubDomains; preload).
   // Deferred to a dedicated effort: Content-Security-Policy (needs nonce
   // handling for Next.js inline scripts to enforce without breaking hydration).
   async headers() {
