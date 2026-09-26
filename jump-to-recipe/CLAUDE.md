@@ -9,7 +9,7 @@ npm run dev              # Next.js dev server (Turbopack) on :3000
 npm run build            # Production build (standalone output)
 npm run lint             # ESLint (next/core-web-vitals + next/typescript + prettier)
 npm run lint:fix         # Auto-fix lint issues
-npm run type-check       # tsc --noEmit (run this — builds skip TS errors, see below)
+npm run type-check       # tsc --noEmit (builds fail on type errors, see below)
 npm run format           # Prettier write
 npm run test             # Jest (jsdom)
 npm run test:watch       # Jest watch mode
@@ -19,7 +19,7 @@ npx jest -t "test name"  # Run a single test by name
 
 **Dependencies live in `jump-to-recipe/`** (its own `package.json` + `package-lock.json`; install and add packages from here). The repo-root `package.json` only proxies scripts — it is not an npm workspace, so the `overrides` here apply everywhere (local, Docker, Vercel). On a Mac with Homebrew `vips`, install with `SHARP_IGNORE_GLOBAL_LIBVIPS=1 npm install` or sharp tries to compile from source.
 
-**Production builds do NOT fail on TypeScript or ESLint errors** — `next.config.ts` sets `typescript.ignoreBuildErrors: true` and `eslint.ignoreDuringBuilds: true` so Docker builds complete. Always run `npm run type-check` and `npm run lint` locally before committing; CI-style checks won't catch regressions during `npm run build`.
+**Production builds fail on TypeScript errors but NOT on ESLint errors** — `next.config.ts` sets `typescript.ignoreBuildErrors: false` (the codebase has 0 type errors; keep it that way — Vercel and Docker builds type-check app code, but NOT test files, so run `npm run type-check` to cover tests) and `eslint.ignoreDuringBuilds: true` (pre-existing lint errors remain). Run `npm run type-check` and `npm run lint` locally before committing.
 
 ### Database (Drizzle ORM, PostgreSQL)
 
