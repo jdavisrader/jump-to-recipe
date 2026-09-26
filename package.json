@@ -4,17 +4,11 @@
   "description": "Jump to Recipe - Recipe and cookbook management platform",
   "private": true,
   "scripts": {
-    "dev": "cd jump-to-recipe && npm run dev",
-    "build": "cd jump-to-recipe && npm run build",
-    "start": "cd jump-to-recipe && npm run start",
-    "lint": "cd jump-to-recipe && npm run lint",
-    "test": "cd jump-to-recipe && npm test"
-  },
-  "workspaces": [
-    "jump-to-recipe"
-  ],
-  "dependencies": {
-    "@hello-pangea/dnd": "^18.0.1",
-    "@radix-ui/react-switch": "^1.2.5"
+    "install:app": "npm --prefix jump-to-recipe install",
+    "dev": "npm --prefix jump-to-recipe run dev",
+    "build": "npm --prefix jump-to-recipe run build",
+    "start": "npm --prefix jump-to-recipe run start",
+    "lint": "npm --prefix jump-to-recipe run lint",
+    "test": "npm --prefix jump-to-recipe test"
   }
 }

@@ -5,16 +5,19 @@ A modern web and mobile platform for collecting, organizing, and sharing digital
 ## 🚀 Quick Start
 
 ```bash
-# Install dependencies
+# Install dependencies (the app in jump-to-recipe/ owns its package.json and lockfile)
+cd jump-to-recipe
 npm install
 
 # Start development server
 npm run dev
-
-# Or work directly in the app directory
-cd jump-to-recipe
-npm run dev
 ```
+
+The root `package.json` only proxies scripts, so `npm run dev` / `npm run build` also work from the repo root
+(`npm run install:app` installs from there).
+
+> **Mac with Homebrew `vips` installed?** `sharp` will try to compile against it and fail. Install with
+> `SHARP_IGNORE_GLOBAL_LIBVIPS=1 npm install` to use sharp's bundled libvips instead.
 
 Visit [http://localhost:3000](http://localhost:3000) to see the application.
 
