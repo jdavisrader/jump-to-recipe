@@ -15,7 +15,7 @@ import {
 // PUT /api/admin/cookbooks/[id]/owner - Transfer cookbook ownership
 export async function PUT(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> | { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Resolve and validate params

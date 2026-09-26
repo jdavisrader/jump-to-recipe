@@ -20,7 +20,7 @@ describe('Drag-and-Drop Position Verification', () => {
     it('should maintain position property during reorder', () => {
       // Requirement 3.4: Position maintained during within-section reorder
       const items: Ingredient[] = [
-        { id: 'a', name: 'Flour', amount: 2, unit: 'cups', position: 0 },
+        { id: 'a', name: 'Flour', amount: 2, unit: 'cup', position: 0 },
         { id: 'b', name: 'Sugar', amount: 1, unit: 'cup', position: 1 },
         { id: 'c', name: 'Salt', amount: 1, unit: 'tsp', position: 2 },
       ];
@@ -108,13 +108,13 @@ describe('Drag-and-Drop Position Verification', () => {
     it('should recalculate position when moving between sections', () => {
       // Requirement 4.3: Position recalculated during cross-section move
       const sourceItems: Ingredient[] = [
-        { id: 'a', name: 'Flour', amount: 2, unit: 'cups', position: 0 },
+        { id: 'a', name: 'Flour', amount: 2, unit: 'cup', position: 0 },
         { id: 'b', name: 'Sugar', amount: 1, unit: 'cup', position: 1 },
       ];
 
       const destItems: Ingredient[] = [
         { id: 'c', name: 'Milk', amount: 1, unit: 'cup', position: 0 },
-        { id: 'd', name: 'Eggs', amount: 2, unit: 'whole', position: 1 },
+        { id: 'd', name: 'Eggs', amount: 2, unit: '', position: 1 },
       ];
 
       const result = moveBetweenSections(sourceItems, destItems, 0, 1);

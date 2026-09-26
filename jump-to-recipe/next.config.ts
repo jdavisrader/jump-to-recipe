@@ -8,9 +8,8 @@ const nextConfig: NextConfig = {
     ignoreDuringBuilds: true,
   },
   typescript: {
-    // Allow production builds to complete even with type errors
-    // You should still fix these in development
-    ignoreBuildErrors: true,
+    // Type errors fail the build (Vercel and Docker) so they can't creep back in.
+    ignoreBuildErrors: false,
   },
   images: {
     remotePatterns: [

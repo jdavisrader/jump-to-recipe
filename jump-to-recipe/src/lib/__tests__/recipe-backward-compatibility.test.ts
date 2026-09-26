@@ -241,6 +241,7 @@ describe('Recipe Backward Compatibility - Section Order Preservation', () => {
         name: 'Butter',
         amount: 0.5,
         unit: 'cup',
+        position: recipe.ingredientSections[1].items.length,
       });
 
       // Order should remain unchanged
@@ -509,6 +510,7 @@ describe('Recipe Backward Compatibility - Section Order Preservation', () => {
         name: 'Milk',
         amount: 1,
         unit: 'cup',
+        position: recipe.ingredients.length,
       });
 
       // Add instruction

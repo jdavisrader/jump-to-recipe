@@ -182,12 +182,14 @@ describe('RecipeEditor with Sections', () => {
           step: 1,
           content: 'Mix dry ingredients',
           duration: 5,
+          position: 0,
         },
         {
           id: '2',
           step: 2,
           content: 'Add wet ingredients',
           duration: 10,
+          position: 1,
         },
       ],
       ingredientSections: [

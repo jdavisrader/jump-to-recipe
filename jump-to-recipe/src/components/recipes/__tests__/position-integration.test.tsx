@@ -12,6 +12,7 @@
  * Requirements: All requirements from explicit-position-persistence spec
  */
 
+import '@testing-library/jest-dom/jest-globals';
 import { describe, it, expect, beforeEach } from '@jest/globals';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -153,7 +154,7 @@ describe('Position Integration Tests', () => {
       const user = userEvent.setup();
       
       const ingredients: Ingredient[] = [
-        { id: '1', name: 'Flour', amount: 2, unit: 'cups', position: 0 },
+        { id: '1', name: 'Flour', amount: 2, unit: 'cup', position: 0 },
         { id: '2', name: 'Sugar', amount: 1, unit: 'cup', position: 1 },
         { id: '3', name: 'Salt', amount: 1, unit: 'tsp', position: 2 },
       ];
@@ -186,13 +187,13 @@ describe('Position Integration Tests', () => {
 
     it('should handle cross-section drag-and-drop', () => {
       const sourceItems: Ingredient[] = [
-        { id: '1', name: 'Flour', amount: 2, unit: 'cups', position: 0 },
+        { id: '1', name: 'Flour', amount: 2, unit: 'cup', position: 0 },
         { id: '2', name: 'Sugar', amount: 1, unit: 'cup', position: 1 },
       ];
 
       const destItems: Ingredient[] = [
         { id: '3', name: 'Milk', amount: 1, unit: 'cup', position: 0 },
-        { id: '4', name: 'Eggs', amount: 2, unit: 'whole', position: 1 },
+        { id: '4', name: 'Eggs', amount: 2, unit: '', position: 1 },
       ];
 
       const result = moveBetweenSections(sourceItems, destItems, 0, 1);
@@ -297,7 +298,7 @@ describe('Position Integration Tests', () => {
           order: 1,
           items: [
             { id: '3', name: 'Milk', amount: 1, unit: 'cup', position: 0 },
-            { id: '4', name: 'Eggs', amount: 2, unit: 'whole', position: 1 },
+            { id: '4', name: 'Eggs', amount: 2, unit: '', position: 1 },
           ],
         },
       ];
@@ -387,7 +388,7 @@ describe('Position Integration Tests', () => {
         id: uuidv4(),
         title: 'Test Recipe',
         ingredients: [
-          { id: uuidv4(), name: 'Flour', amount: 2, unit: 'cups', position: 0 },
+          { id: uuidv4(), name: 'Flour', amount: 2, unit: 'cup', position: 0 },
           { id: uuidv4(), name: 'Sugar', amount: 1, unit: 'cup', position: 1 },
         ],
         instructions: [
@@ -417,7 +418,7 @@ describe('Position Integration Tests', () => {
         id: uuidv4(),
         title: 'Legacy Recipe',
         ingredients: [
-          { id: uuidv4(), name: 'Flour', amount: 2, unit: 'cups' },
+          { id: uuidv4(), name: 'Flour', amount: 2, unit: 'cup' },
           { id: uuidv4(), name: 'Sugar', amount: 1, unit: 'cup' },
         ],
         instructions: [
@@ -450,7 +451,7 @@ describe('Position Integration Tests', () => {
             name: 'Dry Ingredients',
             order: 0,
             items: [
-              { id: uuidv4(), name: 'Flour', amount: 2, unit: 'cups', position: 0 },
+              { id: uuidv4(), name: 'Flour', amount: 2, unit: 'cup', position: 0 },
               { id: uuidv4(), name: 'Sugar', amount: 1, unit: 'cup', position: 1 },
             ],
           },
@@ -486,7 +487,7 @@ describe('Position Integration Tests', () => {
       const importedRecipe: any = {
         title: 'Imported Recipe',
         ingredients: [
-          { name: 'Flour', amount: 2, unit: 'cups' },
+          { name: 'Flour', amount: 2, unit: 'cup' },
           { name: 'Sugar', amount: 1, unit: 'cup' },
         ],
         instructions: [
@@ -515,7 +516,7 @@ describe('Position Integration Tests', () => {
       const apiPayload = {
         title: 'API Test Recipe',
         ingredients: [
-          { id: uuidv4(), name: 'Flour', amount: 2, unit: 'cups', position: 0 },
+          { id: uuidv4(), name: 'Flour', amount: 2, unit: 'cup', position: 0 },
           { id: uuidv4(), name: 'Sugar', amount: 1, unit: 'cup', position: 1 },
         ],
         instructions: [
@@ -537,7 +538,7 @@ describe('Position Integration Tests', () => {
       const invalidPayload: any = {
         title: 'Invalid Recipe',
         ingredients: [
-          { id: uuidv4(), name: 'Flour', amount: 2, unit: 'cups' },
+          { id: uuidv4(), name: 'Flour', amount: 2, unit: 'cup' },
         ],
         instructions: [
           { id: uuidv4(), step: 1, content: 'Mix', position: 0 },
@@ -559,7 +560,7 @@ describe('Position Integration Tests', () => {
       const invalidPayload = {
         title: 'Invalid Recipe',
         ingredients: [
-          { id: uuidv4(), name: 'Flour', amount: 2, unit: 'cups', position: -1 },
+          { id: uuidv4(), name: 'Flour', amount: 2, unit: 'cup', position: -1 },
         ],
         instructions: [
           { id: uuidv4(), step: 1, content: 'Mix', position: 0 },
@@ -587,7 +588,7 @@ describe('Position Integration Tests', () => {
             name: 'Section 1',
             order: 0,
             items: [
-              { id: uuidv4(), name: 'Flour', amount: 2, unit: 'cups', position: 0 },
+              { id: uuidv4(), name: 'Flour', amount: 2, unit: 'cup', position: 0 },
             ],
           },
         ],
@@ -623,7 +624,7 @@ describe('Position Integration Tests', () => {
       
       // Step 1: Start with flat ingredients
       const initialIngredients: Ingredient[] = [
-        { id: uuidv4(), name: 'Flour', amount: 2, unit: 'cups', position: 0 },
+        { id: uuidv4(), name: 'Flour', amount: 2, unit: 'cup', position: 0 },
         { id: uuidv4(), name: 'Sugar', amount: 1, unit: 'cup', position: 1 },
       ];
 

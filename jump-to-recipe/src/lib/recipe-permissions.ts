@@ -149,10 +149,13 @@ export async function getRecipePermissionForSession(
  * Use this as a wrapper for API routes that need permission checking
  * Supports both Promise and non-Promise params for Next.js 15 compatibility
  */
+// Next 15 passes dynamic route params as a promise.
+export type RecipeRouteContext = { params: Promise<{ id: string } | { photoId: string }> };
+
 export function withRecipePermission(
   handler: (
     req: NextRequest,
-    context: { params: Promise<{ id: string }> | Promise<{ photoId: string }> | { id: string } | { photoId: string } },
+    context: RecipeRouteContext,
     permission: RecipePermission,
     session: Awaited<ReturnType<typeof getServerSession>>
   ) => Promise<NextResponse>,
@@ -163,7 +166,7 @@ export function withRecipePermission(
 ) {
   return async (
     req: NextRequest,
-    context: { params: Promise<{ id: string }> | Promise<{ photoId: string }> | { id: string } | { photoId: string } }
+    context: RecipeRouteContext
   ): Promise<NextResponse> => {
     try {
       const session = await getServerSession(authOptions);
@@ -174,7 +177,7 @@ export function withRecipePermission(
       }
 
       // Await params if it's a Promise (Next.js 15)
-      const params = context.params instanceof Promise ? await context.params : context.params;
+      const params = await context.params;
 
       let recipeId: string;
 

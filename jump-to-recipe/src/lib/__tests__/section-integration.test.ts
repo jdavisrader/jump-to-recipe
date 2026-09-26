@@ -78,7 +78,8 @@ describe('Section Integration Tests', () => {
           name: 'Flour',
           amount: 2,
           unit: 'cup',
-          sectionId: 'section-1'
+          sectionId: 'section-1',
+          position: 0
         }
       ],
       instructions: [
@@ -86,7 +87,8 @@ describe('Section Integration Tests', () => {
           id: '1',
           step: 1,
           content: 'Mix ingredients',
-          sectionId: 'section-1'
+          sectionId: 'section-1',
+          position: 0
         }
       ],
       ingredientSections: [

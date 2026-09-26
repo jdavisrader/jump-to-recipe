@@ -6,6 +6,10 @@
 
 import { normalizeRecipeData } from '../recipe-normalizer';
 
+// Scraped data is untyped by design; these tests feed deliberately malformed shapes.
+const normalizeScraped = (scrapedData: unknown) =>
+  normalizeRecipeData(scrapedData as Parameters<typeof normalizeRecipeData>[0], 'user-123');
+
 describe('recipe-normalizer', () => {
   describe('normalizeRecipeData', () => {
     it('should assign position to ingredients when missing (Req 5.1)', () => {
@@ -19,7 +23,7 @@ describe('recipe-normalizer', () => {
         },
       };
 
-      const result = normalizeRecipeData(scrapedData, 'user-123');
+      const result = normalizeScraped(scrapedData);
 
       expect(result.ingredients).toHaveLength(2);
       expect(result.ingredients[0].position).toBe(0);
@@ -37,7 +41,7 @@ describe('recipe-normalizer', () => {
         },
       };
 
-      const result = normalizeRecipeData(scrapedData, 'user-123');
+      const result = normalizeScraped(scrapedData);
 
       expect(result.instructions).toHaveLength(2);
       expect(result.instructions[0].position).toBe(0);
@@ -55,7 +59,7 @@ describe('recipe-normalizer', () => {
         },
       };
 
-      const result = normalizeRecipeData(scrapedData, 'user-123');
+      const result = normalizeScraped(scrapedData);
 
       expect(result.ingredients[0].position).toBe(0);
       expect(result.ingredients[1].position).toBe(1);
@@ -73,7 +77,7 @@ describe('recipe-normalizer', () => {
         },
       };
 
-      const result = normalizeRecipeData(scrapedData, 'user-123');
+      const result = normalizeScraped(scrapedData);
 
       // All three ingredients are kept, empty name becomes "Unknown ingredient"
       expect(result.ingredients).toHaveLength(3);
@@ -93,7 +97,7 @@ describe('recipe-normalizer', () => {
         },
       };
 
-      const result = normalizeRecipeData(scrapedData, 'user-123');
+      const result = normalizeScraped(scrapedData);
 
       expect(result.ingredients).toHaveLength(2);
       expect(result.ingredients[0].position).toBe(0);
@@ -108,7 +112,7 @@ describe('recipe-normalizer', () => {
         },
       };
 
-      const result = normalizeRecipeData(scrapedData, 'user-123');
+      const result = normalizeScraped(scrapedData);
 
       expect(result.instructions).toHaveLength(2);
       expect(result.instructions[0].position).toBe(0);
@@ -124,7 +128,7 @@ describe('recipe-normalizer', () => {
         },
       };
 
-      const result = normalizeRecipeData(scrapedData, 'user-123');
+      const result = normalizeScraped(scrapedData);
 
       // Default items should be added with positions
       expect(result.ingredients).toHaveLength(1);
@@ -145,7 +149,7 @@ describe('recipe-normalizer', () => {
         },
       };
 
-      const result = normalizeRecipeData(scrapedData, 'user-123');
+      const result = normalizeScraped(scrapedData);
 
       expect(result.ingredients).toHaveLength(3);
       // All positions should be reindexed to be sequential
@@ -166,7 +170,7 @@ describe('recipe-normalizer', () => {
         },
       };
 
-      const result = normalizeRecipeData(scrapedData, 'user-123');
+      const result = normalizeScraped(scrapedData);
 
       expect(result.instructions).toHaveLength(2);
       expect(result.instructions[0].position).toBe(0);

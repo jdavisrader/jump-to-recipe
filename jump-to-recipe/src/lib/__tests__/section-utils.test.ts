@@ -271,7 +271,8 @@ describe('SectionDataTransformer', () => {
             id: '1',
             name: 'Flour',
             amount: 2,
-            unit: 'cup' as const
+            unit: 'cup' as const,
+            position: 0
           }
         ],
         instructions: [

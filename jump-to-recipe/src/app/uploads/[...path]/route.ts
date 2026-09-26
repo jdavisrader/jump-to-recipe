@@ -5,10 +5,11 @@ import { existsSync } from 'fs';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { path: string[] } }
+  { params }: { params: Promise<{ path: string[] }> }
 ) {
   try {
-    const filePath = join(process.cwd(), 'public', 'uploads', ...params.path);
+    const { path: pathSegments } = await params;
+    const filePath = join(process.cwd(), 'public', 'uploads', ...pathSegments);
     
     // Security check: ensure the path is within uploads directory
     if (!filePath.startsWith(join(process.cwd(), 'public', 'uploads'))) {
