@@ -3,6 +3,7 @@ import { existsSync } from 'fs';
 import path from 'path';
 import sharp from 'sharp';
 import { S3Client, PutObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
+import { USE_BLOB, isBlobUrl, uploadToBlob, deleteFromBlob } from './blob-storage';
 
 // Configuration
 const UPLOAD_DIR = path.join(process.cwd(), 'public', 'uploads');
@@ -231,7 +232,9 @@ export async function uploadFile(
 
   // Upload to storage
   let url: string;
-  if (USE_S3) {
+  if (USE_BLOB) {
+    url = await uploadToBlob(buffer, filename, options.category, file.type, options.recipeId);
+  } else if (USE_S3) {
     url = await uploadToS3(buffer, filename, options.category, file.type, options.recipeId);
   } else {
     url = await uploadToLocal(buffer, filename, options.category, options.recipeId);
@@ -282,7 +285,9 @@ export async function deleteFile(url: string): Promise<void> {
   if (!url) return;
 
   try {
-    if (USE_S3 && url.includes('s3.')) {
+    if (isBlobUrl(url)) {
+      await deleteFromBlob(url);
+    } else if (USE_S3 && url.includes('s3.')) {
       await deleteFromS3(url);
     } else {
       await deleteFromLocal(url);
