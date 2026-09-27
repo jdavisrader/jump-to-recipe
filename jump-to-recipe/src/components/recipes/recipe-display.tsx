@@ -15,6 +15,7 @@ import { RecipeComments } from "./recipe-comments";
 import { AddToCookbookModal } from "./add-to-cookbook-modal";
 import { RecipePhotosViewer } from "./recipe-photos-viewer";
 import { RecipeScaler } from "./recipe-scaler";
+import { CookModeToggle } from "./cook-mode-toggle";
 import { scaleIngredient } from "@/lib/recipe-scaling";
 import type { Recipe } from "@/types/recipe";
 import type { RecipePhoto } from "@/types/recipe-photos";
@@ -186,6 +187,8 @@ export function RecipeDisplay({ recipe, onEdit, canEdit = false, showComments = 
           </div>
         )}
       </div>
+
+      <CookModeToggle />
 
       {/* Main Content: Ingredients (sticky) and Instructions */}
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">

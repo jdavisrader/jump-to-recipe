@@ -5,6 +5,7 @@ export { useDebounce } from './useDebounce';
 export { useMyRecipes } from './useMyRecipes';
 export { useRecipePermissions } from './useRecipePermissions';
 export { useRecipeValidation } from './useRecipeValidation';
+export { useWakeLock } from './useWakeLock';
 export type {
   ValidationError,
   ValidationState,
