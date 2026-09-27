@@ -27,6 +27,11 @@ The implementation provides secure file upload capabilities with local storage (
    - Authentication and ownership verification
    - Graceful error handling
 
+   > **Removed (2026-09):** this endpoint was never called by the app, and it only checked that the caller
+   > was logged in — not ownership — so any user could delete any stored file by URL (and, on local disk,
+   > paths outside `public/uploads`). Removing an image in the UI only clears the form field, and recipe
+   > photos are soft-deleted via `/api/recipes/photos/[photoId]`, so replaced images remain in storage.
+
 ### UI Components
 
 1. **Generic Image Upload** (`src/components/ui/image-upload.tsx`)
