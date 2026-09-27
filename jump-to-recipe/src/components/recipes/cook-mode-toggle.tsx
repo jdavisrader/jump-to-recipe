@@ -3,6 +3,7 @@
 import type { KeyboardEvent } from "react";
 import { ChefHat } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
+import { useToast } from "@/components/ui/use-toast";
 import { useWakeLock } from "@/hooks/useWakeLock";
 
 /**
@@ -11,10 +12,21 @@ import { useWakeLock } from "@/hooks/useWakeLock";
  */
 export function CookModeToggle() {
   const { isSupported, isActive, enable, disable } = useWakeLock();
+  const { toast } = useToast();
 
   if (!isSupported) return null;
 
-  const toggleCookMode = (checked: boolean) => (checked ? enable() : disable());
+  const toggleCookMode = async (checked: boolean) => {
+    if (!checked) return disable();
+
+    const isKeptAwake = await enable();
+    if (!isKeptAwake) {
+      toast({
+        title: "Couldn't keep your screen on",
+        description: "Your device didn't allow it right now. Try again in a moment.",
+      });
+    }
+  };
 
   const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     if (event.key === " " || event.key === "Enter") {

@@ -45,12 +45,37 @@ describe('useWakeLock', () => {
     expect(result.current.isActive).toBe(false);
   });
 
-  it('stays inactive when the request is denied', async () => {
+  it('reports success from enable', async () => {
+    const { result } = renderHook(() => useWakeLock());
+
+    let isKeptAwake = false;
+    await act(async () => {
+      isKeptAwake = await result.current.enable();
+    });
+    expect(isKeptAwake).toBe(true);
+  });
+
+  it('stays inactive and reports failure when the request is denied', async () => {
     request.mockRejectedValue(new Error('NotAllowedError'));
     const { result } = renderHook(() => useWakeLock());
 
-    await act(() => result.current.enable());
+    let isKeptAwake = true;
+    await act(async () => {
+      isKeptAwake = await result.current.enable();
+    });
+    expect(isKeptAwake).toBe(false);
     expect(result.current.isActive).toBe(false);
+  });
+
+  it('does not retry on visibility change after a denied request', async () => {
+    request.mockRejectedValue(new Error('NotAllowedError'));
+    const { result } = renderHook(() => useWakeLock());
+    await act(async () => {
+      await result.current.enable();
+    });
+
+    await act(async () => setVisibility('visible'));
+    expect(request).toHaveBeenCalledTimes(1);
   });
 
   it('re-requests the lock when the page becomes visible while enabled', async () => {

@@ -13,18 +13,22 @@ export function useWakeLock() {
   const wantsLockRef = useRef(false);
   const sentinelRef = useRef<WakeLockSentinel | null>(null);
 
+  /** Resolves to whether the screen is now being kept awake. */
   const requestLock = useCallback(async () => {
     try {
       const sentinel = await navigator.wakeLock.request('screen');
       if (!wantsLockRef.current) {
         await sentinel.release();
-        return;
+        return false;
       }
       sentinelRef.current = sentinel;
       setIsActive(true);
+      return true;
     } catch {
-      // Denied (e.g. low battery or page not visible) — leave the screen alone
+      // Denied (e.g. battery saver or page not visible) — leave the screen alone
+      wantsLockRef.current = false;
       setIsActive(false);
+      return false;
     }
   }, []);
 
@@ -37,7 +41,7 @@ export function useWakeLock() {
 
   const enable = useCallback(async () => {
     wantsLockRef.current = true;
-    await requestLock();
+    return requestLock();
   }, [requestLock]);
 
   const disable = useCallback(async () => {
