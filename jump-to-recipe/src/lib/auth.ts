@@ -1,9 +1,7 @@
-import GoogleProvider from 'next-auth/providers/google';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { DrizzleAdapter } from '@auth/drizzle-adapter';
 import { db } from '@/db';
 import { users } from '@/db/schema/users';
-import { env } from '@/lib/env';
 import { eq } from 'drizzle-orm';
 import bcrypt from 'bcrypt';
 import type { AuthOptions, User } from 'next-auth';
@@ -12,17 +10,13 @@ import { checkRateLimit, clientIpFromXff } from '@/lib/rate-limit';
 const LOGIN_WINDOW_MS = 15 * 60 * 1000; // 15 minutes
 
 /**
- * NextAuth configuration with Google provider and credentials
+ * NextAuth configuration with email/password credentials
  * Uses JWT strategy for session management
  * Implements role-based access control
  */
 export const authOptions: AuthOptions = {
   adapter: DrizzleAdapter(db),
   providers: [
-    GoogleProvider({
-      clientId: env.GOOGLE_ID,
-      clientSecret: env.GOOGLE_SECRET,
-    }),
     CredentialsProvider({
       name: 'Credentials',
       credentials: {

@@ -56,7 +56,8 @@ Next.js 15 (App Router, React 19 Server Components), TypeScript strict, Tailwind
   2. **Public API** (`/api/auth`, `/api/recipes/search`, `/api/recipes/discover`, and GET on `/api/recipes`) — skip auth.
   3. **Protected** (`/profile`, `/my-recipes`, `/recipes/new`, `/recipes/import`, `/cookbooks`, `/grocery-lists`) — require session cookie.
   4. **Admin** (`/admin/*`) — decodes the JWT with `getToken()` and requires `token.role === 'admin'`. Non-admins are bounced to `/?unauthorized=1`.
-- Auth is configured in `src/lib/auth.ts`: Google OAuth + Credentials (bcrypt-hashed passwords), DrizzleAdapter, **JWT session strategy** (not DB sessions — the role claim lives on the JWT, which is why middleware can check it cheaply).
+- Auth is configured in `src/lib/auth.ts`: Credentials only (bcrypt-hashed passwords; Google OAuth was removed so nothing bypasses the sign-up code), DrizzleAdapter, **JWT session strategy** (not DB sessions — the role claim lives on the JWT, which is why middleware can check it cheaply).
+- Registration (`/api/auth/register`) requires a shared code matching the `SIGNUP_CODE` env var (`src/lib/signup-code.ts`). If it's unset, registration is closed. Invite links can pre-fill it: `/auth/register?code=...`.
 - When adding a new top-level protected route, update the `protectedRoutes` array in `src/middleware.ts` — the middleware doesn't auto-discover.
 
 ### Data model quirks

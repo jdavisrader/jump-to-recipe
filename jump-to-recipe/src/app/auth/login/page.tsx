@@ -11,7 +11,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Mail } from 'lucide-react';
 import { sanitizeCallbackUrl } from '@/lib/safe-redirect';
 
 // Schema for login form validation
@@ -24,7 +23,6 @@ type LoginFormData = z.infer<typeof loginSchema>;
 
 function LoginForm() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [oauthLoading, setOAuthLoading] = useState<boolean>(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -39,17 +37,6 @@ function LoginForm() {
       password: '',
     },
   });
-  
-  const handleOAuthSignIn = async (provider: 'google') => {
-    setOAuthLoading(true);
-    try {
-      await signIn(provider, { callbackUrl });
-    } catch (error) {
-      console.error('Authentication error:', error);
-    } finally {
-      setOAuthLoading(false);
-    }
-  };
   
   const onSubmit = async (data: LoginFormData) => {
     setIsLoading(true);
@@ -146,31 +133,6 @@ function LoginForm() {
             <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading ? 'Signing in...' : 'Sign in'}
             </Button>
-            
-            {/* Google OAuth temporarily disabled */}
-            {/* <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t" />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-background px-2 text-muted-foreground">
-                  Or continue with
-                </span>
-              </div>
-            </div>
-            
-            <div className="flex flex-col space-y-2">
-              <Button
-                type="button"
-                variant="outline"
-                className="w-full"
-                onClick={() => handleOAuthSignIn('google')}
-                disabled={oauthLoading}
-              >
-                <Mail className="mr-2 h-4 w-4" />
-                Continue with Google
-              </Button>
-            </div> */}
           </CardContent>
         </form>
         <CardFooter className="flex flex-col space-y-4">

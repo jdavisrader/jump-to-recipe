@@ -4,12 +4,14 @@ import { users } from '@/db/schema/users';
 import bcrypt from 'bcrypt';
 import { z } from 'zod';
 import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
+import { isValidSignupCode } from '@/lib/signup-code';
 
 // Schema for user registration validation
 const registerSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
   email: z.string().email('Invalid email address'),
   password: z.string().min(8, 'Password must be at least 8 characters'),
+  signupCode: z.string().min(1, 'Sign-up code is required'),
 });
 
 const WINDOW_MS = 60 * 60 * 1000; // 1 hour
@@ -43,6 +45,15 @@ export async function POST(request: NextRequest) {
     }
 
     const validatedData = validationResult.data;
+
+    // Gate registration behind the shared sign-up code. The per-IP limit above
+    // keeps this from being brute-forced.
+    if (!isValidSignupCode(validatedData.signupCode)) {
+      return NextResponse.json(
+        { error: 'Invalid sign-up code.' },
+        { status: 403 }
+      );
+    }
 
     // Normalize email to lowercase so casing can't create duplicate accounts or
     // cause phantom "invalid password" failures at sign in.

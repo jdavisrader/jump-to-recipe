@@ -8,8 +8,6 @@ jest.mock('dotenv/config', () => ({}));
 const BASE_ENV = {
   DATABASE_URL: 'postgres://localhost/test',
   NEXTAUTH_SECRET: 'secret',
-  GOOGLE_ID: 'google-id',
-  GOOGLE_SECRET: 'google-secret',
   NODE_ENV: 'production',
 };
 
