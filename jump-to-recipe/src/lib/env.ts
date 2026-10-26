@@ -13,6 +13,9 @@ const envSchema = z.object({
   NEXTAUTH_URL: z.string().min(1).optional(),
   NEXTAUTH_SECRET: z.string().min(1),
 
+  // Shared code required to register. Unset means registration is closed.
+  SIGNUP_CODE: z.string().min(8).optional(),
+
   // OAuth Providers
   GOOGLE_ID: z.string().min(1),
   GOOGLE_SECRET: z.string().min(1),

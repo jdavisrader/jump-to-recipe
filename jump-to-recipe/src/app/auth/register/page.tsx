@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { Suspense, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -16,12 +16,14 @@ const registerSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
   email: z.string().email('Invalid email address'),
   password: z.string().min(8, 'Password must be at least 8 characters'),
+  signupCode: z.string().trim().min(1, 'Sign-up code is required'),
 });
 
 type RegisterFormData = z.infer<typeof registerSchema>;
 
-export default function RegisterPage() {
+function RegisterForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
@@ -31,6 +33,7 @@ export default function RegisterPage() {
       name: '',
       email: '',
       password: '',
+      signupCode: searchParams.get('code') ?? '',
     },
   });
   
@@ -117,6 +120,19 @@ export default function RegisterPage() {
                 <p className="text-sm text-red-500">{errors.password.message}</p>
               )}
             </div>
+            <div className="space-y-2">
+              <Label htmlFor="signupCode">Sign-up code</Label>
+              <Input
+                id="signupCode"
+                autoComplete="off"
+                placeholder="Ask the person who invited you"
+                {...register('signupCode')}
+                disabled={isLoading}
+              />
+              {errors.signupCode && (
+                <p className="text-sm text-red-500">{errors.signupCode.message}</p>
+              )}
+            </div>
           </CardContent>
           <CardFooter className="flex flex-col space-y-4">
             <Button type="submit" className="w-full" disabled={isLoading}>
@@ -132,5 +148,17 @@ export default function RegisterPage() {
         </form>
       </Card>
     </div>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="text-center">Loading...</div>
+      </div>
+    }>
+      <RegisterForm />
+    </Suspense>
   );
 }
