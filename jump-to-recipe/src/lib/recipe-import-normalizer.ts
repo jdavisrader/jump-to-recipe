@@ -325,8 +325,9 @@ function normalizeImportedSections<T extends ImportedIngredientItem | ImportedIn
     return undefined;
   }
 
-  // Reindex order values to ensure sequential order
-  return normalized.map((section, index) => ({
+  // Sort by existing order, then reindex order values to be sequential
+  // (the stored array order is not reliable, only the order values are)
+  return normalized.sort((a, b) => a.order - b.order).map((section, index) => ({
     ...section,
     order: index,
   }));
