@@ -2,7 +2,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { DeleteButton } from '../delete-button';
 
 describe('DeleteButton', () => {
-  it('renders with X icon', () => {
+  it('renders with trash icon', () => {
     render(<DeleteButton ariaLabel="Delete ingredient" />);
     
     // Check that the button renders
@@ -30,11 +30,11 @@ describe('DeleteButton', () => {
     expect(handleDelete).not.toHaveBeenCalled();
   });
 
-  it('applies outline variant by default', () => {
+  it('applies ghost variant by default', () => {
     render(<DeleteButton ariaLabel="Delete ingredient" />);
     
     const deleteButton = screen.getByRole('button');
-    // The button should have outline variant classes
+    // The button should have ghost variant classes
     expect(deleteButton).toBeInTheDocument();
   });
 

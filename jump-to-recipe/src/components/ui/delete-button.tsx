@@ -1,5 +1,5 @@
 import * as React from "react";
-import { X } from "lucide-react";
+import { Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button, buttonVariants } from "@/components/ui/button";
 import type { VariantProps } from "class-variance-authority";
@@ -29,7 +29,7 @@ export interface DeleteButtonProps
   
   /**
    * Visual variant for the button.
-   * Defaults to "outline" for subtle appearance.
+   * Defaults to "ghost" so it matches the section delete button.
    */
   variant?: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link";
 }
@@ -37,13 +37,13 @@ export interface DeleteButtonProps
 /**
  * DeleteButton - A button component for deleting items with clear visual feedback.
  * 
- * This component displays an X icon that users can click to delete items.
+ * This component displays a trash icon that users can click to delete items.
  * It includes proper accessibility labels, hover states, and follows the
  * design system's button patterns.
  * 
  * ## Features
  * 
- * - **Visual Indicator**: X icon from lucide-react
+ * - **Visual Indicator**: Trash icon from lucide-react
  * - **Hover State**: Visual feedback on hover
  * - **Accessibility**: Proper ARIA labels and keyboard support
  * - **Disabled State**: Visual feedback when deletion is not allowed
@@ -110,7 +110,7 @@ export interface DeleteButtonProps
  * 
  * The component uses the Button component from the design system:
  * 
- * - **Default**: Outline variant with subtle appearance
+ * - **Default**: Ghost variant with a muted icon
  * - **Hover**: Background color change and icon color change
  * - **Focus**: Ring indicator for keyboard navigation
  * - **Disabled**: Muted appearance and not-allowed cursor
@@ -118,15 +118,15 @@ export interface DeleteButtonProps
  * 
  * ## Variants
  * 
- * - **outline** (default): Subtle border with hover effect
+ * - **ghost** (default): No background, muted icon that turns red on hover
+ * - **outline**: Subtle border with hover effect
  * - **destructive**: Red background for dangerous actions
- * - **ghost**: No background, only hover effect
  * - **secondary**: Secondary color scheme
  * 
  * ## Requirements
  * 
  * Validates Requirements 4.1, 4.4, 8.5:
- * - 4.1: Displays a clear "X" icon
+ * - 4.1: Displays a clear delete (trash) icon
  * - 4.4: Provides visual feedback on hover
  * - 8.5: Memoized to avoid unnecessary re-renders
  * 
@@ -137,7 +137,7 @@ export const DeleteButton = React.memo(function DeleteButton({
   onDelete,
   ariaLabel = "Delete",
   size = "icon",
-  variant = "outline",
+  variant = "ghost",
   disabled = false,
   className,
   onClick,
@@ -161,13 +161,13 @@ export const DeleteButton = React.memo(function DeleteButton({
       onClick={handleClick}
       aria-label={ariaLabel}
       className={cn(
-        // Hover state for icon color
-        "hover:text-destructive",
+        // Muted until hover, matching the section delete button
+        "text-muted-foreground hover:text-destructive",
         className
       )}
       {...props}
     >
-      <X className="h-4 w-4" aria-hidden="true" />
+      <Trash2 className="h-4 w-4" aria-hidden="true" />
     </Button>
   );
 });
