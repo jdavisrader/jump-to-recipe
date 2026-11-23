@@ -106,7 +106,7 @@ describe('RecipePhotosManager', () => {
     it('renders photo grid with correct number of photos', () => {
       render(<RecipePhotosManager {...defaultProps} />);
       
-      expect(screen.getByText('Recipe Photos')).toBeInTheDocument();
+      expect(screen.getAllByRole('img').length).toBeGreaterThan(0);
       expect(screen.getAllByRole('img')).toHaveLength(2);
     });
 
@@ -262,17 +262,18 @@ describe('RecipePhotosManager', () => {
         // checking that the optimistic update happens
         
         // For now, let's just verify the component renders correctly
-        expect(screen.getByText('Recipe Photos')).toBeInTheDocument();
+        expect(screen.getAllByRole('img').length).toBeGreaterThan(0);
       }
     });
   });
 
   describe('Empty States', () => {
-    it('shows empty state when no photos and user can edit', () => {
+    it('shows only the upload area when no photos and user can edit', () => {
       render(<RecipePhotosManager {...defaultProps} photos={[]} />);
       
-      expect(screen.getByText('No photos yet')).toBeInTheDocument();
-      expect(screen.getByText('Upload photos to showcase your recipe visually')).toBeInTheDocument();
+      expect(screen.getByTestId('recipe-photos-upload')).toBeInTheDocument();
+      expect(screen.queryByText('No photos yet')).not.toBeInTheDocument();
+      expect(screen.queryByRole('img')).not.toBeInTheDocument();
     });
 
     it('shows different empty state when no photos and user cannot edit', () => {
@@ -353,7 +354,7 @@ describe('RecipePhotosManager', () => {
       });
       
       // Verify the component doesn't crash - it should still render
-      expect(screen.getByText('Recipe Photos')).toBeInTheDocument();
+      expect(screen.getAllByRole('img').length).toBeGreaterThan(0);
       
       // The component should have called onPhotosChange to remove the photo
       // even though the API failed (optimistic update that doesn't get reverted in current implementation)
@@ -370,7 +371,7 @@ describe('RecipePhotosManager', () => {
       
       // For now, just test that the component renders without errors
       // The drag-and-drop testing would require more complex setup
-      expect(screen.getByText('Recipe Photos')).toBeInTheDocument();
+      expect(screen.getAllByRole('img').length).toBeGreaterThan(0);
       
       consoleSpy.mockRestore();
     });

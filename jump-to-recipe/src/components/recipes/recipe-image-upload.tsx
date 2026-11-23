@@ -15,21 +15,17 @@ export function RecipeImageUpload({
   onRemove,
   disabled,
 }: RecipeImageUploadProps) {
+  // Same 16:9 shape as the recipe page hero, so the preview matches what viewers see
   return (
-    <div className="space-y-2">
-      <label className="text-sm font-medium">Recipe Image</label>
-      <ImageUpload
-        category="recipes"
-        value={value}
-        onChange={onChange}
-        onRemove={onRemove}
-        disabled={disabled}
-        placeholder="Upload a recipe image"
-        className="aspect-video max-w-md"
-      />
-      <p className="text-xs text-gray-500">
-        Upload an appetizing photo of your recipe. This will be displayed on recipe cards and in your cookbook.
-      </p>
-    </div>
+    <ImageUpload
+      category="recipes"
+      value={value}
+      onChange={onChange}
+      onRemove={onRemove}
+      disabled={disabled}
+      placeholder="Upload a cover photo"
+      className="aspect-video w-full flex items-center justify-center"
+      previewClassName="aspect-video"
+    />
   );
 }

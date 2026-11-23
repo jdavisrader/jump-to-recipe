@@ -242,8 +242,8 @@ export function RecipePhotosUpload({
       <div
         {...getRootProps()}
         className={cn(
-          "border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer transition-colors hover:border-gray-400",
-          isDragActive && "border-blue-400 bg-blue-50 dark:bg-blue-950/20",
+          "border-2 border-dashed border-border rounded-lg p-6 text-center cursor-pointer transition-colors hover:border-muted-foreground",
+          isDragActive && "border-primary bg-accent/30",
           disabled && "cursor-not-allowed opacity-50",
           !isOnline && "opacity-50 cursor-not-allowed",
           totalPhotos >= maxFiles && "opacity-50 cursor-not-allowed"
@@ -251,8 +251,8 @@ export function RecipePhotosUpload({
       >
         <input {...getInputProps()} />
         <div className="flex flex-col items-center justify-center space-y-2">
-          <Upload className="h-8 w-8 text-gray-400" />
-          <p className="text-sm text-gray-600 dark:text-gray-300">
+          <Upload className="h-8 w-8 text-muted-foreground" />
+          <p className="text-sm text-foreground">
             {!isOnline
               ? "No internet connection"
               : isDragActive
@@ -262,10 +262,10 @@ export function RecipePhotosUpload({
                   : "Drag & drop photos here, or click to select"
             }
           </p>
-          <p className="text-xs text-gray-400">
+          <p className="text-xs text-muted-foreground">
             JPEG, PNG, WEBP, HEIC up to {FILE_STORAGE_CONFIG.MAX_RECIPE_PHOTO_SIZE_MB}MB each
           </p>
-          <p className="text-xs text-gray-400">
+          <p className="text-xs text-muted-foreground">
             {totalPhotos}/{maxFiles} photos
           </p>
         </div>
