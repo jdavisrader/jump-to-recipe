@@ -1,18 +1,11 @@
 "use client";
 
-import { Clock, Users, ChefHat, ExternalLink, Edit, Star, MoreVertical, Minus, Plus } from "lucide-react";
+import { Clock, Users, ChefHat, Minus, Plus } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { 
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { RecipeImage } from "./recipe-image";
 import { RecipeComments } from "./recipe-comments";
-import { AddToCookbookModal } from "./add-to-cookbook-modal";
+import { RecipeActions } from "./recipe-actions";
 import { RecipePhotosViewer } from "./recipe-photos-viewer";
 import { RecipeScaler } from "./recipe-scaler";
 import { CookModeToggle } from "./cook-mode-toggle";
@@ -35,7 +28,6 @@ export function RecipeDisplay({ recipe, onEdit, canEdit = false, showComments = 
   const [photos, setPhotos] = useState<RecipePhoto[]>([]);
   const [photosLoading, setPhotosLoading] = useState(true);
   const [scale, setScale] = useState(1);
-  const [showAddToCookbook, setShowAddToCookbook] = useState(false);
   const totalTime = (recipe.prepTime || 0) + (recipe.cookTime || 0);
   const displayedServings = Math.round((recipe.servings || 4) * scale);
   
@@ -81,47 +73,21 @@ export function RecipeDisplay({ recipe, onEdit, canEdit = false, showComments = 
 
       {/* Header */}
       <div className="border-b pb-6">
-        {/* Title with Star and Menu */}
-        <div className="flex justify-between items-start mb-2">
-          <h1 className="text-3xl font-bold tracking-tight flex-1">{recipe.title}</h1>
-          <div className="flex items-center gap-2 ml-4">
-            <Button variant="ghost" size="sm" className="p-2">
-              <Star className="h-5 w-5" />
-            </Button>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="p-2">
-                  <MoreVertical className="h-5 w-5" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => setShowAddToCookbook(true)}>
-                  <Star className="h-4 w-4 mr-2" />
-                  Add to Cookbook
-                </DropdownMenuItem>
-                {canEdit && (
-                  <DropdownMenuItem onClick={onEdit}>
-                    <Edit className="h-4 w-4 mr-2" />
-                    Edit Recipe
-                  </DropdownMenuItem>
-                )}
-                {recipe.sourceUrl && (
-                  <DropdownMenuItem asChild>
-                    <a href={recipe.sourceUrl} target="_blank" rel="noopener noreferrer">
-                      <ExternalLink className="h-4 w-4 mr-2" />
-                      View Original Recipe
-                    </a>
-                  </DropdownMenuItem>
-                )}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </div>
-        
+        <h1 className="text-3xl font-bold tracking-tight mb-2">{recipe.title}</h1>
+
         {/* Author */}
         {recipe.authorName && (
           <p className="text-muted-foreground mb-4">By {recipe.authorName}</p>
         )}
+
+        <div className="mb-6">
+          <RecipeActions
+            recipeId={recipe.id}
+            canEdit={canEdit}
+            onEdit={onEdit}
+            sourceUrl={recipe.sourceUrl}
+          />
+        </div>
         
         {/* Description */}
         {recipe.description && (
@@ -402,13 +368,6 @@ export function RecipeDisplay({ recipe, onEdit, canEdit = false, showComments = 
           />
         </div>
       )}
-      
-      {/* Add to Cookbook Modal */}
-      <AddToCookbookModal
-        recipeId={recipe.id}
-        isOpen={showAddToCookbook}
-        onClose={() => setShowAddToCookbook(false)}
-      />
     </div>
   );
 }
