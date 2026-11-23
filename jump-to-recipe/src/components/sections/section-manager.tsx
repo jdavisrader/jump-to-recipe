@@ -424,17 +424,17 @@ export function SectionManager<T extends { id: string }>({
                           role="list"
                           aria-label={`${section.name} - drag ${itemType === 'ingredient' ? 'ingredients' : 'steps'} to reorder`}
                           aria-describedby="drag-instructions"
+                          // Highlight with color and ring only: changing padding mid-drag
+                          // shifts the layout the drag library measured at drag start
                           className={cn(
-                            'space-y-3 transition-all duration-200',
-                            snapshot.isDraggingOver &&
-                              'bg-accent/30 rounded-lg p-4 ring-2 ring-primary ring-offset-2'
+                            'space-y-3 rounded-lg transition-colors',
+                            snapshot.isDraggingOver && 'bg-accent/30 ring-2 ring-primary ring-offset-2'
                           )}
                         >
+                          {/* No enter animation here: a dropped item mounts as new in its
+                              destination section and would replay the slide-in after the drop */}
                           {section.items.map((item, itemIndex) => (
-                            <div
-                              key={item.id}
-                              className="section-item-enter"
-                            >
+                            <div key={item.id}>
                               {renderItem(item, itemIndex, section.id)}
                             </div>
                           ))}

@@ -173,7 +173,7 @@ describe('Drag-only-from-handle restriction - Sectioned mode', () => {
     render(<TestWrapperSectioned />);
 
     // Find the drag handle element in sectioned mode
-    const dragHandleElement = screen.getByTestId('drag-handle-section-1-ing-1');
+    const dragHandleElement = screen.getByTestId('drag-handle-ing-1');
     
     // Verify dragHandleProps are applied (restricts drag to handle only)
     expect(dragHandleElement).toHaveAttribute('data-drag-source', 'handle-only');
@@ -183,7 +183,7 @@ describe('Drag-only-from-handle restriction - Sectioned mode', () => {
     render(<TestWrapperSectioned />);
 
     // Find the draggable container in sectioned mode
-    const draggableContainer = screen.getByTestId('draggable-section-1-ing-1');
+    const draggableContainer = screen.getByTestId('draggable-ing-1');
     
     // Verify draggableProps are applied to container (provides context)
     expect(draggableContainer).toHaveAttribute('data-drag-source', 'anywhere');
@@ -193,8 +193,8 @@ describe('Drag-only-from-handle restriction - Sectioned mode', () => {
     render(<TestWrapperSectioned />);
 
     // Get both elements
-    const draggableContainer = screen.getByTestId('draggable-section-1-ing-1');
-    const dragHandleElement = screen.getByTestId('drag-handle-section-1-ing-1');
+    const draggableContainer = screen.getByTestId('draggable-ing-1');
+    const dragHandleElement = screen.getByTestId('drag-handle-ing-1');
 
     // Verify they are different elements
     expect(draggableContainer).not.toBe(dragHandleElement);
