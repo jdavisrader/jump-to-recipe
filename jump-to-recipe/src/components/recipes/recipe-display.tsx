@@ -3,7 +3,7 @@
 import { Clock, Users, ChefHat, Minus, Plus } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { RecipeImage } from "./recipe-image";
+import { RecipeHeroImage } from "./recipe-hero-image";
 import { RecipeComments } from "./recipe-comments";
 import { RecipeActions } from "./recipe-actions";
 import { RecipePhotosViewer } from "./recipe-photos-viewer";
@@ -57,19 +57,12 @@ export function RecipeDisplay({ recipe, onEdit, canEdit = false, showComments = 
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      {/* Recipe Image */}
-      {recipe.imageUrl && (
-        <div className="aspect-video w-full overflow-hidden rounded-lg">
-          <RecipeImage
-            src={recipe.imageUrl}
-            alt={recipe.title}
-            width={800}
-            height={450}
-            className="object-cover w-full h-full"
-            priority
-          />
-        </div>
-      )}
+      <RecipeHeroImage
+        imageUrl={recipe.imageUrl}
+        title={recipe.title}
+        canEdit={canEdit}
+        onEdit={onEdit}
+      />
 
       {/* Header */}
       <div className="border-b pb-6">
