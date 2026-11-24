@@ -108,7 +108,7 @@ describe('RecipeIngredientsWithSections', () => {
   it('renders add ingredient button in flat mode', () => {
     render(<TestWrapper />);
 
-    expect(screen.getByText('Add Ingredient')).toBeInTheDocument();
+    expect(screen.getByText('Add ingredient')).toBeInTheDocument();
   });
 
   it('falls back to displaying the decimal amount for legacy ingredients with no displayAmount', () => {

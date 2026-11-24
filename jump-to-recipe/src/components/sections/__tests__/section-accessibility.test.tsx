@@ -51,10 +51,13 @@ describe('Section Components Accessibility', () => {
       const user = userEvent.setup();
       render(<SectionManager {...mockProps} />);
       
-      // Tab through interactive elements - simplified tab order without drag handles
+      // Tab order without drag handles: title, Move down (first section has no Up), delete
       await user.tab();
       expect(document.activeElement).toHaveAttribute('title', 'Click to edit');
-      
+
+      await user.tab();
+      expect(document.activeElement).toHaveAccessibleName(/^Move .* down$/);
+
       await user.tab();
       expect(document.activeElement).toHaveAttribute('title', 'Delete section');
     });
@@ -67,14 +70,15 @@ describe('Section Components Accessibility', () => {
       const dragHandles = screen.queryAllByTitle('Drag to reorder');
       expect(dragHandles).toHaveLength(0);
       
-      // Tab through and verify only edit and delete buttons are focusable
+      // Tab through and verify only edit, reorder arrow and delete buttons are focusable
       await user.tab();
-      const firstFocused = document.activeElement;
-      expect(firstFocused).toHaveAttribute('title', 'Click to edit');
-      
+      expect(document.activeElement).toHaveAttribute('title', 'Click to edit');
+
       await user.tab();
-      const secondFocused = document.activeElement;
-      expect(secondFocused).toHaveAttribute('title', 'Delete section');
+      expect(document.activeElement).toHaveAccessibleName(/^Move .* down$/);
+
+      await user.tab();
+      expect(document.activeElement).toHaveAttribute('title', 'Delete section');
     });
 
     it('should announce loading state to screen readers', () => {

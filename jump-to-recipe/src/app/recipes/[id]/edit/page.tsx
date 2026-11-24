@@ -4,6 +4,7 @@ import { useState, useEffect, use, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { RecipeForm, DeleteRecipeSection, AssignOwnerSection } from "@/components/recipes";
+import { FormPageHeader, RecipeStatusBadge } from "@/components/recipes/form-page-header";
 import { ErrorBoundary } from "@/components/ui/error-boundary";
 import { useToast } from "@/components/ui/use-toast";
 import { fetchWithRetry } from "@/lib/api-retry";
@@ -334,12 +335,9 @@ export default function EditRecipePage({ params }: EditRecipePageProps) {
       }}
     >
       <div className="container mx-auto py-8 max-w-4xl">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Edit Recipe</h1>
-          <p className="text-muted-foreground">
-            Update your recipe details
-          </p>
-        </div>
+        <FormPageHeader backHref={`/recipes/${id}`} backLabel="Back to recipe" title="Edit recipe">
+          <RecipeStatusBadge visibility={recipe.visibility} updatedAt={recipe.updatedAt} />
+        </FormPageHeader>
 
         <RecipeForm
           initialData={{
@@ -363,6 +361,7 @@ export default function EditRecipePage({ params }: EditRecipePageProps) {
           onSubmit={handleUpdateRecipe}
           isLoading={isLoading}
           submitLabel="Save changes"
+          cancelLabel="Discard changes"
           recipeId={recipe.id}
           onCancel={() => router.push(`/recipes/${id}`)}
           beforeSubmit={
@@ -388,9 +387,9 @@ export default function EditRecipePage({ params }: EditRecipePageProps) {
           }
         />
 
-        {/* Kept apart from Save; the confirmation modal guards the delete */}
+        {/* Below the form, apart from Save; the confirmation modal guards the delete */}
         {canDelete && (
-          <div className="mt-10 flex justify-center">
+          <div className="mt-10">
             <DeleteRecipeSection
               recipeId={recipe.id}
               recipeTitle={recipe.title}
