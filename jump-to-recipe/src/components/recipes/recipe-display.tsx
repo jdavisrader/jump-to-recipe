@@ -1,7 +1,5 @@
 "use client";
 
-import { Clock } from "lucide-react";
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { RecipeHero } from "./recipe-hero";
 import { RecipeStats } from "./recipe-stats";
@@ -10,7 +8,8 @@ import { RecipeActions } from "./recipe-actions";
 import { RecipePhotosViewer } from "./recipe-photos-viewer";
 import { RecipeIngredientsList } from "./recipe-ingredients-list";
 import { CookModeToggle } from "./cook-mode-toggle";
-import { RecipeJumpNav, getMethodSectionId } from "./recipe-jump-nav";
+import { RecipeJumpNav } from "./recipe-jump-nav";
+import { RecipeMethod } from "./recipe-method";
 import type { Recipe } from "@/types/recipe";
 import type { RecipePhoto } from "@/types/recipe-photos";
 import { useSession } from "next-auth/react";
@@ -73,7 +72,7 @@ export function RecipeDisplay({ recipe, onEdit, canEdit = false, showComments = 
       </div>
 
       {/* Main Content: Ingredients (sticky) and Instructions */}
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+      <div className="grid grid-cols-1 gap-10 lg:grid-cols-5">
         <div className="lg:col-span-2">
           <RecipeIngredientsList
             ingredients={recipe.ingredients}
@@ -84,77 +83,11 @@ export function RecipeDisplay({ recipe, onEdit, canEdit = false, showComments = 
           />
         </div>
 
-        {/* Instructions */}
-        <div className="lg:col-span-3">
-          <Card className="print:border-0 print:shadow-none">
-            <CardHeader>
-              <CardTitle>Instructions</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {recipe.instructionSections && recipe.instructionSections.length > 0 ? (
-                // Display sectioned instructions
-                <div className="space-y-8">
-                  {recipe.instructionSections
-                    .sort((a, b) => a.order - b.order)
-                    .map((section, sectionIndex) => (
-                      <div
-                        key={section.id}
-                        id={getMethodSectionId(sectionIndex + 1)}
-                        className="scroll-mt-24"
-                      >
-                        <h4 className="font-semibold text-lg mb-4 text-primary">
-                          {section.name}
-                        </h4>
-                        <ol className="space-y-4">
-                          {section.items.map((instruction) => (
-                            <li key={instruction.id} className="flex gap-4">
-                              <div className="flex-shrink-0 w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-sm font-medium">
-                                {instruction.step}
-                              </div>
-                              <div className="flex-1 space-y-1">
-                                <div className="text-sm leading-relaxed">
-                                  {instruction.content}
-                                </div>
-                                {instruction.duration && (
-                                  <div className="text-xs text-muted-foreground flex items-center gap-1">
-                                    <Clock className="h-3 w-3" />
-                                    {instruction.duration} min
-                                  </div>
-                                )}
-                              </div>
-                            </li>
-                          ))}
-                        </ol>
-                      </div>
-                    ))}
-                </div>
-              ) : (
-                // Display flat instructions (backward compatible)
-                <ol className="space-y-4">
-                  {recipe.instructions
-                    .sort((a, b) => a.step - b.step)
-                    .map((instruction) => (
-                      <li key={instruction.id} className="flex gap-4">
-                        <div className="flex-shrink-0 w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-sm font-medium">
-                          {instruction.step}
-                        </div>
-                        <div className="flex-1 space-y-1">
-                          <div className="text-sm leading-relaxed">
-                            {instruction.content}
-                          </div>
-                          {instruction.duration && (
-                            <div className="text-xs text-muted-foreground flex items-center gap-1">
-                              <Clock className="h-3 w-3" />
-                              {instruction.duration} min
-                            </div>
-                          )}
-                        </div>
-                      </li>
-                    ))}
-                </ol>
-              )}
-            </CardContent>
-          </Card>
+        <div className="min-w-0 lg:col-span-3">
+          <RecipeMethod
+            instructions={recipe.instructions}
+            instructionSections={recipe.instructionSections}
+          />
         </div>
       </div>
 
