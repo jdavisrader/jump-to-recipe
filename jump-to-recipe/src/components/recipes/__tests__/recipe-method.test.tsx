@@ -37,7 +37,10 @@ describe('RecipeMethod', () => {
     render(<RecipeMethod instructions={[step('Mix', 0, 5)]} />);
 
     expect(screen.queryByText(/Part/)).not.toBeInTheDocument();
-    expect(screen.getByText('5 min')).toBeInTheDocument();
-    expect(screen.getByRole('heading', { level: 2, name: 'Method' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 2, name: 'Instructions' })).toBeInTheDocument();
+    // Duration sits above the step text
+    const duration = screen.getByText('5 min');
+    const text = screen.getByText('Mix');
+    expect(duration.compareDocumentPosition(text) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 });

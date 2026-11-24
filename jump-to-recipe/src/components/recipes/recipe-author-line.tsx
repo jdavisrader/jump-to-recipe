@@ -27,7 +27,7 @@ export function RecipeAuthorLine({ authorName, updatedAt, sourceUrl }: RecipeAut
   const updatedLabel = `Updated ${dateFormatter.format(new Date(updatedAt))}`;
 
   return (
-    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
+    <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
       {authorName && (
         <span
           className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-muted text-sm font-semibold text-foreground"

@@ -11,17 +11,18 @@ interface RecipeHeroImageProps {
   onEdit?: () => void;
 }
 
-const frameClasses = "aspect-[4/3] w-full overflow-hidden rounded-2xl";
+// Wide banner on larger screens, closer to square on phones
+const frameClasses = "aspect-[4/3] w-full overflow-hidden rounded-2xl sm:aspect-[16/7]";
 
 export function RecipeHeroImage({ imageUrl, title, canEdit, onEdit }: RecipeHeroImageProps) {
   if (imageUrl) {
     return (
-      <div className={`${frameClasses} border print:max-h-64`}>
+      <div className={`${frameClasses} border`}>
         <RecipeImage
           src={imageUrl}
           alt={title}
-          width={800}
-          height={600}
+          width={1200}
+          height={525}
           className="h-full w-full object-cover"
           priority
         />

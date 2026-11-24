@@ -31,7 +31,7 @@ export function RecipeActions({ recipeId, canEdit, onEdit }: RecipeActionsProps)
   };
 
   return (
-    <div className="flex flex-wrap gap-2 print:hidden">
+    <div className="flex flex-wrap justify-center gap-2 print:hidden">
       {canEdit && (
         <Button onClick={onEdit} className={touchTarget}>
           <Pencil className="mr-2 h-4 w-4" aria-hidden="true" />

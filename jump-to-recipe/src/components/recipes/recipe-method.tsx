@@ -42,9 +42,9 @@ export function RecipeMethod({
   const showPartLabels = groups.length > 1;
 
   return (
-    <section aria-labelledby="method-heading">
-      <h2 id="method-heading" className="text-2xl font-bold tracking-tight">
-        Method
+    <section aria-labelledby="instructions-heading">
+      <h2 id="instructions-heading" className="text-2xl font-bold tracking-tight">
+        Instructions
       </h2>
 
       {groups.map((group, groupIndex) => (
@@ -79,16 +79,16 @@ export function RecipeMethod({
                   {stepIndex + 1}
                 </span>
                 <div className="flex-1 space-y-1 pt-1.5">
-                  <p className="leading-relaxed">
-                    <span className="sr-only">Step {stepIndex + 1}: </span>
-                    {step.content}
-                  </p>
                   {step.duration ? (
                     <p className="flex items-center gap-1 text-sm text-muted-foreground">
                       <Clock className="h-3.5 w-3.5" aria-hidden="true" />
                       {step.duration} min
                     </p>
                   ) : null}
+                  <p className="leading-relaxed">
+                    <span className="sr-only">Step {stepIndex + 1}: </span>
+                    {step.content}
+                  </p>
                 </div>
               </li>
             ))}

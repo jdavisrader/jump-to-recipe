@@ -48,7 +48,7 @@ export function RecipeIngredientsList({
   return (
     <section
       aria-labelledby="ingredients-heading"
-      className="rounded-2xl border bg-card p-6 lg:sticky lg:top-20 lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto print:static print:max-h-none print:border-0 print:p-0"
+      className="rounded-2xl border bg-card p-6 print:border-0 print:p-0"
     >
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 id="ingredients-heading" className="text-2xl font-bold tracking-tight">

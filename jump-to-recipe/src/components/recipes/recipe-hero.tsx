@@ -1,9 +1,7 @@
 import type { ReactNode } from "react";
 
 import { RecipeHeroImage } from "./recipe-hero-image";
-import { RecipeDescription } from "./recipe-description";
 import { RecipeAuthorLine } from "./recipe-author-line";
-import { cn } from "@/lib/utils";
 import type { Recipe } from "@/types/recipe";
 
 interface RecipeHeroProps {
@@ -13,24 +11,27 @@ interface RecipeHeroProps {
   >;
   canEdit: boolean;
   onEdit?: () => void;
-  /** Stats and actions, shown under the tags */
+  /** Stats and actions, shown under the description */
   children?: ReactNode;
 }
 
+/** Full-width photo on top, then the recipe's details centered beneath it */
 export function RecipeHero({ recipe, canEdit, onEdit, children }: RecipeHeroProps) {
-  // Viewers who can't add a photo get the full width instead of an empty column
-  const hasPhotoColumn = Boolean(recipe.imageUrl) || canEdit;
-
   return (
-    <section
-      className={cn("grid items-start gap-8 lg:gap-10", hasPhotoColumn && "lg:grid-cols-2")}
-    >
-      <div className="flex min-w-0 flex-col gap-5">
+    <section className="flex flex-col items-center gap-8">
+      <div className="w-full print:hidden">
+        <RecipeHeroImage
+          imageUrl={recipe.imageUrl}
+          title={recipe.title}
+          canEdit={canEdit}
+          onEdit={onEdit}
+        />
+      </div>
+
+      <div className="flex w-full max-w-3xl flex-col items-center gap-5 text-center">
         <h1 className="text-4xl font-bold leading-tight tracking-tight sm:text-5xl">
           {recipe.title}
         </h1>
-
-        {recipe.description && <RecipeDescription text={recipe.description} />}
 
         <RecipeAuthorLine
           authorName={recipe.authorName}
@@ -39,7 +40,7 @@ export function RecipeHero({ recipe, canEdit, onEdit, children }: RecipeHeroProp
         />
 
         {recipe.tags.length > 0 && (
-          <ul className="flex flex-wrap gap-2" aria-label="Tags">
+          <ul className="flex flex-wrap justify-center gap-2" aria-label="Tags">
             {recipe.tags.map((tag) => (
               <li
                 key={tag}
@@ -51,19 +52,14 @@ export function RecipeHero({ recipe, canEdit, onEdit, children }: RecipeHeroProp
           </ul>
         )}
 
-        {children}
-      </div>
+        {recipe.description && (
+          <p className="max-w-prose whitespace-pre-line text-lg leading-relaxed text-muted-foreground">
+            {recipe.description}
+          </p>
+        )}
 
-      {hasPhotoColumn && (
-        <div className="order-first min-w-0 lg:order-none print:hidden">
-          <RecipeHeroImage
-            imageUrl={recipe.imageUrl}
-            title={recipe.title}
-            canEdit={canEdit}
-            onEdit={onEdit}
-          />
-        </div>
-      )}
+        {children && <div className="flex w-full flex-col gap-5">{children}</div>}
+      </div>
     </section>
   );
 }

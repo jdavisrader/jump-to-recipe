@@ -35,7 +35,7 @@ export function RecipeStats({ prepTime, cookTime, servings, difficulty, scale }:
 
   // Cells draw their own top/left borders; the negative margin hides them on the outer edge
   return (
-    <div className="overflow-hidden rounded-xl border">
+    <div className="overflow-hidden rounded-xl border text-left">
       <dl className="-ml-px -mt-px flex flex-wrap">
         {stats.map(({ label, value }) => (
           <div key={label} className="flex-1 basis-28 border-l border-t px-4 py-3">
