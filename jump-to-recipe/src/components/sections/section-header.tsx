@@ -268,10 +268,10 @@ export function SectionHeader({
     <>
       <div
         className={cn(
-          'flex items-center gap-3 p-3 bg-background rounded-lg border border-border',
+          'flex items-center gap-2 border-b border-border pb-2',
           isDeleting && 'animate-pulse opacity-50',
-          'hover:bg-accent/40 transition-colors duration-200',
-          hasError && 'border-red-500 dark:border-red-500 bg-red-50 dark:bg-red-950/20',
+          'transition-colors duration-200',
+          hasError && 'border-red-500 dark:border-red-500 bg-red-50 dark:bg-red-950/20 rounded-t-md',
           className
         )}
       >

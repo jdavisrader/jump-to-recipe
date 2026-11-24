@@ -9,7 +9,7 @@ import { getDraggableStyle } from '@/lib/drag-drop-style';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { FormPanel } from '@/components/recipes/form-panel';
 import {
   Select,
   SelectContent,
@@ -733,7 +733,7 @@ export function RecipeIngredientsWithSections<TFieldValues extends FieldValues, 
             </div>
 
             {/* Ingredient Fields */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-2 flex-1">
+            <div className="grid flex-1 grid-cols-2 gap-2 md:grid-cols-[5.5rem_7rem_1fr]">
               {/* Field order: Quantity, Unit, Ingredient Name, Notes */}
               <FormField
                 control={control}
@@ -749,6 +749,7 @@ export function RecipeIngredientsWithSections<TFieldValues extends FieldValues, 
                       <Input
                         type="text"
                         placeholder="e.g. 1 3/4"
+                        aria-label="Quantity"
                         name={field.name}
                         ref={field.ref}
                         value={displayValue}
@@ -781,7 +782,7 @@ export function RecipeIngredientsWithSections<TFieldValues extends FieldValues, 
                   <FormItem>
                     <Select onValueChange={field.onChange} defaultValue={field.value || undefined}>
                       <FormControl>
-                        <SelectTrigger>
+                        <SelectTrigger aria-label="Unit">
                           <SelectValue placeholder="Unit" />
                         </SelectTrigger>
                       </FormControl>
@@ -811,10 +812,11 @@ export function RecipeIngredientsWithSections<TFieldValues extends FieldValues, 
                 control={control}
                 name={`${fieldBaseName}.name`}
                 render={({ field }) => (
-                  <FormItem>
+                  <FormItem className="col-span-2 md:col-span-1">
                     <FormControl>
                       <Input
                         placeholder="Ingredient name"
+                        aria-label="Ingredient"
                         {...field}
                         onBlur={(e) => {
                           field.onBlur();
@@ -845,9 +847,14 @@ export function RecipeIngredientsWithSections<TFieldValues extends FieldValues, 
                 control={control}
                 name={`${fieldBaseName}.notes`}
                 render={({ field }) => (
-                  <FormItem>
+                  <FormItem className="col-span-2 md:col-start-3">
                     <FormControl>
-                      <Input placeholder="Notes (optional)" {...field} />
+                      <Input
+                        placeholder="Notes (optional)"
+                        aria-label="Ingredient notes"
+                        className="h-8 text-sm"
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -884,6 +891,7 @@ export function RecipeIngredientsWithSections<TFieldValues extends FieldValues, 
               snapshot.isDraggingOver ? 'bg-accent/30 ring-2 ring-primary ring-offset-2' : ''
             } ${isTouchDevice ? 'touch-device' : ''}`}
           >
+            <IngredientColumnLabels />
             {ingredientFields.map((field, index) => (
               <Draggable
                 key={field.id}
@@ -914,7 +922,7 @@ export function RecipeIngredientsWithSections<TFieldValues extends FieldValues, 
                     </div>
 
                     {/* Ingredient Fields */}
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-2 flex-1">
+                    <div className="grid flex-1 grid-cols-2 gap-2 md:grid-cols-[5.5rem_7rem_1fr]">
                       {/* Field order: Quantity, Unit, Ingredient Name, Notes */}
                       <FormField
                         control={control}
@@ -930,6 +938,7 @@ export function RecipeIngredientsWithSections<TFieldValues extends FieldValues, 
                               <Input
                                 type="text"
                                 placeholder="e.g. 1 3/4"
+                                aria-label="Quantity"
                                 name={field.name}
                                 ref={field.ref}
                                 value={displayValue}
@@ -962,7 +971,7 @@ export function RecipeIngredientsWithSections<TFieldValues extends FieldValues, 
                           <FormItem>
                             <Select onValueChange={field.onChange} defaultValue={field.value || undefined}>
                               <FormControl>
-                                <SelectTrigger>
+                                <SelectTrigger aria-label="Unit">
                                   <SelectValue placeholder="Unit" />
                                 </SelectTrigger>
                               </FormControl>
@@ -992,9 +1001,9 @@ export function RecipeIngredientsWithSections<TFieldValues extends FieldValues, 
                         control={control}
                         name={`ingredients.${index}.name`}
                         render={({ field }) => (
-                          <FormItem>
+                          <FormItem className="col-span-2 md:col-span-1">
                             <FormControl>
-                              <Input placeholder="Ingredient name" {...field} />
+                              <Input placeholder="Ingredient name" aria-label="Ingredient" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -1005,9 +1014,14 @@ export function RecipeIngredientsWithSections<TFieldValues extends FieldValues, 
                         control={control}
                         name={`ingredients.${index}.notes`}
                         render={({ field }) => (
-                          <FormItem>
+                          <FormItem className="col-span-2 md:col-start-3">
                             <FormControl>
-                              <Input placeholder="Notes (optional)" {...field} />
+                              <Input
+                                placeholder="Notes (optional)"
+                                aria-label="Ingredient notes"
+                                className="h-8 text-sm"
+                                {...field}
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -1046,7 +1060,7 @@ export function RecipeIngredientsWithSections<TFieldValues extends FieldValues, 
               disabled={isLoading}
             >
               <Plus className="h-4 w-4 mr-2" />
-              Add Ingredient
+              Add ingredient
             </Button>
           </div>
         )}
@@ -1054,22 +1068,37 @@ export function RecipeIngredientsWithSections<TFieldValues extends FieldValues, 
     </DragDropContext>
   );
 
+  const itemCount = shouldUseSections
+    ? ingredientSections.reduce((total: number, section: IngredientSection) => total + section.items.length, 0)
+    : ingredients.length;
+  const runningTotal = [
+    `${itemCount} ${itemCount === 1 ? 'item' : 'items'}`,
+    shouldUseSections && `${ingredientSections.length} ${ingredientSections.length === 1 ? 'group' : 'groups'}`,
+  ].filter(Boolean).join(' · ');
+
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-        <CardTitle>Ingredients</CardTitle>
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={handleToggleSections}
-          disabled={isLoading}
-          aria-label={shouldUseSections ? 'Convert to simple list' : 'Organize into sections'}
-        >
-          {shouldUseSections ? 'Use Simple List' : 'Organize into Sections'}
-        </Button>
-      </CardHeader>
-      <CardContent>
+    <FormPanel
+      title="Ingredients"
+      description="Group ingredients when the recipe has parts, like the cake and the frosting. Groups here don't have to match the method sections."
+      aside={
+        <>
+          <span className="text-sm text-muted-foreground tabular-nums" aria-live="polite">
+            {runningTotal}
+          </span>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={handleToggleSections}
+            disabled={isLoading}
+            aria-label={shouldUseSections ? 'Convert to simple list' : 'Organize into sections'}
+          >
+            {shouldUseSections ? 'Use Simple List' : 'Organize into Sections'}
+          </Button>
+        </>
+      }
+    >
+      <div>
         {/* Drag instructions for screen readers and keyboard users */}
         <div id="drag-instructions" className="sr-only">
           To reorder ingredients, use the drag handle. 
@@ -1100,12 +1129,13 @@ export function RecipeIngredientsWithSections<TFieldValues extends FieldValues, 
                 onRemoveItem={handleRemoveIngredient}
                 renderItem={renderIngredientItem}
                 itemType="ingredient"
-                addSectionLabel="Add Ingredient Section"
-                addItemLabel="Add Ingredient"
+                addSectionLabel="Add ingredient group"
+                addItemLabel="Add ingredient"
                 isLoading={isLoading}
                 validationErrors={validationErrors}
                 onValidate={onValidate}
                 enableDragDrop={true}
+                itemsHeader={<IngredientColumnLabels />}
               />
             </div>
           </DragDropContext>
@@ -1133,7 +1163,20 @@ export function RecipeIngredientsWithSections<TFieldValues extends FieldValues, 
             Drag to reorder
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </FormPanel>
+  );
+}
+
+function IngredientColumnLabels() {
+  return (
+    <div
+      aria-hidden="true"
+      className="hidden gap-2 px-11 text-xs font-medium uppercase tracking-wide text-muted-foreground md:grid md:grid-cols-[5.5rem_7rem_1fr]"
+    >
+      <span>Qty</span>
+      <span>Unit</span>
+      <span>Ingredient</span>
+    </div>
   );
 }
