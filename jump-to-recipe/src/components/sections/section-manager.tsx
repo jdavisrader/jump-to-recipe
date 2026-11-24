@@ -135,7 +135,7 @@ interface SectionManagerProps<T> {
  * 
  * - **Append-Only Ordering**: New sections are always added to the bottom of the list
  * - **Order Stability**: Section order remains stable during rename and delete operations
- * - **No Reordering**: Sections cannot be reordered after creation (no drag-and-drop)
+ * - **Arrow Reordering**: Sections move up or down one place with the header arrows (no drag-and-drop)
  * - **Automatic Reindexing**: When sections are deleted, remaining sections are reindexed sequentially
  * 
  * ## Validation Support
@@ -321,6 +321,27 @@ export function SectionManager<T extends { id: string }>({
   // Sort sections by order
   const sortedSections = [...sections].sort((a, b) => a.order - b.order);
 
+  /**
+   * Swaps a section with its neighbour and renumbers order from 0.
+   * Does nothing when the section is already at that end of the list.
+   *
+   * @param sectionId - The ID of the section to move
+   * @param direction - 'up' moves it earlier, 'down' later
+   */
+  const handleSectionMove = (sectionId: string, direction: 'up' | 'down') => {
+    const index = sortedSections.findIndex(section => section.id === sectionId);
+    const targetIndex = direction === 'up' ? index - 1 : index + 1;
+    if (index === -1 || targetIndex < 0 || targetIndex >= sortedSections.length) return;
+
+    const reordered = [...sortedSections];
+    [reordered[index], reordered[targetIndex]] = [reordered[targetIndex], reordered[index]];
+    onSectionsChange(reordered.map((section, order) => ({ ...section, order })));
+
+    if (onValidate) {
+      onValidate();
+    }
+  };
+
   // Loading skeleton
   if (isLoading) {
     return (
@@ -389,6 +410,9 @@ export function SectionManager<T extends { id: string }>({
                   titleId={`section-${section.id}-title`}
                   hasItems={section.items.length > 0}
                   isLastSection={sections.length === 1}
+                  onMove={handleSectionMove}
+                  canMoveUp={sectionIndex > 0}
+                  canMoveDown={sectionIndex < sortedSections.length - 1}
                 />
                 
                 {/* Section Name Validation Error */}

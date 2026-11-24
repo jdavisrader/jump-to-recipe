@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { Trash2, Loader2 } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { ChevronDown, ChevronUp, Trash2, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ConfirmationModal } from '@/components/ui/confirmation-modal';
 import { EditableTitle } from './editable-title';
@@ -15,7 +15,7 @@ interface Section {
   id: string;
   /** Display name of the section */
   name: string;
-  /** Order index of the section (for reference only, not used for reordering) */
+  /** Order index of the section (the arrows in this header change it) */
   order: number;
 }
 
@@ -93,6 +93,14 @@ interface SectionHeaderProps {
    * deleting this section will convert the recipe to unsectioned mode.
    */
   isLastSection?: boolean;
+
+  /**
+   * Moves the section one place up or down. The Up arrow is hidden when
+   * canMoveUp is false (first section), and Down when canMoveDown is false.
+   */
+  onMove?: (id: string, direction: 'up' | 'down') => void;
+  canMoveUp?: boolean;
+  canMoveDown?: boolean;
 }
 
 /**
@@ -106,7 +114,7 @@ interface SectionHeaderProps {
  * - **Inline Editing**: Click the title to rename the section
  * - **Delete Control**: Button to delete the section with smart confirmation
  * - **Validation Support**: Display validation errors for section names
- * - **No Reordering**: No drag handle or reordering controls (sections maintain creation order)
+ * - **Arrow Reordering**: Up/down buttons move the section one place (no drag handle)
  * 
  * ## Validation Features
  * 
@@ -227,9 +235,31 @@ export function SectionHeader({
   errorMessage,
   titleId,
   hasItems = false,
-  isLastSection = false
+  isLastSection = false,
+  onMove,
+  canMoveUp = false,
+  canMoveDown = false,
 }: SectionHeaderProps) {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const moveUpRef = useRef<HTMLButtonElement>(null);
+  const moveDownRef = useRef<HTMLButtonElement>(null);
+  const pendingFocus = useRef<'up' | 'down' | null>(null);
+
+  // React may move this header's DOM node during the swap, which drops focus.
+  // Put it back on the same arrow, or the other one if that arrow is now hidden.
+  useEffect(() => {
+    const direction = pendingFocus.current;
+    if (!direction) return;
+    pendingFocus.current = null;
+    const [preferred, fallback] =
+      direction === 'up' ? [moveUpRef, moveDownRef] : [moveDownRef, moveUpRef];
+    (preferred.current ?? fallback.current)?.focus();
+  }, [section.order]);
+
+  const handleMove = (direction: 'up' | 'down') => {
+    pendingFocus.current = direction;
+    onMove?.(section.id, direction);
+  };
 
   const handleRename = (newName: string) => {
     onRename(section.id, newName);
@@ -299,6 +329,36 @@ export function SectionHeader({
             </div>
           )}
         </div>
+
+        {/* Reorder Buttons */}
+        {onMove && canMoveUp && (
+          <Button
+            ref={moveUpRef}
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={() => handleMove('up')}
+            disabled={isDeleting}
+            className="h-11 w-11 text-muted-foreground hover:text-foreground section-button"
+            aria-label={`Move ${section.name} up`}
+          >
+            <ChevronUp className="h-4 w-4" aria-hidden="true" />
+          </Button>
+        )}
+        {onMove && canMoveDown && (
+          <Button
+            ref={moveDownRef}
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={() => handleMove('down')}
+            disabled={isDeleting}
+            className="h-11 w-11 text-muted-foreground hover:text-foreground section-button"
+            aria-label={`Move ${section.name} down`}
+          >
+            <ChevronDown className="h-4 w-4" aria-hidden="true" />
+          </Button>
+        )}
 
         {/* Delete Button */}
         {canDelete && (
