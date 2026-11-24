@@ -5,6 +5,7 @@ import { ChefHat } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/components/ui/use-toast";
 import { useWakeLock } from "@/hooks/useWakeLock";
+import { cn } from "@/lib/utils";
 
 /**
  * Labeled switch that keeps the screen awake while cooking.
@@ -36,13 +37,18 @@ export function CookModeToggle() {
   };
 
   return (
-    <div className="flex items-center justify-between gap-4 rounded-lg border bg-muted/40 px-4 py-3">
+    <div
+      className={cn(
+        "flex items-center justify-between gap-4 rounded-xl border px-4 py-3 transition-colors",
+        isActive ? "border-primary/50 bg-primary/10" : "bg-muted/40"
+      )}
+    >
       <div className="flex items-center gap-3">
-        <ChefHat className="h-5 w-5 shrink-0" aria-hidden="true" />
+        <ChefHat className="h-5 w-5 shrink-0 text-primary" aria-hidden="true" />
         <div>
-          <p id="cook-mode-label" className="font-medium">Cook Mode</p>
-          <p id="cook-mode-description" className="text-sm text-muted-foreground">
-            Keeps your screen on while you cook
+          <p id="cook-mode-label" className="font-semibold">Cook Mode</p>
+          <p id="cook-mode-description" aria-live="polite" className="text-sm text-muted-foreground">
+            {isActive ? "On · your screen will stay awake" : "Keeps your screen on while you cook"}
           </p>
         </div>
       </div>

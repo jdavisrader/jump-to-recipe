@@ -10,6 +10,7 @@ import { RecipeActions } from "./recipe-actions";
 import { RecipePhotosViewer } from "./recipe-photos-viewer";
 import { RecipeScaler } from "./recipe-scaler";
 import { CookModeToggle } from "./cook-mode-toggle";
+import { RecipeJumpNav, getMethodSectionId } from "./recipe-jump-nav";
 import { scaleIngredient } from "@/lib/recipe-scaling";
 import type { Recipe } from "@/types/recipe";
 import type { RecipePhoto } from "@/types/recipe-photos";
@@ -67,7 +68,8 @@ export function RecipeDisplay({ recipe, onEdit, canEdit = false, showComments = 
         <RecipeActions recipeId={recipe.id} canEdit={canEdit} onEdit={onEdit} />
       </RecipeHero>
 
-      <div className="print:hidden">
+      <div className="flex flex-col gap-3 print:hidden">
+        <RecipeJumpNav sections={recipe.instructionSections ?? []} />
         <CookModeToggle />
       </div>
 
@@ -175,8 +177,12 @@ export function RecipeDisplay({ recipe, onEdit, canEdit = false, showComments = 
                 <div className="space-y-8">
                   {recipe.instructionSections
                     .sort((a, b) => a.order - b.order)
-                    .map((section) => (
-                      <div key={section.id}>
+                    .map((section, sectionIndex) => (
+                      <div
+                        key={section.id}
+                        id={getMethodSectionId(sectionIndex + 1)}
+                        className="scroll-mt-24"
+                      >
                         <h4 className="font-semibold text-lg mb-4 text-primary">
                           {section.name}
                         </h4>
