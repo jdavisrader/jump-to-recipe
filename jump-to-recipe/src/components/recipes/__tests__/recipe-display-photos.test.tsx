@@ -81,8 +81,16 @@ describe('RecipeDisplay - Photo Integration', () => {
     });
   });
 
+  it('shows recipe notes in their own section', async () => {
+    render(<RecipeDisplay recipe={{ ...mockRecipe, notes: 'Chill the dough overnight.' }} />);
+
+    expect(screen.getByRole('heading', { level: 2, name: 'Notes' })).toBeInTheDocument();
+    expect(screen.getByText('Chill the dough overnight.')).toBeInTheDocument();
+    await waitFor(() => expect(global.fetch).toHaveBeenCalled());
+  });
+
   describe('Photo Loading States', () => {
-    it('shows loading state while fetching photos', async () => {
+    it('shows nothing while fetching photos', async () => {
       // Mock fetch to delay response
       (global.fetch as jest.Mock).mockImplementation(
         () => new Promise(() => {}) // Never resolves
@@ -90,13 +98,9 @@ describe('RecipeDisplay - Photo Integration', () => {
 
       render(<RecipeDisplay recipe={mockRecipe} />);
 
-      // Should show loading skeleton
-      await waitFor(() => {
-        expect(screen.getByText('Original recipe')).toBeInTheDocument();
-      });
-
-      const loadingSkeletons = document.querySelectorAll('.animate-pulse');
-      expect(loadingSkeletons.length).toBeGreaterThan(0);
+      await waitFor(() => expect(global.fetch).toHaveBeenCalled());
+      expect(screen.queryByText('Original recipe')).not.toBeInTheDocument();
+      expect(document.querySelectorAll('.animate-pulse')).toHaveLength(0);
     });
 
     it('displays photos after successful fetch', async () => {
