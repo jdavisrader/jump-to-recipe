@@ -56,8 +56,8 @@ describe('SectionManager', () => {
       />
     );
 
-    expect(screen.getByText('Section 1')).toBeInTheDocument();
-    expect(screen.getByText('Section 2')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('Section 1')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('Section 2')).toBeInTheDocument();
     expect(screen.getByTestId('item-item-1')).toBeInTheDocument();
     expect(screen.getByTestId('item-item-2')).toBeInTheDocument();
     expect(screen.getByTestId('item-item-3')).toBeInTheDocument();
@@ -206,13 +206,8 @@ describe('SectionManager', () => {
       />
     );
 
-    // Click on section title to edit
-    await user.click(screen.getByText('Section 1'));
-    
-    const input = screen.getByRole('textbox');
-    await user.clear(input);
-    await user.type(input, 'Renamed Section');
-    await user.keyboard('{Enter}');
+    // The section name is a plain text field, renamed as the user types
+    fireEvent.change(screen.getByDisplayValue('Section 1'), { target: { value: 'Renamed Section' } });
 
     expect(mockOnSectionsChange).toHaveBeenCalledWith(
       expect.arrayContaining([
@@ -271,9 +266,9 @@ describe('SectionManager', () => {
       />
     );
 
-    const sectionHeaders = screen.getAllByText(/Section \d/);
-    expect(sectionHeaders[0]).toHaveTextContent('Section 2');
-    expect(sectionHeaders[1]).toHaveTextContent('Section 1');
+    const sectionNames = screen.getAllByRole('textbox', { name: 'Section name' });
+    expect(sectionNames[0]).toHaveValue('Section 2');
+    expect(sectionNames[1]).toHaveValue('Section 1');
   });
 
   it('applies custom className', () => {
@@ -373,8 +368,8 @@ describe('SectionManager', () => {
       expect(screen.queryByTestId(/^draggable-/)).not.toBeInTheDocument();
       
       // Verify sections are rendered directly
-      expect(screen.getByText('Section 1')).toBeInTheDocument();
-      expect(screen.getByText('Section 2')).toBeInTheDocument();
+      expect(screen.getByDisplayValue('Section 1')).toBeInTheDocument();
+      expect(screen.getByDisplayValue('Section 2')).toBeInTheDocument();
     });
 
     it('verifies "Add Section" appends to bottom', async () => {
@@ -491,12 +486,8 @@ describe('SectionManager', () => {
         />
       );
 
-      // Rename the first section
-      await user.click(screen.getByText('Section 1'));
-      const input = screen.getByRole('textbox');
-      await user.clear(input);
-      await user.type(input, 'Renamed Section');
-      await user.keyboard('{Enter}');
+      // The section name is a plain text field, renamed as the user types
+      fireEvent.change(screen.getByDisplayValue('Section 1'), { target: { value: 'Renamed Section' } });
 
       // Verify order is preserved
       expect(mockOnSectionsChange).toHaveBeenCalledWith([

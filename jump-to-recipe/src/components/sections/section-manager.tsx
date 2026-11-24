@@ -362,7 +362,7 @@ export function SectionManager<T extends { id: string }>({
 
   return (
     <div className={cn('space-y-6', className)}>
-      <div className="space-y-6">
+      <div>
         {sortedSections.length === 0 ? (
           <div className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-border rounded-lg bg-muted/30">
             <div className="text-muted-foreground text-center">
@@ -382,17 +382,12 @@ export function SectionManager<T extends { id: string }>({
             return (
               <div
                 key={section.id}
+                // Sections sit on the panel separated by a divider, not boxed in their own cards;
+                // only an invalid section gets an outline so it's easy to find
                 className={cn(
-                  // Base section container styling (theme tokens; Tailwind's gray-800 reads blue in dark mode)
-                  'bg-background border rounded-lg',
-                  // Smooth transitions for hover effects
-                  'transition-[border-color,background-color] duration-200 ease-in-out',
-                  // Spacing and layout
-                  'p-3 sm:p-4 space-y-3',
-                  // Validation error styling
-                  hasValidationError
-                    ? 'border-red-300 dark:border-red-700 bg-red-50/30 dark:bg-red-950/10'
-                    : 'border-border hover:border-muted-foreground/40'
+                  'mt-6 space-y-3 border-t pt-6 first:mt-0 first:border-t-0 first:pt-0',
+                  hasValidationError &&
+                    'rounded-xl border border-red-300 bg-red-50/30 p-3 first:border-t first:p-3 dark:border-red-700 dark:bg-red-950/10'
                 )}
                 role="group"
                 aria-labelledby={`section-${section.id}-title`}
@@ -415,21 +410,8 @@ export function SectionManager<T extends { id: string }>({
                   canMoveDown={sectionIndex < sortedSections.length - 1}
                 />
                 
-                {/* Section Name Validation Error */}
-                {sectionNameError && (
-                  <div 
-                    className="validation-error-container px-3 pt-2"
-                    id={`section-${section.id}-name-error`}
-                    role="alert"
-                  >
-                    <p className="text-red-600 dark:text-red-400 text-sm">
-                      {sectionNameError}
-                    </p>
-                  </div>
-                )}
-
                 {/* Section Items */}
-                <div className="space-y-3 mt-3">
+                <div className="space-y-3">
                   {section.items.length > 0 && itemsHeader}
                   {section.items.length === 0 && (
                     <div 
@@ -498,12 +480,11 @@ export function SectionManager<T extends { id: string }>({
                   {/* Add Item Button */}
                   <Button
                     type="button"
-                    variant="outline"
-                    size="sm"
+                    variant="ghost"
                     onClick={() => onAddItem(section.id)}
                     disabled={isAddingItem[section.id]}
                     className={cn(
-                      "text-sm section-button",
+                      "min-h-[44px] font-semibold text-primary hover:text-primary section-button",
                       isAddingItem[section.id] && "animate-pulse"
                     )}
                     aria-label={`Add ${itemType === 'ingredient' ? 'ingredient' : 'step'} to ${section.name}`}
@@ -529,7 +510,7 @@ export function SectionManager<T extends { id: string }>({
         onClick={handleAddSection}
         disabled={isAddingSection}
         className={cn(
-          "w-full section-button",
+          "w-full border-dashed section-button",
           isAddingSection && "animate-pulse"
         )}
       >

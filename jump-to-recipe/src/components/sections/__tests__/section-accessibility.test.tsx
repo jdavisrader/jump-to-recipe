@@ -2,7 +2,6 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { SectionManager, Section } from '../section-manager';
 import { SectionHeader } from '../section-header';
-import { EditableTitle } from '../editable-title';
 
 describe('Section Components Accessibility', () => {
   const mockSections: Section[] = [
@@ -53,7 +52,7 @@ describe('Section Components Accessibility', () => {
       
       // Tab order without drag handles: title, Move down (first section has no Up), delete
       await user.tab();
-      expect(document.activeElement).toHaveAttribute('title', 'Click to edit');
+      expect(document.activeElement).toHaveAccessibleName('Section name');
 
       await user.tab();
       expect(document.activeElement).toHaveAccessibleName(/^Move .* down$/);
@@ -72,7 +71,7 @@ describe('Section Components Accessibility', () => {
       
       // Tab through and verify only edit, reorder arrow and delete buttons are focusable
       await user.tab();
-      expect(document.activeElement).toHaveAttribute('title', 'Click to edit');
+      expect(document.activeElement).toHaveAccessibleName('Section name');
 
       await user.tab();
       expect(document.activeElement).toHaveAccessibleName(/^Move .* down$/);
@@ -217,90 +216,6 @@ describe('Section Components Accessibility', () => {
     });
   });
 
-  describe('EditableTitle Accessibility', () => {
-    const titleProps = {
-      value: 'Test Section',
-      onChange: jest.fn()
-    };
-
-    it('should have proper ARIA structure', async () => {
-      render(<EditableTitle {...titleProps} />);
-      
-      // Check that the editable title has proper attributes
-      const button = screen.getByTitle('Click to edit');
-      expect(button).toHaveAttribute('type', 'button');
-    });
-
-    it('should provide proper keyboard navigation for editing', async () => {
-      const user = userEvent.setup();
-      render(<EditableTitle {...titleProps} />);
-      
-      const button = screen.getByTitle('Click to edit');
-      await user.click(button);
-      
-      const input = screen.getByDisplayValue('Test Section');
-      expect(input).toHaveFocus();
-      expect(input).toHaveAttribute('type', 'text');
-    });
-
-    it('should support keyboard shortcuts for save/cancel', async () => {
-      const user = userEvent.setup();
-      const onChange = jest.fn();
-      render(<EditableTitle {...titleProps} onChange={onChange} />);
-      
-      const button = screen.getByTitle('Click to edit');
-      await user.click(button);
-      
-      const input = screen.getByDisplayValue('Test Section');
-      await user.clear(input);
-      await user.type(input, 'New Name');
-      
-      // Enter should save
-      await user.keyboard('{Enter}');
-      expect(onChange).toHaveBeenCalledWith('New Name');
-    });
-
-    it('should handle escape key to cancel editing', async () => {
-      const user = userEvent.setup();
-      const onChange = jest.fn();
-      render(<EditableTitle {...titleProps} onChange={onChange} />);
-      
-      const button = screen.getByTitle('Click to edit');
-      await user.click(button);
-      
-      const input = screen.getByDisplayValue('Test Section');
-      await user.clear(input);
-      await user.type(input, 'New Name');
-      
-      // Escape should cancel
-      await user.keyboard('{Escape}');
-      expect(onChange).not.toHaveBeenCalled();
-      
-      // Should return to button state
-      expect(screen.getByTitle('Click to edit')).toBeInTheDocument();
-    });
-
-    it('should indicate disabled state properly', () => {
-      render(<EditableTitle {...titleProps} disabled={true} />);
-      
-      const button = screen.getByTitle('Editing disabled');
-      expect(button).toBeDisabled();
-      expect(button).toHaveClass('opacity-50');
-      expect(button).toHaveClass('cursor-not-allowed');
-    });
-
-    it('should provide proper placeholder text', async () => {
-      const user = userEvent.setup();
-      render(<EditableTitle value="" onChange={jest.fn()} placeholder="Custom Placeholder" />);
-      
-      const button = screen.getByTitle('Click to edit');
-      await user.click(button);
-      
-      const input = screen.getByPlaceholderText('Custom Placeholder');
-      expect(input).toBeInTheDocument();
-    });
-  });
-
   describe('Animation and Visual Feedback', () => {
     it('should provide smooth transitions for section operations', () => {
       render(<SectionManager {...mockProps} />);
@@ -383,7 +298,7 @@ describe('Section Components Accessibility', () => {
       expect(deleteButtons[0]).toHaveAccessibleName();
       
       // Rename section operation
-      const editButtons = screen.getAllByTitle('Click to edit');
+      const editButtons = screen.getAllByRole('textbox', { name: 'Section name' });
       expect(editButtons[0]).toHaveAccessibleName();
     });
   });
@@ -393,7 +308,7 @@ describe('Section Components Accessibility', () => {
       const user = userEvent.setup();
       render(<SectionManager {...mockProps} />);
       
-      const editButton = screen.getAllByTitle('Click to edit')[0];
+      const editButton = screen.getAllByRole('textbox', { name: 'Section name' })[0];
       await user.click(editButton);
       
       const input = screen.getByDisplayValue('Ingredients');

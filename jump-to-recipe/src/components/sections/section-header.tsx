@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from 'react';
 import { ChevronDown, ChevronUp, Trash2, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ConfirmationModal } from '@/components/ui/confirmation-modal';
-import { EditableTitle } from './editable-title';
 import { cn } from '@/lib/utils';
 
 /**
@@ -220,7 +219,6 @@ interface SectionHeaderProps {
  * 
  * ## Related Components
  * 
- * @see {@link EditableTitle} for the inline editing functionality
  * @see {@link ConfirmationModal} for the deletion confirmation
  * @see {@link SectionManager} for the parent component that uses this header
  */
@@ -298,31 +296,33 @@ export function SectionHeader({
     <>
       <div
         className={cn(
-          'flex items-center gap-2 border-b border-border pb-2',
+          'flex items-start gap-1',
           isDeleting && 'animate-pulse opacity-50',
-          'transition-colors duration-200',
-          hasError && 'border-red-500 dark:border-red-500 bg-red-50 dark:bg-red-950/20 rounded-t-md',
           className
         )}
       >
-        {/* Editable Title */}
-        <div className="flex-1">
-          <EditableTitle
-            value={section.name}
-            onChange={handleRename}
-            className={cn(
-              "text-lg font-medium",
-              hasError && "text-red-700 dark:text-red-300"
-            )}
-            disabled={isDeleting}
+        {/* Section name: always editable, like the other fields */}
+        <div className="min-w-0 flex-1">
+          <input
             id={titleId}
+            type="text"
+            value={section.name}
+            onChange={(e) => handleRename(e.target.value)}
+            placeholder="Section name, e.g. Frosting"
+            aria-label="Section name"
+            disabled={isDeleting}
             aria-invalid={hasError}
             aria-describedby={errorMessage ? `${titleId}-error` : undefined}
+            className={cn(
+              'h-11 w-full rounded-lg border border-transparent bg-muted px-4 font-semibold text-foreground placeholder:font-normal placeholder:text-muted-foreground',
+              'focus-visible:border-ring focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50',
+              hasError && 'border-destructive'
+            )}
           />
           {errorMessage && (
-            <div 
+            <div
               id={`${titleId}-error`}
-              className="text-red-600 dark:text-red-400 text-sm mt-1"
+              className="mt-1 text-sm text-destructive"
               role="alert"
             >
               {errorMessage}
@@ -363,12 +363,13 @@ export function SectionHeader({
         {/* Delete Button */}
         {canDelete && (
           <Button
+            type="button"
             variant="ghost"
-            size="sm"
+            size="icon"
             onClick={handleDeleteClick}
             disabled={isDeleting}
             className={cn(
-              "text-muted-foreground hover:text-destructive section-button",
+              "h-11 w-11 text-destructive hover:bg-destructive/10 hover:text-destructive section-button",
               isDeleting && "animate-spin"
             )}
             title="Delete section"
