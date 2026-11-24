@@ -1,6 +1,6 @@
 "use client";
 
-import { Clock, Minus, Plus } from "lucide-react";
+import { Clock } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { RecipeHero } from "./recipe-hero";
@@ -8,10 +8,9 @@ import { RecipeStats } from "./recipe-stats";
 import { RecipeComments } from "./recipe-comments";
 import { RecipeActions } from "./recipe-actions";
 import { RecipePhotosViewer } from "./recipe-photos-viewer";
-import { RecipeScaler } from "./recipe-scaler";
+import { RecipeIngredientsList } from "./recipe-ingredients-list";
 import { CookModeToggle } from "./cook-mode-toggle";
 import { RecipeJumpNav, getMethodSectionId } from "./recipe-jump-nav";
-import { scaleIngredient } from "@/lib/recipe-scaling";
 import type { Recipe } from "@/types/recipe";
 import type { RecipePhoto } from "@/types/recipe-photos";
 import { useSession } from "next-auth/react";
@@ -75,94 +74,14 @@ export function RecipeDisplay({ recipe, onEdit, canEdit = false, showComments = 
 
       {/* Main Content: Ingredients (sticky) and Instructions */}
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-        {/* Ingredients - Sticky */}
         <div className="lg:col-span-2">
-          <Card className="lg:sticky lg:top-6 print:border-0 print:shadow-none">
-            <CardHeader>
-              <div className="flex items-center justify-between gap-2">
-                <CardTitle>Ingredients</CardTitle>
-                <div className="print:hidden">
-                  <RecipeScaler scale={scale} onChange={setScale} />
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              {recipe.ingredientSections && recipe.ingredientSections.length > 0 ? (
-                // Display sectioned ingredients
-                <div className="space-y-6">
-                  {recipe.ingredientSections
-                    .sort((a, b) => a.order - b.order)
-                    .map((section) => (
-                      <div key={section.id}>
-                        <h4 className="font-semibold text-sm mb-3 text-primary">
-                          {section.name}
-                        </h4>
-                        <ul className="space-y-3">
-                          {section.items.map((ingredient) => {
-                            const scaled = scaleIngredient(ingredient, scale);
-                            return (
-                            <li key={ingredient.id} className="flex items-start gap-2">
-                              <input
-                                type="checkbox"
-                                className="mt-1 h-4 w-4 rounded border-input bg-background text-primary focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                                aria-label={`Check off ${ingredient.name}`}
-                              />
-                              <div className="flex-1">
-                                <div className="font-medium">
-                                  {ingredient.amount > 0 && (
-                                    <span className="text-muted-foreground mr-2">
-                                      {scaled.displayAmount || scaled.amount} {scaled.unit}
-                                    </span>
-                                  )}
-                                  {ingredient.name}
-                                </div>
-                                {ingredient.notes && (
-                                  <div className="text-sm text-muted-foreground">
-                                    {ingredient.notes}
-                                  </div>
-                                )}
-                              </div>
-                            </li>
-                            );
-                          })}
-                        </ul>
-                      </div>
-                    ))}
-                </div>
-              ) : (
-                // Display flat ingredients (backward compatible)
-                <ul className="space-y-3">
-                  {recipe.ingredients.map((ingredient) => {
-                    const scaled = scaleIngredient(ingredient, scale);
-                    return (
-                    <li key={ingredient.id} className="flex items-start gap-2">
-                      <input
-                        type="checkbox"
-                        className="mt-1 h-4 w-4 rounded border-input bg-background text-primary focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                        aria-label={`Check off ${ingredient.name}`}
-                      />
-                      <div className="flex-1">
-                        <div className="font-medium">
-                          {ingredient.amount > 0 && (
-                            <span className="text-muted-foreground mr-2">
-                              {scaled.displayAmount || scaled.amount} {scaled.unit}
-                            </span>
-                          )}
-                          {ingredient.name}
-                        </div>
-                        {ingredient.notes && (
-                          <div className="text-sm text-muted-foreground">
-                            {ingredient.notes}
-                          </div>
-                        )}
-                      </div>
-                    </li>
-                    );
-                  })}
-                </ul>
-              )}
-            </CardContent>
-          </Card>
+          <RecipeIngredientsList
+            ingredients={recipe.ingredients}
+            ingredientSections={recipe.ingredientSections}
+            servings={recipe.servings}
+            scale={scale}
+            onScaleChange={setScale}
+          />
         </div>
 
         {/* Instructions */}
