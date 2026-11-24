@@ -1,10 +1,9 @@
 'use client';
 
-import { useState } from 'react';
-import { Trash2, Loader2 } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { ChevronDown, ChevronUp, Trash2, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ConfirmationModal } from '@/components/ui/confirmation-modal';
-import { EditableTitle } from './editable-title';
 import { cn } from '@/lib/utils';
 
 /**
@@ -15,7 +14,7 @@ interface Section {
   id: string;
   /** Display name of the section */
   name: string;
-  /** Order index of the section (for reference only, not used for reordering) */
+  /** Order index of the section (the arrows in this header change it) */
   order: number;
 }
 
@@ -93,6 +92,14 @@ interface SectionHeaderProps {
    * deleting this section will convert the recipe to unsectioned mode.
    */
   isLastSection?: boolean;
+
+  /**
+   * Moves the section one place up or down. The Up arrow is hidden when
+   * canMoveUp is false (first section), and Down when canMoveDown is false.
+   */
+  onMove?: (id: string, direction: 'up' | 'down') => void;
+  canMoveUp?: boolean;
+  canMoveDown?: boolean;
 }
 
 /**
@@ -106,7 +113,7 @@ interface SectionHeaderProps {
  * - **Inline Editing**: Click the title to rename the section
  * - **Delete Control**: Button to delete the section with smart confirmation
  * - **Validation Support**: Display validation errors for section names
- * - **No Reordering**: No drag handle or reordering controls (sections maintain creation order)
+ * - **Arrow Reordering**: Up/down buttons move the section one place (no drag handle)
  * 
  * ## Validation Features
  * 
@@ -212,7 +219,6 @@ interface SectionHeaderProps {
  * 
  * ## Related Components
  * 
- * @see {@link EditableTitle} for the inline editing functionality
  * @see {@link ConfirmationModal} for the deletion confirmation
  * @see {@link SectionManager} for the parent component that uses this header
  */
@@ -227,9 +233,31 @@ export function SectionHeader({
   errorMessage,
   titleId,
   hasItems = false,
-  isLastSection = false
+  isLastSection = false,
+  onMove,
+  canMoveUp = false,
+  canMoveDown = false,
 }: SectionHeaderProps) {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const moveUpRef = useRef<HTMLButtonElement>(null);
+  const moveDownRef = useRef<HTMLButtonElement>(null);
+  const pendingFocus = useRef<'up' | 'down' | null>(null);
+
+  // React may move this header's DOM node during the swap, which drops focus.
+  // Put it back on the same arrow, or the other one if that arrow is now hidden.
+  useEffect(() => {
+    const direction = pendingFocus.current;
+    if (!direction) return;
+    pendingFocus.current = null;
+    const [preferred, fallback] =
+      direction === 'up' ? [moveUpRef, moveDownRef] : [moveDownRef, moveUpRef];
+    (preferred.current ?? fallback.current)?.focus();
+  }, [section.order]);
+
+  const handleMove = (direction: 'up' | 'down') => {
+    pendingFocus.current = direction;
+    onMove?.(section.id, direction);
+  };
 
   const handleRename = (newName: string) => {
     onRename(section.id, newName);
@@ -268,31 +296,33 @@ export function SectionHeader({
     <>
       <div
         className={cn(
-          'flex items-center gap-3 p-3 bg-background rounded-lg border border-border',
+          'flex items-start gap-1',
           isDeleting && 'animate-pulse opacity-50',
-          'hover:bg-accent/40 transition-colors duration-200',
-          hasError && 'border-red-500 dark:border-red-500 bg-red-50 dark:bg-red-950/20',
           className
         )}
       >
-        {/* Editable Title */}
-        <div className="flex-1">
-          <EditableTitle
-            value={section.name}
-            onChange={handleRename}
-            className={cn(
-              "text-lg font-medium",
-              hasError && "text-red-700 dark:text-red-300"
-            )}
-            disabled={isDeleting}
+        {/* Section name: always editable, like the other fields */}
+        <div className="min-w-0 flex-1">
+          <input
             id={titleId}
+            type="text"
+            value={section.name}
+            onChange={(e) => handleRename(e.target.value)}
+            placeholder="Section name, e.g. Frosting"
+            aria-label="Section name"
+            disabled={isDeleting}
             aria-invalid={hasError}
             aria-describedby={errorMessage ? `${titleId}-error` : undefined}
+            className={cn(
+              'h-11 w-full rounded-lg border border-transparent bg-muted px-4 font-semibold text-foreground placeholder:font-normal placeholder:text-muted-foreground',
+              'focus-visible:border-ring focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50',
+              hasError && 'border-destructive'
+            )}
           />
           {errorMessage && (
-            <div 
+            <div
               id={`${titleId}-error`}
-              className="text-red-600 dark:text-red-400 text-sm mt-1"
+              className="mt-1 text-sm text-destructive"
               role="alert"
             >
               {errorMessage}
@@ -300,15 +330,46 @@ export function SectionHeader({
           )}
         </div>
 
+        {/* Reorder Buttons */}
+        {onMove && canMoveUp && (
+          <Button
+            ref={moveUpRef}
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={() => handleMove('up')}
+            disabled={isDeleting}
+            className="h-11 w-11 text-muted-foreground hover:text-foreground section-button"
+            aria-label={`Move ${section.name} up`}
+          >
+            <ChevronUp className="h-4 w-4" aria-hidden="true" />
+          </Button>
+        )}
+        {onMove && canMoveDown && (
+          <Button
+            ref={moveDownRef}
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={() => handleMove('down')}
+            disabled={isDeleting}
+            className="h-11 w-11 text-muted-foreground hover:text-foreground section-button"
+            aria-label={`Move ${section.name} down`}
+          >
+            <ChevronDown className="h-4 w-4" aria-hidden="true" />
+          </Button>
+        )}
+
         {/* Delete Button */}
         {canDelete && (
           <Button
+            type="button"
             variant="ghost"
-            size="sm"
+            size="icon"
             onClick={handleDeleteClick}
             disabled={isDeleting}
             className={cn(
-              "text-muted-foreground hover:text-destructive section-button",
+              "h-11 w-11 text-destructive hover:bg-destructive/10 hover:text-destructive section-button",
               isDeleting && "animate-spin"
             )}
             title="Delete section"

@@ -3,28 +3,10 @@
 import { useState, useCallback, useMemo } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Clock, Users, ChefHat, AlertCircle } from "lucide-react";
+import { AlertCircle } from "lucide-react";
 import { v4 as uuidv4 } from "uuid";
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from "@/components/ui/select";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+import { Form } from "@/components/ui/form";
 
 import { createRecipeSchema, validateRecipeWithSections } from "@/lib/validations/recipe";
 import { normalizeExistingRecipe } from "@/lib/recipe-import-normalizer";
@@ -33,13 +15,12 @@ import type { NewRecipeInput } from "@/types/recipe";
 import type { IngredientSection, InstructionSection } from "@/types/sections";
 import type { RecipePhoto } from "@/types/recipe-photos";
 
-import { RecipeImageUpload } from "@/components/recipes/recipe-image-upload";
 import { RecipeIngredientsWithSections } from "@/components/recipes/recipe-ingredients-with-sections";
 import { RecipeInstructionsWithSections } from "@/components/recipes/recipe-instructions-with-sections";
 import { EmptySectionWarningModal } from "@/components/recipes/empty-section-warning-modal";
-import { RecipePhotosManager } from "@/components/recipes/recipe-photos-manager";
-import { NewRecipePhotosUpload, type TempRecipePhoto } from "@/components/recipes/new-recipe-photos-upload";
-import { RecipePhotosCard } from "@/components/recipes/recipe-photos-card";
+import type { TempRecipePhoto } from "@/components/recipes/new-recipe-photos-upload";
+import { RecipeFormBasics } from "@/components/recipes/recipe-form-basics";
+import { RecipeFormDetails } from "@/components/recipes/recipe-form-details";
 import { FormActionBar } from "@/components/recipes/form-action-bar";
 import { ConfirmationModal } from "@/components/ui/confirmation-modal";
 
@@ -100,6 +81,9 @@ interface RecipeFormProps {
    * unsaved changes, the user is asked to confirm before this runs.
    */
   onCancel?: () => void;
+
+  /** Label for the cancel button; defaults to "Cancel" */
+  cancelLabel?: string;
 }
 
 /**
@@ -281,6 +265,7 @@ export function RecipeForm({
   recipeId,
   beforeSubmit,
   onCancel,
+  cancelLabel,
 }: RecipeFormProps) {
   // Normalize initial data for backward compatibility (Requirement 11.1, 11.2, 11.3)
   // This silently fixes invalid data when editing existing recipes
@@ -324,7 +309,6 @@ export function RecipeForm({
   // Field arrays are now managed by the section components
   // Keep these for backward compatibility but they're handled internally
 
-  const [tagInput, setTagInput] = useState("");
   const [showEmptySectionWarning, setShowEmptySectionWarning] = useState(false);
   const [emptySections, setEmptySections] = useState<Array<{
     sectionId: string;
@@ -355,24 +339,6 @@ export function RecipeForm({
   
   // Ref for the first invalid field to manage focus
   const firstInvalidFieldRef = useState<HTMLElement | null>(null);
-
-  const handleAddTag = () => {
-    if (tagInput.trim()) {
-      const currentTags = form.getValues("tags") || [];
-      if (!currentTags.includes(tagInput.trim())) {
-        form.setValue("tags", [...currentTags, tagInput.trim()]);
-      }
-      setTagInput("");
-    }
-  };
-
-  const handleRemoveTag = (tagToRemove: string) => {
-    const currentTags = form.getValues("tags") || [];
-    form.setValue(
-      "tags",
-      currentTags.filter((tag) => tag !== tagToRemove)
-    );
-  };
 
   // Validation handler that can be called on blur or manually
   const handleValidation = useCallback(() => {
@@ -589,193 +555,15 @@ export function RecipeForm({
           </div>
         )}
 
-        {/* Basic Information */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Basic Information</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <FormField
-              control={form.control}
-              name="title"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Recipe Title</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter recipe title..." {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Description</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder="Brief description of the recipe..."
-                      {...field}
-                      value={field.value || ''}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <FormField
-                control={form.control}
-                name="prepTime"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="flex items-center gap-2">
-                      <Clock className="h-4 w-4" />
-                      Prep Time (minutes)
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        placeholder="15"
-                        {...field}
-                        value={field.value || ''}
-                        onChange={(e) =>
-                          field.onChange(
-                            e.target.value ? parseInt(e.target.value) : undefined
-                          )
-                        }
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="cookTime"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="flex items-center gap-2">
-                      <Clock className="h-4 w-4" />
-                      Cook Time (minutes)
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        placeholder="30"
-                        {...field}
-                        value={field.value || ''}
-                        onChange={(e) =>
-                          field.onChange(
-                            e.target.value ? parseInt(e.target.value) : undefined
-                          )
-                        }
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="servings"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="flex items-center gap-2">
-                      <Users className="h-4 w-4" />
-                      Servings
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        placeholder="4"
-                        {...field}
-                        value={field.value || ''}
-                        onChange={(e) =>
-                          field.onChange(
-                            e.target.value ? parseInt(e.target.value) : undefined
-                          )
-                        }
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <FormField
-              control={form.control}
-              name="difficulty"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="flex items-center gap-2">
-                    <ChefHat className="h-4 w-4" />
-                    Difficulty
-                  </FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value || undefined}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select difficulty..." />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="easy">Easy</SelectItem>
-                      <SelectItem value="medium">Medium</SelectItem>
-                      <SelectItem value="hard">Hard</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </CardContent>
-        </Card>
-
-        {/* Photos */}
-        <RecipePhotosCard
-          cover={
-            <FormField
-              control={form.control}
-              name="imageUrl"
-              render={({ field }) => (
-                <FormItem>
-                  <FormControl>
-                    <RecipeImageUpload
-                      value={field.value}
-                      onChange={field.onChange}
-                      onRemove={() => field.onChange("")}
-                      disabled={isLoading}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          }
-          originalPhotos={
-            recipeId ? (
-              <RecipePhotosManager
-                recipeId={recipeId}
-                photos={photos}
-                canEdit={true}
-                onPhotosChange={setPhotos}
-              />
-            ) : (
-              <NewRecipePhotosUpload
-                photos={photos}
-                onPhotosChange={setPhotos}
-                disabled={isLoading}
-              />
-            )
-          }
+        <RecipeFormBasics
+          control={form.control}
+          isLoading={isLoading}
+          recipeId={recipeId}
+          photos={photos}
+          onPhotosChange={setPhotos}
         />
+
+        <RecipeFormDetails control={form.control} />
 
         {/* Ingredients with Sections */}
         <RecipeIngredientsWithSections
@@ -804,127 +592,13 @@ export function RecipeForm({
           onFieldChange={handleFieldChange}
         />
 
-        {/* Notes */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Notes</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <FormField
-              control={form.control}
-              name="notes"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="sr-only">Notes</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder="Any additional notes or tips..."
-                      {...field}
-                      value={field.value || ''}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </CardContent>
-        </Card>
-
-        {/* Details */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Details</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <label htmlFor="recipe-tag-input" className="text-sm font-medium">
-                Tags
-              </label>
-              <div className="flex gap-2">
-                <Input
-                  id="recipe-tag-input"
-                  placeholder="Add a tag..."
-                  value={tagInput}
-                  onChange={(e) => setTagInput(e.target.value)}
-                  onKeyPress={(e) => {
-                    if (e.key === "Enter") {
-                      e.preventDefault();
-                      handleAddTag();
-                    }
-                  }}
-                />
-                <Button type="button" onClick={handleAddTag}>
-                  Add
-                </Button>
-              </div>
-
-              <div className="flex flex-wrap gap-2">
-                {(form.watch("tags") || []).map((tag) => (
-                  <span
-                    key={tag}
-                    className="inline-flex items-center gap-1 px-2 py-1 bg-secondary text-secondary-foreground rounded-md text-sm"
-                  >
-                    {tag}
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveTag(tag)}
-                      className="hover:text-destructive"
-                    >
-                      ×
-                    </button>
-                  </span>
-                ))}
-              </div>
-            </div>
-
-            <FormField
-              control={form.control}
-              name="sourceUrl"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Source URL</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="url"
-                      placeholder="https://example.com/recipe"
-                      {...field}
-                      value={field.value || ''}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="visibility"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Visibility</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select visibility..." />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="private">Private</SelectItem>
-                      <SelectItem value="public">Public</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </CardContent>
-        </Card>
 
         {/* Additional content before submit button */}
         {beforeSubmit}
 
         <FormActionBar
           submitLabel={submitLabel}
+          cancelLabel={cancelLabel}
           isLoading={isLoading}
           isValid={isValid}
           errorCount={errorSummary?.count ?? 0}

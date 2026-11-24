@@ -96,7 +96,7 @@ describe('Section Animation and Feedback', () => {
       render(<SectionManager {...mockProps} />);
       
       // Verify sections are rendered directly without drag-and-drop wrappers
-      const sections = screen.getAllByText(/Ingredients|Instructions/);
+      const sections = screen.getAllByDisplayValue(/Ingredients|Instructions/);
       expect(sections.length).toBeGreaterThan(0);
       
       // Verify no drag-related classes exist
@@ -216,7 +216,7 @@ describe('Section Animation and Feedback', () => {
       expect(endTime - startTime).toBeLessThan(1000);
       
       // Should render all sections
-      const sectionElements = screen.getAllByText(/Section \d+/);
+      const sectionElements = screen.getAllByDisplayValue(/Section \d+/);
       expect(sectionElements.length).toBe(20);
     });
 

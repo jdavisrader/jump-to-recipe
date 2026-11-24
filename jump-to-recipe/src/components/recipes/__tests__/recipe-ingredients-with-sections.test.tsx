@@ -54,7 +54,7 @@ describe('RecipeIngredientsWithSections', () => {
     
     expect(screen.getByText('Ingredients')).toBeInTheDocument();
     expect(screen.getByDisplayValue('Test Ingredient')).toBeInTheDocument();
-    expect(screen.getByText('Organize into Sections')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Add section' })).toBeInTheDocument();
     expect(screen.queryByTestId('section-manager')).not.toBeInTheDocument();
   });
 
@@ -76,25 +76,24 @@ describe('RecipeIngredientsWithSections', () => {
     expect(screen.getByTestId('sections-count')).toHaveTextContent('1');
   });
 
-  it('shows toggle button for switching modes', () => {
+  it('turns the flat list into two sections when Add section is clicked', async () => {
+    const user = userEvent.setup();
     render(<TestWrapper />);
-    
-    expect(screen.getByText('Organize into Sections')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Add section' }));
+
+    expect(screen.getByTestId('section-manager')).toBeInTheDocument();
+    expect(screen.getByTestId('sections-count')).toHaveTextContent('2');
   });
 
-  it('shows different toggle text when sections exist', () => {
-    const sections = [
-      {
-        id: 'section-1',
-        name: 'Test Section',
-        order: 0,
-        items: []
-      }
-    ];
-    
-    render(<TestWrapper defaultSections={sections} />);
-    
-    expect(screen.getByText('Use Simple List')).toBeInTheDocument();
+  it('shows notes on the same row as the ingredient', () => {
+    render(<TestWrapper />);
+
+    const name = screen.getByDisplayValue('Test Ingredient');
+    const notes = screen.getByRole('textbox', { name: 'Ingredient notes' });
+    const row = '[class*="md:grid-cols-[5.5rem_7rem_1fr_1fr]"]';
+    expect(notes.closest(row)).not.toBeNull();
+    expect(notes.closest(row)).toBe(name.closest(row));
   });
 
   it('renders ingredient form fields', () => {
@@ -108,7 +107,7 @@ describe('RecipeIngredientsWithSections', () => {
   it('renders add ingredient button in flat mode', () => {
     render(<TestWrapper />);
 
-    expect(screen.getByText('Add Ingredient')).toBeInTheDocument();
+    expect(screen.getByText('Add ingredient')).toBeInTheDocument();
   });
 
   it('falls back to displaying the decimal amount for legacy ingredients with no displayAmount', () => {

@@ -35,7 +35,7 @@ describe('RecipeForm Validation Integration Tests', () => {
   });
 
   const fillBasicRecipeForm = async () => {
-    const titleInput = screen.getByLabelText(/recipe title/i);
+    const titleInput = screen.getByLabelText(/recipe name/i);
     await user.clear(titleInput);
     await user.type(titleInput, 'Test Recipe');
     
@@ -265,7 +265,7 @@ describe('RecipeForm Validation Integration Tests', () => {
     it('should trigger validation on blur events', async () => {
       render(<RecipeForm onSubmit={mockOnSubmit} />);
 
-      const titleInput = screen.getByLabelText(/recipe title/i);
+      const titleInput = screen.getByLabelText(/recipe name/i);
       
       // Focus and blur without entering data
       await user.click(titleInput);
@@ -285,7 +285,7 @@ describe('RecipeForm Validation Integration Tests', () => {
       render(<RecipeForm onSubmit={mockOnSubmit} />);
 
       // Clear required fields
-      const titleInput = screen.getByLabelText(/recipe title/i);
+      const titleInput = screen.getByLabelText(/recipe name/i);
       await user.clear(titleInput);
 
       const ingredientInputs = screen.getAllByPlaceholderText(/ingredient name/i);
@@ -310,7 +310,7 @@ describe('RecipeForm Validation Integration Tests', () => {
       render(<RecipeForm onSubmit={mockOnSubmit} />);
 
       // Clear multiple required fields
-      const titleInput = screen.getByLabelText(/recipe title/i);
+      const titleInput = screen.getByLabelText(/recipe name/i);
       await user.clear(titleInput);
 
       // Trigger validation
@@ -330,7 +330,7 @@ describe('RecipeForm Validation Integration Tests', () => {
       render(<RecipeForm onSubmit={mockOnSubmit} />);
 
       // Clear required field
-      const titleInput = screen.getByLabelText(/recipe title/i);
+      const titleInput = screen.getByLabelText(/recipe name/i);
       await user.clear(titleInput);
 
       // Trigger validation
@@ -350,7 +350,7 @@ describe('RecipeForm Validation Integration Tests', () => {
       render(<RecipeForm onSubmit={mockOnSubmit} />);
 
       // Clear multiple fields
-      const titleInput = screen.getByLabelText(/recipe title/i);
+      const titleInput = screen.getByLabelText(/recipe name/i);
       await user.clear(titleInput);
 
       const ingredientInputs = screen.getAllByPlaceholderText(/ingredient name/i);
@@ -381,7 +381,7 @@ describe('RecipeForm Validation Integration Tests', () => {
       render(<RecipeForm onSubmit={mockOnSubmit} />);
 
       // Clear required field
-      const titleInput = screen.getByLabelText(/recipe title/i);
+      const titleInput = screen.getByLabelText(/recipe name/i);
       await user.clear(titleInput);
 
       // Trigger validation
@@ -411,7 +411,7 @@ describe('RecipeForm Validation Integration Tests', () => {
       render(<RecipeForm onSubmit={mockOnSubmit} />);
 
       // Clear required field
-      const titleInput = screen.getByLabelText(/recipe title/i);
+      const titleInput = screen.getByLabelText(/recipe name/i);
       await user.clear(titleInput);
 
       // Trigger validation
@@ -431,7 +431,7 @@ describe('RecipeForm Validation Integration Tests', () => {
       render(<RecipeForm onSubmit={mockOnSubmit} />);
 
       // Clear multiple fields
-      const titleInput = screen.getByLabelText(/recipe title/i);
+      const titleInput = screen.getByLabelText(/recipe name/i);
       await user.clear(titleInput);
 
       // Trigger validation
@@ -469,7 +469,7 @@ describe('RecipeForm Validation Integration Tests', () => {
       render(<RecipeForm onSubmit={mockOnSubmit} />);
 
       // Clear required field
-      const titleInput = screen.getByLabelText(/recipe title/i);
+      const titleInput = screen.getByLabelText(/recipe name/i);
       await user.clear(titleInput);
 
       // Trigger validation
@@ -487,7 +487,7 @@ describe('RecipeForm Validation Integration Tests', () => {
       render(<RecipeForm onSubmit={mockOnSubmit} />);
 
       // Clear required field
-      const titleInput = screen.getByLabelText(/recipe title/i);
+      const titleInput = screen.getByLabelText(/recipe name/i);
       await user.clear(titleInput);
 
       // Trigger validation
@@ -515,7 +515,7 @@ describe('RecipeForm Validation Integration Tests', () => {
       render(<RecipeForm onSubmit={mockOnSubmit} />);
 
       // Clear required field
-      const titleInput = screen.getByLabelText(/recipe title/i);
+      const titleInput = screen.getByLabelText(/recipe name/i);
       await user.clear(titleInput);
 
       // Trigger validation
@@ -538,7 +538,7 @@ describe('RecipeForm Validation Integration Tests', () => {
       render(<RecipeForm onSubmit={mockOnSubmit} />);
 
       // Clear required field
-      const titleInput = screen.getByLabelText(/recipe title/i);
+      const titleInput = screen.getByLabelText(/recipe name/i);
       await user.clear(titleInput);
 
       // Trigger validation
@@ -563,7 +563,7 @@ describe('RecipeForm Validation Integration Tests', () => {
       render(<RecipeForm onSubmit={mockOnSubmit} />);
 
       // Clear multiple required fields
-      const titleInput = screen.getByLabelText(/recipe title/i);
+      const titleInput = screen.getByLabelText(/recipe name/i);
       await user.clear(titleInput);
 
       const ingredientInputs = screen.getAllByPlaceholderText(/ingredient name/i);
@@ -655,7 +655,7 @@ describe('RecipeForm Validation Integration Tests', () => {
       render(<RecipeForm onSubmit={mockOnSubmit} />);
 
       // Don't fill anything, just clear the default values
-      const titleInput = screen.getByLabelText(/recipe title/i);
+      const titleInput = screen.getByLabelText(/recipe name/i);
       await user.clear(titleInput);
 
       const submitButton = screen.getByRole('button', { name: /save recipe/i });

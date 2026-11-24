@@ -27,6 +27,13 @@ describe('RecipeStats', () => {
     expect(screen.queryByText('Total time')).not.toBeInTheDocument();
   });
 
+  it('shows difficulty when it is set', () => {
+    render(<RecipeStats difficulty="medium" scale={1} />);
+
+    expect(screen.getByText('Difficulty')).toBeInTheDocument();
+    expect(screen.getByText('Medium')).toBeInTheDocument();
+  });
+
   it('renders nothing when no stats are known', () => {
     const { container } = render(<RecipeStats scale={1} />);
 

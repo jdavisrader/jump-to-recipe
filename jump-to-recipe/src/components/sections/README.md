@@ -103,18 +103,6 @@ interface SectionHeaderProps {
 }
 ```
 
-### EditableTitle
-
-```typescript
-interface EditableTitleProps {
-  value: string;                               // Current title value
-  onChange: (value: string) => void;           // Callback when title changes
-  placeholder?: string;                        // Placeholder when empty
-  className?: string;                          // Additional CSS classes
-  disabled?: boolean;                          // Disables editing with visual feedback
-}
-```
-
 ## Usage Examples
 
 ### Basic Usage with Append-Only Behavior

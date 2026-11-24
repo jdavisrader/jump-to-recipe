@@ -35,6 +35,7 @@ describe('CookModeToggle', () => {
     fireEvent.click(toggle);
     await waitFor(() => expect(toggle).toHaveAttribute('aria-checked', 'true'));
     expect(request).toHaveBeenCalledWith('screen');
+    expect(screen.getByText('On · your screen will stay awake')).toBeInTheDocument();
 
     fireEvent.click(toggle);
     await waitFor(() => expect(toggle).toHaveAttribute('aria-checked', 'false'));

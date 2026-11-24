@@ -5,7 +5,7 @@
  */
 
 import React from 'react';
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { render, screen, waitFor, within, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { SectionManager, Section } from '../section-manager';
 
@@ -467,15 +467,10 @@ describe('SectionManager Validation Integration Tests', () => {
         />
       );
 
-      // Find the editable title (it should be a button or input)
-      const titleElement = screen.getByText('Test Section');
-      await user.click(titleElement);
-
-      // Type new name
-      const input = screen.getByDisplayValue('Test Section');
-      await user.clear(input);
-      await user.type(input, 'New Section Name');
-      await user.keyboard('{Enter}');
+      // The section name is a plain text field, renamed as the user types
+      fireEvent.change(screen.getByDisplayValue('Test Section'), {
+        target: { value: 'New Section Name' },
+      });
 
       await waitFor(() => {
         expect(mockOnValidate).toHaveBeenCalled();

@@ -42,7 +42,7 @@ describe('Section Components Performance', () => {
       expect(renderTime).toBeLessThan(800); // 800ms - improved from 1000ms
       
       // Verify all sections are rendered
-      const sectionElements = screen.getAllByText(/Section \d+/);
+      const sectionElements = screen.getAllByDisplayValue(/Section \d+/);
       expect(sectionElements.length).toBe(50);
     });
 
@@ -60,7 +60,7 @@ describe('Section Components Performance', () => {
       expect(renderTime).toBeLessThan(400); // 400ms for 20 sections
       
       // Verify sections are rendered correctly
-      const sectionElements = screen.getAllByText(/Section \d+/);
+      const sectionElements = screen.getAllByDisplayValue(/Section \d+/);
       expect(sectionElements.length).toBe(20);
       
       // Verify no drag-related elements exist
@@ -119,7 +119,7 @@ describe('Section Components Performance', () => {
       expect(renderTime).toBeLessThan(300); // 300ms for 10 sections
       
       // Verify sections are rendered
-      const sectionElements = screen.getAllByText(/Section \d+/);
+      const sectionElements = screen.getAllByDisplayValue(/Section \d+/);
       expect(sectionElements.length).toBe(10);
     });
 
@@ -229,9 +229,6 @@ describe('Section Components Performance', () => {
       const onRename = jest.fn();
       render(<SectionHeader section={section} onRename={onRename} onDelete={jest.fn()} />);
       
-      const editButton = screen.getByTitle('Click to edit');
-      fireEvent.click(editButton);
-      
       const input = screen.getByDisplayValue('Test Section');
       const startTime = performance.now();
       
@@ -258,7 +255,7 @@ describe('Section Components Performance', () => {
       expect(sectionElements.length).toBeGreaterThan(0);
       
       // Verify sections are rendered efficiently
-      const sectionTexts = screen.getAllByText(/Section \d+/);
+      const sectionTexts = screen.getAllByDisplayValue(/Section \d+/);
       expect(sectionTexts.length).toBe(3);
     });
 
@@ -302,7 +299,7 @@ describe('Section Components Performance', () => {
       expect(buttons.length).toBeGreaterThan(0);
       
       // Verify sections are accessible
-      const sectionElements = screen.getAllByText(/Section \d+/);
+      const sectionElements = screen.getAllByDisplayValue(/Section \d+/);
       expect(sectionElements.length).toBe(20);
     });
 

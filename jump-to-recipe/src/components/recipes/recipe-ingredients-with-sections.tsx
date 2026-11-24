@@ -9,7 +9,7 @@ import { getDraggableStyle } from '@/lib/drag-drop-style';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { FormPanel } from '@/components/recipes/form-panel';
 import {
   Select,
   SelectContent,
@@ -24,7 +24,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { DragHandle } from '@/components/ui/drag-handle';
-import { DeleteButton } from '@/components/ui/delete-button';
+import { RemoveRowButton } from './remove-row-button';
 
 import { SectionManager, Section } from '@/components/sections/section-manager';
 import type { Ingredient } from '@/types/recipe';
@@ -138,82 +138,25 @@ export function RecipeIngredientsWithSections<TFieldValues extends FieldValues, 
   // Note: We don't sync flat ingredients with sections automatically to prevent infinite loops
   // The form submission will handle converting sections to the final format
 
-  const handleToggleSections = () => {
-    if (!shouldUseSections) {
-      // Convert flat ingredients to sections
-      // Preserve ingredient order by maintaining array positions
-      if (ingredients.length > 0) {
-        const defaultSection: IngredientSection = {
-          id: uuidv4(),
-          name: 'Ingredients',
-          order: 0,
-          // Preserve order: map ingredients with their current array index as position
-          items: ingredients.map((ingredient: Ingredient, index: number) => ({
-            ...ingredient,
-            position: index, // Explicitly assign position based on current order
-          })),
-        };
-        appendSection(defaultSection);
-      } else {
-        // Create an empty section if no ingredients exist
-        const emptySection: IngredientSection = {
-          id: uuidv4(),
-          name: 'Ingredients',
-          order: 0,
-          items: [],
-        };
-        appendSection(emptySection);
-      }
-      setUseSections(true);
-    } else {
-      // Convert sections back to flat ingredients
-      // Preserve order: first by section order, then by ingredient position within each section
-      
-      // Sort sections by their order property
-      const sortedSections = [...ingredientSections].sort(
-        (a: IngredientSection, b: IngredientSection) => a.order - b.order
-      );
-
-      // Flatten ingredients while preserving order
-      const allIngredients = sortedSections.flatMap((section: IngredientSection, sectionIndex: number) => {
-        // Sort items within each section by position (if available) or array index
-        const sortedItems = [...section.items].sort((a: any, b: any) => {
-          const posA = typeof a.position === 'number' ? a.position : section.items.indexOf(a);
-          const posB = typeof b.position === 'number' ? b.position : section.items.indexOf(b);
-          return posA - posB;
-        });
-        
-        // Keep all properties including position (Requirement 3.1, 3.2, 4.4)
-        return sortedItems;
-      });
-      
-      // Reindex positions for flat list (global scope)
-      const reindexedIngredients = allIngredients.map((item: any, index: number) => ({
-        ...item,
+  // A flat list becomes its first group, followed by a new empty one to fill in
+  const handleAddSection = () => {
+    const existingGroup: IngredientSection = {
+      id: uuidv4(),
+      name: 'Ingredients',
+      order: 0,
+      items: ingredients.map((ingredient: Ingredient, index: number) => ({
+        ...ingredient,
         position: index,
-      }));
-
-      // Clear sections using replace method
-      replaceSections([]);
-
-      // Replace flat ingredients with all ingredients from sections
-      if (reindexedIngredients.length > 0) {
-        replaceIngredients(reindexedIngredients);
-      } else {
-        // Ensure at least one empty ingredient exists with position
-        replaceIngredients([{
-          id: uuidv4(),
-          name: '',
-          amount: 0,
-          unit: '',
-          displayAmount: '',
-          notes: '',
-          position: 0,
-        }]);
-      }
-
-      setUseSections(false);
-    }
+      })),
+    };
+    const newGroup: IngredientSection = {
+      id: uuidv4(),
+      name: 'Untitled Section',
+      order: 1,
+      items: [],
+    };
+    appendSection([existingGroup, newGroup]);
+    setUseSections(true);
   };
 
   const handleSectionsChange = (newSections: Section<Ingredient>[]) => {
@@ -733,7 +676,7 @@ export function RecipeIngredientsWithSections<TFieldValues extends FieldValues, 
             </div>
 
             {/* Ingredient Fields */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-2 flex-1">
+            <div className="grid flex-1 grid-cols-2 gap-2 md:grid-cols-[5.5rem_7rem_1fr_1fr]">
               {/* Field order: Quantity, Unit, Ingredient Name, Notes */}
               <FormField
                 control={control}
@@ -749,6 +692,7 @@ export function RecipeIngredientsWithSections<TFieldValues extends FieldValues, 
                       <Input
                         type="text"
                         placeholder="e.g. 1 3/4"
+                        aria-label="Quantity"
                         name={field.name}
                         ref={field.ref}
                         value={displayValue}
@@ -781,7 +725,7 @@ export function RecipeIngredientsWithSections<TFieldValues extends FieldValues, 
                   <FormItem>
                     <Select onValueChange={field.onChange} defaultValue={field.value || undefined}>
                       <FormControl>
-                        <SelectTrigger>
+                        <SelectTrigger aria-label="Unit">
                           <SelectValue placeholder="Unit" />
                         </SelectTrigger>
                       </FormControl>
@@ -811,10 +755,11 @@ export function RecipeIngredientsWithSections<TFieldValues extends FieldValues, 
                 control={control}
                 name={`${fieldBaseName}.name`}
                 render={({ field }) => (
-                  <FormItem>
+                  <FormItem className="col-span-2 md:col-span-1">
                     <FormControl>
                       <Input
                         placeholder="Ingredient name"
+                        aria-label="Ingredient"
                         {...field}
                         onBlur={(e) => {
                           field.onBlur();
@@ -845,9 +790,14 @@ export function RecipeIngredientsWithSections<TFieldValues extends FieldValues, 
                 control={control}
                 name={`${fieldBaseName}.notes`}
                 render={({ field }) => (
-                  <FormItem>
+                  <FormItem className="col-span-2 md:col-span-1">
                     <FormControl>
-                      <Input placeholder="Notes (optional)" {...field} />
+                      <Input
+                        placeholder="Notes (optional)"
+                        aria-label="Ingredient notes"
+                        {...field}
+                        value={field.value ?? ''}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -856,8 +806,8 @@ export function RecipeIngredientsWithSections<TFieldValues extends FieldValues, 
             </div>
 
             {/* Delete Button */}
-            <DeleteButton
-              onDelete={() => handleRemoveIngredient(sectionId, ingredient.id)}
+            <RemoveRowButton
+              onRemove={() => handleRemoveIngredient(sectionId, ingredient.id)}
               disabled={isLoading}
               ariaLabel={`Delete ${ingredient.name || 'ingredient'}`}
             />
@@ -884,6 +834,7 @@ export function RecipeIngredientsWithSections<TFieldValues extends FieldValues, 
               snapshot.isDraggingOver ? 'bg-accent/30 ring-2 ring-primary ring-offset-2' : ''
             } ${isTouchDevice ? 'touch-device' : ''}`}
           >
+            <IngredientColumnLabels />
             {ingredientFields.map((field, index) => (
               <Draggable
                 key={field.id}
@@ -914,7 +865,7 @@ export function RecipeIngredientsWithSections<TFieldValues extends FieldValues, 
                     </div>
 
                     {/* Ingredient Fields */}
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-2 flex-1">
+                    <div className="grid flex-1 grid-cols-2 gap-2 md:grid-cols-[5.5rem_7rem_1fr_1fr]">
                       {/* Field order: Quantity, Unit, Ingredient Name, Notes */}
                       <FormField
                         control={control}
@@ -930,6 +881,7 @@ export function RecipeIngredientsWithSections<TFieldValues extends FieldValues, 
                               <Input
                                 type="text"
                                 placeholder="e.g. 1 3/4"
+                                aria-label="Quantity"
                                 name={field.name}
                                 ref={field.ref}
                                 value={displayValue}
@@ -962,7 +914,7 @@ export function RecipeIngredientsWithSections<TFieldValues extends FieldValues, 
                           <FormItem>
                             <Select onValueChange={field.onChange} defaultValue={field.value || undefined}>
                               <FormControl>
-                                <SelectTrigger>
+                                <SelectTrigger aria-label="Unit">
                                   <SelectValue placeholder="Unit" />
                                 </SelectTrigger>
                               </FormControl>
@@ -992,9 +944,9 @@ export function RecipeIngredientsWithSections<TFieldValues extends FieldValues, 
                         control={control}
                         name={`ingredients.${index}.name`}
                         render={({ field }) => (
-                          <FormItem>
+                          <FormItem className="col-span-2 md:col-span-1">
                             <FormControl>
-                              <Input placeholder="Ingredient name" {...field} />
+                              <Input placeholder="Ingredient name" aria-label="Ingredient" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -1005,9 +957,14 @@ export function RecipeIngredientsWithSections<TFieldValues extends FieldValues, 
                         control={control}
                         name={`ingredients.${index}.notes`}
                         render={({ field }) => (
-                          <FormItem>
+                          <FormItem className="col-span-2 md:col-span-1">
                             <FormControl>
-                              <Input placeholder="Notes (optional)" {...field} />
+                              <Input
+                                placeholder="Notes (optional)"
+                                aria-label="Ingredient notes"
+                                {...field}
+                                value={field.value ?? ''}
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -1016,8 +973,8 @@ export function RecipeIngredientsWithSections<TFieldValues extends FieldValues, 
                     </div>
 
                     {/* Delete Button */}
-                    <DeleteButton
-                      onDelete={() => removeIngredient(index)}
+                    <RemoveRowButton
+                      onRemove={() => removeIngredient(index)}
                       disabled={ingredientFields.length === 1 || isLoading}
                       ariaLabel={`Delete ${ingredients[index]?.name || 'ingredient'}`}
                     />
@@ -1029,7 +986,8 @@ export function RecipeIngredientsWithSections<TFieldValues extends FieldValues, 
 
             <Button
               type="button"
-              variant="outline"
+              variant="ghost"
+              className="min-h-[44px] font-semibold text-primary hover:text-primary"
               onClick={() => {
                 // Calculate next position based on current ingredients
                 const nextPosition = ingredients.length;
@@ -1046,7 +1004,18 @@ export function RecipeIngredientsWithSections<TFieldValues extends FieldValues, 
               disabled={isLoading}
             >
               <Plus className="h-4 w-4 mr-2" />
-              Add Ingredient
+              Add ingredient
+            </Button>
+
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleAddSection}
+              disabled={isLoading}
+              className="w-full border-dashed"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Add section
             </Button>
           </div>
         )}
@@ -1054,22 +1023,27 @@ export function RecipeIngredientsWithSections<TFieldValues extends FieldValues, 
     </DragDropContext>
   );
 
+  const itemCount = shouldUseSections
+    ? ingredientSections.reduce((total: number, section: IngredientSection) => total + section.items.length, 0)
+    : ingredients.length;
+  const runningTotal = [
+    `${itemCount} ${itemCount === 1 ? 'item' : 'items'}`,
+    shouldUseSections && `${ingredientSections.length} ${ingredientSections.length === 1 ? 'group' : 'groups'}`,
+  ].filter(Boolean).join(' · ');
+
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-        <CardTitle>Ingredients</CardTitle>
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={handleToggleSections}
-          disabled={isLoading}
-          aria-label={shouldUseSections ? 'Convert to simple list' : 'Organize into sections'}
-        >
-          {shouldUseSections ? 'Use Simple List' : 'Organize into Sections'}
-        </Button>
-      </CardHeader>
-      <CardContent>
+    <FormPanel
+      title="Ingredients"
+      description="Group ingredients when the recipe has parts, like the cake and the frosting. Groups here don't have to match the instruction sections."
+      aside={
+        <>
+          <span className="text-sm text-muted-foreground tabular-nums" aria-live="polite">
+            {runningTotal}
+          </span>
+        </>
+      }
+    >
+      <div>
         {/* Drag instructions for screen readers and keyboard users */}
         <div id="drag-instructions" className="sr-only">
           To reorder ingredients, use the drag handle. 
@@ -1100,12 +1074,13 @@ export function RecipeIngredientsWithSections<TFieldValues extends FieldValues, 
                 onRemoveItem={handleRemoveIngredient}
                 renderItem={renderIngredientItem}
                 itemType="ingredient"
-                addSectionLabel="Add Ingredient Section"
-                addItemLabel="Add Ingredient"
+                addSectionLabel="Add section"
+                addItemLabel="Add ingredient"
                 isLoading={isLoading}
                 validationErrors={validationErrors}
                 onValidate={onValidate}
                 enableDragDrop={true}
+                itemsHeader={<IngredientColumnLabels />}
               />
             </div>
           </DragDropContext>
@@ -1133,7 +1108,21 @@ export function RecipeIngredientsWithSections<TFieldValues extends FieldValues, 
             Drag to reorder
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </FormPanel>
+  );
+}
+
+function IngredientColumnLabels() {
+  return (
+    <div
+      aria-hidden="true"
+      className="hidden gap-2 px-11 text-xs font-medium uppercase tracking-wide text-muted-foreground md:grid md:grid-cols-[5.5rem_7rem_1fr_1fr]"
+    >
+      <span>Qty</span>
+      <span>Unit</span>
+      <span>Ingredient</span>
+      <span>Notes</span>
+    </div>
   );
 }

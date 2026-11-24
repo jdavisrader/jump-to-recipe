@@ -163,19 +163,17 @@ describe('RecipeForm with Sections', () => {
   it('renders the form with section components', () => {
     render(<RecipeForm {...defaultProps} />);
 
-    expect(screen.getByText('Basic Information')).toBeInTheDocument();
     expect(screen.getByTestId('ingredients-with-sections')).toBeInTheDocument();
     expect(screen.getByTestId('instructions-with-sections')).toBeInTheDocument();
-    expect(screen.getByText('Photos')).toBeInTheDocument();
-    // Card title plus the field's screen-reader label
-    expect(screen.getAllByText('Notes').length).toBeGreaterThan(0);
+    expect(screen.getByText('Basics')).toBeInTheDocument();
+    expect(screen.getByLabelText('Notes')).toBeInTheDocument();
     expect(screen.getByText('Details')).toBeInTheDocument();
   });
 
   it('initializes with default values including empty sections', () => {
     render(<RecipeForm {...defaultProps} />);
 
-    const titleInput = screen.getByLabelText(/recipe title/i);
+    const titleInput = screen.getByLabelText(/recipe name/i);
     expect(titleInput).toHaveValue('');
 
     // Section components should be rendered
@@ -220,7 +218,7 @@ describe('RecipeForm with Sections', () => {
 
     render(<RecipeForm {...defaultProps} initialData={initialData} />);
 
-    const titleInput = screen.getByLabelText(/recipe title/i);
+    const titleInput = screen.getByLabelText(/recipe name/i);
     expect(titleInput).toHaveValue('Test Recipe');
 
     const descriptionInput = screen.getByLabelText(/description/i);
@@ -230,7 +228,7 @@ describe('RecipeForm with Sections', () => {
   it('renders form fields correctly', async () => {
     render(<RecipeForm {...defaultProps} />);
 
-    const titleInput = screen.getByLabelText(/recipe title/i);
+    const titleInput = screen.getByLabelText(/recipe name/i);
     await user.type(titleInput, 'New Recipe');
 
     expect(titleInput).toHaveValue('New Recipe');
@@ -274,16 +272,13 @@ describe('RecipeForm with Sections', () => {
     render(<RecipeForm {...defaultProps} />);
 
     const tagInput = screen.getByPlaceholderText(/add a tag/i);
-    // Use getAllByRole and find the specific Add button for tags (not section buttons)
-    const addButtons = screen.getAllByRole('button', { name: /add/i });
-    // The tag add button should be the last one (after section add buttons)
-    const addButton = addButtons[addButtons.length - 1];
+    const addButton = screen.getByRole('button', { name: 'Add' });
 
     await user.type(tagInput, 'dessert');
     await user.click(addButton);
 
-    // Tag should be added (this would be visible in the actual component)
     expect(tagInput).toHaveValue('');
+    expect(screen.getByRole('button', { name: 'Remove tag dessert' })).toBeInTheDocument();
   });
 
   it('handles image upload', async () => {
@@ -309,7 +304,7 @@ describe('RecipeForm with Sections', () => {
 
     render(<RecipeForm {...defaultProps} initialData={initialData} />);
 
-    const titleInput = screen.getByLabelText(/recipe title/i);
+    const titleInput = screen.getByLabelText(/recipe name/i);
     expect(titleInput).toHaveValue('Simple Recipe');
 
     // Section components should still render but in non-sectioned mode
@@ -336,7 +331,7 @@ describe('RecipeForm with Sections', () => {
 
     render(<RecipeForm {...defaultProps} initialData={initialData} />);
 
-    const titleInput = screen.getByLabelText(/recipe title/i);
+    const titleInput = screen.getByLabelText(/recipe name/i);
     expect(titleInput).toHaveValue('Test Recipe');
 
     const descriptionInput = screen.getByLabelText(/description/i);

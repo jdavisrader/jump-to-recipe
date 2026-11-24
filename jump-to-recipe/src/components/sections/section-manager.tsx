@@ -121,6 +121,9 @@ interface SectionManagerProps<T> {
    * The parent component must wrap this component in a DragDropContext.
    */
   enableDragDrop?: boolean;
+
+  /** Shown above each section's items when it has any, e.g. column labels */
+  itemsHeader?: React.ReactNode;
 }
 
 /**
@@ -132,7 +135,7 @@ interface SectionManagerProps<T> {
  * 
  * - **Append-Only Ordering**: New sections are always added to the bottom of the list
  * - **Order Stability**: Section order remains stable during rename and delete operations
- * - **No Reordering**: Sections cannot be reordered after creation (no drag-and-drop)
+ * - **Arrow Reordering**: Sections move up or down one place with the header arrows (no drag-and-drop)
  * - **Automatic Reindexing**: When sections are deleted, remaining sections are reindexed sequentially
  * 
  * ## Validation Support
@@ -245,6 +248,7 @@ export function SectionManager<T extends { id: string }>({
   validationErrors,
   onValidate,
   enableDragDrop = false,
+  itemsHeader,
 }: SectionManagerProps<T>) {
   const defaultAddSectionLabel = `Add ${itemType === 'ingredient' ? 'Ingredient' : 'Instruction'} Section`;
   const defaultAddItemLabel = `Add ${itemType === 'ingredient' ? 'Ingredient' : 'Step'}`;
@@ -317,6 +321,27 @@ export function SectionManager<T extends { id: string }>({
   // Sort sections by order
   const sortedSections = [...sections].sort((a, b) => a.order - b.order);
 
+  /**
+   * Swaps a section with its neighbour and renumbers order from 0.
+   * Does nothing when the section is already at that end of the list.
+   *
+   * @param sectionId - The ID of the section to move
+   * @param direction - 'up' moves it earlier, 'down' later
+   */
+  const handleSectionMove = (sectionId: string, direction: 'up' | 'down') => {
+    const index = sortedSections.findIndex(section => section.id === sectionId);
+    const targetIndex = direction === 'up' ? index - 1 : index + 1;
+    if (index === -1 || targetIndex < 0 || targetIndex >= sortedSections.length) return;
+
+    const reordered = [...sortedSections];
+    [reordered[index], reordered[targetIndex]] = [reordered[targetIndex], reordered[index]];
+    onSectionsChange(reordered.map((section, order) => ({ ...section, order })));
+
+    if (onValidate) {
+      onValidate();
+    }
+  };
+
   // Loading skeleton
   if (isLoading) {
     return (
@@ -337,7 +362,7 @@ export function SectionManager<T extends { id: string }>({
 
   return (
     <div className={cn('space-y-6', className)}>
-      <div className="space-y-6">
+      <div>
         {sortedSections.length === 0 ? (
           <div className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-border rounded-lg bg-muted/30">
             <div className="text-muted-foreground text-center">
@@ -357,19 +382,12 @@ export function SectionManager<T extends { id: string }>({
             return (
               <div
                 key={section.id}
+                // Sections sit on the panel separated by a divider, not boxed in their own cards;
+                // only an invalid section gets an outline so it's easy to find
                 className={cn(
-                  // Base section container styling (theme tokens; Tailwind's gray-800 reads blue in dark mode)
-                  'bg-muted/40 border rounded-xl shadow-sm',
-                  // Smooth transitions for hover effects
-                  'transition-[box-shadow,border-color,background-color] duration-200 ease-in-out',
-                  // Spacing and layout
-                  'p-4 space-y-3',
-                  // Hover state
-                  'hover:shadow-md',
-                  // Validation error styling
-                  hasValidationError
-                    ? 'border-red-300 dark:border-red-700 bg-red-50/30 dark:bg-red-950/10'
-                    : 'border-border hover:border-muted-foreground/40'
+                  'mt-6 space-y-3 border-t pt-6 first:mt-0 first:border-t-0 first:pt-0',
+                  hasValidationError &&
+                    'rounded-xl border border-red-300 bg-red-50/30 p-3 first:border-t first:p-3 dark:border-red-700 dark:bg-red-950/10'
                 )}
                 role="group"
                 aria-labelledby={`section-${section.id}-title`}
@@ -387,23 +405,14 @@ export function SectionManager<T extends { id: string }>({
                   titleId={`section-${section.id}-title`}
                   hasItems={section.items.length > 0}
                   isLastSection={sections.length === 1}
+                  onMove={handleSectionMove}
+                  canMoveUp={sectionIndex > 0}
+                  canMoveDown={sectionIndex < sortedSections.length - 1}
                 />
                 
-                {/* Section Name Validation Error */}
-                {sectionNameError && (
-                  <div 
-                    className="validation-error-container px-3 pt-2"
-                    id={`section-${section.id}-name-error`}
-                    role="alert"
-                  >
-                    <p className="text-red-600 dark:text-red-400 text-sm">
-                      {sectionNameError}
-                    </p>
-                  </div>
-                )}
-
                 {/* Section Items */}
-                <div className="space-y-3 mt-4">
+                <div className="space-y-3">
+                  {section.items.length > 0 && itemsHeader}
                   {section.items.length === 0 && (
                     <div 
                       className="flex items-center gap-2 p-3 border-2 border-dashed border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/20 rounded-lg text-amber-700 dark:text-amber-300 text-sm section-empty-indicator"
@@ -471,12 +480,11 @@ export function SectionManager<T extends { id: string }>({
                   {/* Add Item Button */}
                   <Button
                     type="button"
-                    variant="outline"
-                    size="sm"
+                    variant="ghost"
                     onClick={() => onAddItem(section.id)}
                     disabled={isAddingItem[section.id]}
                     className={cn(
-                      "text-sm section-button",
+                      "min-h-[44px] font-semibold text-primary hover:text-primary section-button",
                       isAddingItem[section.id] && "animate-pulse"
                     )}
                     aria-label={`Add ${itemType === 'ingredient' ? 'ingredient' : 'step'} to ${section.name}`}
@@ -502,7 +510,7 @@ export function SectionManager<T extends { id: string }>({
         onClick={handleAddSection}
         disabled={isAddingSection}
         className={cn(
-          "w-full section-button",
+          "w-full border-dashed section-button",
           isAddingSection && "animate-pulse"
         )}
       >

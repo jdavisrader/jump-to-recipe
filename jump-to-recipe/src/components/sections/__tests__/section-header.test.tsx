@@ -26,13 +26,11 @@ describe('SectionHeader', () => {
       />
     );
 
-    expect(screen.getByText('Test Section')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('Test Section')).toBeInTheDocument();
     expect(screen.getByTitle('Delete section')).toBeInTheDocument();
   });
 
   it('calls onRename when title is changed', async () => {
-    const user = userEvent.setup();
-    
     render(
       <SectionHeader
         section={mockSection}
@@ -41,13 +39,9 @@ describe('SectionHeader', () => {
       />
     );
 
-    // Click on the title to edit it
-    await user.click(screen.getByText('Test Section'));
-    
-    const input = screen.getByRole('textbox');
-    await user.clear(input);
-    await user.type(input, 'New Section Name');
-    await user.keyboard('{Enter}');
+    // The name is a plain text field, renamed as the user types
+    const input = screen.getByRole('textbox', { name: 'Section name' });
+    fireEvent.change(input, { target: { value: 'New Section Name' } });
 
     expect(mockOnRename).toHaveBeenCalledWith('section-1', 'New Section Name');
   });
@@ -206,7 +200,7 @@ describe('SectionHeader', () => {
     );
 
     // Find the main header container by looking for the element with the flex class
-    const header = document.querySelector('.flex.items-center');
+    const header = document.querySelector('.flex.items-start');
     expect(header).toHaveClass('custom-class');
   });
 
@@ -223,7 +217,7 @@ describe('SectionHeader', () => {
     expect(screen.queryByTitle('Drag to reorder')).not.toBeInTheDocument();
     
     // Verify no drag-related classes are present
-    const header = document.querySelector('.flex.items-center');
+    const header = document.querySelector('.flex.items-start');
     expect(header).not.toHaveClass('section-drag-preview');
     expect(header).not.toHaveClass('cursor-grab');
   });
