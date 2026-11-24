@@ -27,7 +27,7 @@ describe('RecipeForm Empty Section Validation', () => {
   });
 
   const fillBasicRecipeForm = async () => {
-    await user.type(screen.getByLabelText(/recipe title/i), 'Test Recipe');
+    await user.type(screen.getByLabelText(/recipe name/i), 'Test Recipe');
     await user.type(screen.getByLabelText(/description/i), 'A test recipe');
   };
 

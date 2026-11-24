@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { RecipeForm } from "@/components/recipes";
+import { FormPageHeader } from "@/components/recipes/form-page-header";
 import type { NewRecipeInput } from "@/types/recipe";
 import type { RecipePhoto } from "@/types/recipe-photos";
 import { downscaleImageForUpload } from "@/lib/downscale-image";
@@ -108,12 +109,11 @@ export default function NewRecipePage() {
 
   return (
     <div className="container mx-auto py-8 max-w-4xl">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">Create New Recipe</h1>
+      <FormPageHeader backHref="/my-recipes" backLabel="Back to recipes" title="New recipe">
         <p className="text-muted-foreground">
-          Share your favorite recipe with the community
+          Add the basics, list what goes in, then walk through the steps.
         </p>
-      </div>
+      </FormPageHeader>
 
       <RecipeForm
         onSubmit={handleCreateRecipe}

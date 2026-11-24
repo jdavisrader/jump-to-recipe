@@ -8,7 +8,6 @@ import { v4 as uuidv4 } from "uuid";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { 
   Select, 
   SelectContent, 
@@ -33,13 +32,11 @@ import type { NewRecipeInput } from "@/types/recipe";
 import type { IngredientSection, InstructionSection } from "@/types/sections";
 import type { RecipePhoto } from "@/types/recipe-photos";
 
-import { RecipeImageUpload } from "@/components/recipes/recipe-image-upload";
 import { RecipeIngredientsWithSections } from "@/components/recipes/recipe-ingredients-with-sections";
 import { RecipeInstructionsWithSections } from "@/components/recipes/recipe-instructions-with-sections";
 import { EmptySectionWarningModal } from "@/components/recipes/empty-section-warning-modal";
-import { RecipePhotosManager } from "@/components/recipes/recipe-photos-manager";
-import { NewRecipePhotosUpload, type TempRecipePhoto } from "@/components/recipes/new-recipe-photos-upload";
-import { RecipePhotosCard } from "@/components/recipes/recipe-photos-card";
+import type { TempRecipePhoto } from "@/components/recipes/new-recipe-photos-upload";
+import { RecipeFormBasics } from "@/components/recipes/recipe-form-basics";
 import { FormActionBar } from "@/components/recipes/form-action-bar";
 import { ConfirmationModal } from "@/components/ui/confirmation-modal";
 
@@ -589,44 +586,20 @@ export function RecipeForm({
           </div>
         )}
 
+        <RecipeFormBasics
+          control={form.control}
+          isLoading={isLoading}
+          recipeId={recipeId}
+          photos={photos}
+          onPhotosChange={setPhotos}
+        />
+
         {/* Basic Information */}
         <Card>
           <CardHeader>
             <CardTitle>Basic Information</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <FormField
-              control={form.control}
-              name="title"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Recipe Title</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter recipe title..." {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Description</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder="Brief description of the recipe..."
-                      {...field}
-                      value={field.value || ''}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <FormField
                 control={form.control}
@@ -738,45 +711,6 @@ export function RecipeForm({
           </CardContent>
         </Card>
 
-        {/* Photos */}
-        <RecipePhotosCard
-          cover={
-            <FormField
-              control={form.control}
-              name="imageUrl"
-              render={({ field }) => (
-                <FormItem>
-                  <FormControl>
-                    <RecipeImageUpload
-                      value={field.value}
-                      onChange={field.onChange}
-                      onRemove={() => field.onChange("")}
-                      disabled={isLoading}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          }
-          originalPhotos={
-            recipeId ? (
-              <RecipePhotosManager
-                recipeId={recipeId}
-                photos={photos}
-                canEdit={true}
-                onPhotosChange={setPhotos}
-              />
-            ) : (
-              <NewRecipePhotosUpload
-                photos={photos}
-                onPhotosChange={setPhotos}
-                disabled={isLoading}
-              />
-            )
-          }
-        />
-
         {/* Ingredients with Sections */}
         <RecipeIngredientsWithSections
           control={form.control as any}
@@ -804,31 +738,6 @@ export function RecipeForm({
           onFieldChange={handleFieldChange}
         />
 
-        {/* Notes */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Notes</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <FormField
-              control={form.control}
-              name="notes"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="sr-only">Notes</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder="Any additional notes or tips..."
-                      {...field}
-                      value={field.value || ''}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </CardContent>
-        </Card>
 
         {/* Details */}
         <Card>

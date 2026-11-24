@@ -166,7 +166,7 @@ describe('RecipeForm with Sections', () => {
     expect(screen.getByText('Basic Information')).toBeInTheDocument();
     expect(screen.getByTestId('ingredients-with-sections')).toBeInTheDocument();
     expect(screen.getByTestId('instructions-with-sections')).toBeInTheDocument();
-    expect(screen.getByText('Photos')).toBeInTheDocument();
+    expect(screen.getByText('Basics')).toBeInTheDocument();
     // Card title plus the field's screen-reader label
     expect(screen.getAllByText('Notes').length).toBeGreaterThan(0);
     expect(screen.getByText('Details')).toBeInTheDocument();
@@ -175,7 +175,7 @@ describe('RecipeForm with Sections', () => {
   it('initializes with default values including empty sections', () => {
     render(<RecipeForm {...defaultProps} />);
 
-    const titleInput = screen.getByLabelText(/recipe title/i);
+    const titleInput = screen.getByLabelText(/recipe name/i);
     expect(titleInput).toHaveValue('');
 
     // Section components should be rendered
@@ -220,7 +220,7 @@ describe('RecipeForm with Sections', () => {
 
     render(<RecipeForm {...defaultProps} initialData={initialData} />);
 
-    const titleInput = screen.getByLabelText(/recipe title/i);
+    const titleInput = screen.getByLabelText(/recipe name/i);
     expect(titleInput).toHaveValue('Test Recipe');
 
     const descriptionInput = screen.getByLabelText(/description/i);
@@ -230,7 +230,7 @@ describe('RecipeForm with Sections', () => {
   it('renders form fields correctly', async () => {
     render(<RecipeForm {...defaultProps} />);
 
-    const titleInput = screen.getByLabelText(/recipe title/i);
+    const titleInput = screen.getByLabelText(/recipe name/i);
     await user.type(titleInput, 'New Recipe');
 
     expect(titleInput).toHaveValue('New Recipe');
@@ -309,7 +309,7 @@ describe('RecipeForm with Sections', () => {
 
     render(<RecipeForm {...defaultProps} initialData={initialData} />);
 
-    const titleInput = screen.getByLabelText(/recipe title/i);
+    const titleInput = screen.getByLabelText(/recipe name/i);
     expect(titleInput).toHaveValue('Simple Recipe');
 
     // Section components should still render but in non-sectioned mode
@@ -336,7 +336,7 @@ describe('RecipeForm with Sections', () => {
 
     render(<RecipeForm {...defaultProps} initialData={initialData} />);
 
-    const titleInput = screen.getByLabelText(/recipe title/i);
+    const titleInput = screen.getByLabelText(/recipe name/i);
     expect(titleInput).toHaveValue('Test Recipe');
 
     const descriptionInput = screen.getByLabelText(/description/i);

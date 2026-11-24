@@ -4,6 +4,7 @@ import { useState, useEffect, use, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { RecipeForm, DeleteRecipeSection, AssignOwnerSection } from "@/components/recipes";
+import { FormPageHeader, RecipeStatusBadge } from "@/components/recipes/form-page-header";
 import { ErrorBoundary } from "@/components/ui/error-boundary";
 import { useToast } from "@/components/ui/use-toast";
 import { fetchWithRetry } from "@/lib/api-retry";
@@ -334,12 +335,9 @@ export default function EditRecipePage({ params }: EditRecipePageProps) {
       }}
     >
       <div className="container mx-auto py-8 max-w-4xl">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Edit Recipe</h1>
-          <p className="text-muted-foreground">
-            Update your recipe details
-          </p>
-        </div>
+        <FormPageHeader backHref={`/recipes/${id}`} backLabel="Back to recipe" title="Edit recipe">
+          <RecipeStatusBadge visibility={recipe.visibility} updatedAt={recipe.updatedAt} />
+        </FormPageHeader>
 
         <RecipeForm
           initialData={{
