@@ -47,7 +47,7 @@ describe('RecipeInstructionsWithSections', () => {
   it('renders flat instructions by default', () => {
     render(<TestWrapper />);
     
-    expect(screen.getByText('Instructions')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Method' })).toBeInTheDocument();
     expect(screen.getByDisplayValue('Test instruction')).toBeInTheDocument();
     expect(screen.getByText('Organize into Sections')).toBeInTheDocument();
     expect(screen.queryByTestId('section-manager')).not.toBeInTheDocument();
@@ -97,13 +97,13 @@ describe('RecipeInstructionsWithSections', () => {
     
     expect(screen.getByPlaceholderText('Describe this step...')).toBeInTheDocument();
     expect(screen.getByPlaceholderText('Duration (min)')).toBeInTheDocument();
-    expect(screen.getByText('Step 1')).toBeInTheDocument();
+    expect(screen.getByLabelText('Step 1')).toBeInTheDocument();
   });
 
   it('renders add step button in flat mode', () => {
     render(<TestWrapper />);
     
-    expect(screen.getByText('Add Step')).toBeInTheDocument();
+    expect(screen.getByText('Add step')).toBeInTheDocument();
   });
 
   it('displays step numbers correctly', () => {
@@ -115,9 +115,9 @@ describe('RecipeInstructionsWithSections', () => {
     
     render(<TestWrapper defaultInstructions={instructions} />);
     
-    expect(screen.getByText('Step 1')).toBeInTheDocument();
-    expect(screen.getByText('Step 2')).toBeInTheDocument();
-    expect(screen.getByText('Step 3')).toBeInTheDocument();
+    expect(screen.getByLabelText('Step 1')).toBeInTheDocument();
+    expect(screen.getByLabelText('Step 2')).toBeInTheDocument();
+    expect(screen.getByLabelText('Step 3')).toBeInTheDocument();
   });
 
   it('handles duration field correctly', () => {
@@ -172,7 +172,7 @@ describe('RecipeInstructionsWithSections', () => {
     
     const toggleButton = screen.getByText('Organize into Sections');
     const removeButton = screen.getByRole('button', { name: /minus/i });
-    const addButton = screen.getByText('Add Step');
+    const addButton = screen.getByText('Add step');
     
     expect(toggleButton).toBeDisabled();
     expect(removeButton).toBeDisabled();
@@ -340,7 +340,7 @@ describe('RecipeInstructionsWithSections', () => {
       render(<TestWrapper />);
       
       // Check for proper step labeling
-      expect(screen.getByText('Step 1')).toBeInTheDocument();
+      expect(screen.getByLabelText('Step 1')).toBeInTheDocument();
       
       // Check for form inputs
       expect(screen.getByPlaceholderText('Describe this step...')).toBeInTheDocument();
@@ -350,7 +350,7 @@ describe('RecipeInstructionsWithSections', () => {
     it('maintains proper button accessibility', () => {
       render(<TestWrapper />);
       
-      const addButton = screen.getByText('Add Step');
+      const addButton = screen.getByText('Add step');
       const toggleButton = screen.getByText('Organize into Sections');
       
       expect(addButton).toHaveAttribute('type', 'button');
