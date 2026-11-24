@@ -61,6 +61,7 @@ export function RecipeDisplay({ recipe, onEdit, canEdit = false, showComments = 
           prepTime={recipe.prepTime}
           cookTime={recipe.cookTime}
           servings={recipe.servings}
+          difficulty={recipe.difficulty}
           scale={scale}
         />
         <RecipeActions recipeId={recipe.id} canEdit={canEdit} onEdit={onEdit} />

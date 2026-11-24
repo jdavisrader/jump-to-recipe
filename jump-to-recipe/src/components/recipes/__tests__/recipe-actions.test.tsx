@@ -1,6 +1,11 @@
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { RecipeActions } from '../recipe-actions';
+
+const mockToast = jest.fn();
+jest.mock('../../ui/use-toast', () => ({
+  useToast: () => ({ toast: mockToast }),
+}));
 
 jest.mock('../add-to-cookbook-button', () => ({
   AddToCookbookButton: () => <button>Add to Cookbook</button>,
@@ -28,5 +33,28 @@ describe('RecipeActions', () => {
     fireEvent.click(screen.getByRole('button', { name: /edit/i }));
 
     expect(onEdit).toHaveBeenCalledTimes(1);
+  });
+
+  it('copies the page link and confirms with a toast when Share is clicked', async () => {
+    const writeText = jest.fn().mockResolvedValue(undefined);
+    Object.assign(navigator, { clipboard: { writeText } });
+    render(<RecipeActions recipeId="recipe-1" canEdit={false} />);
+
+    fireEvent.click(screen.getByRole('button', { name: /share/i }));
+
+    expect(writeText).toHaveBeenCalledWith(window.location.href);
+    await waitFor(() =>
+      expect(mockToast).toHaveBeenCalledWith(expect.objectContaining({ title: 'Link copied' }))
+    );
+  });
+
+  it('opens the print dialog when Print is clicked', () => {
+    const print = jest.spyOn(window, 'print').mockImplementation(() => {});
+    render(<RecipeActions recipeId="recipe-1" canEdit={false} />);
+
+    fireEvent.click(screen.getByRole('button', { name: /print/i }));
+
+    expect(print).toHaveBeenCalledTimes(1);
+    print.mockRestore();
   });
 });
