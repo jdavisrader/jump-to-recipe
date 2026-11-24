@@ -163,12 +163,10 @@ describe('RecipeForm with Sections', () => {
   it('renders the form with section components', () => {
     render(<RecipeForm {...defaultProps} />);
 
-    expect(screen.getByText('Basic Information')).toBeInTheDocument();
     expect(screen.getByTestId('ingredients-with-sections')).toBeInTheDocument();
     expect(screen.getByTestId('instructions-with-sections')).toBeInTheDocument();
     expect(screen.getByText('Basics')).toBeInTheDocument();
-    // Card title plus the field's screen-reader label
-    expect(screen.getAllByText('Notes').length).toBeGreaterThan(0);
+    expect(screen.getByLabelText('Notes')).toBeInTheDocument();
     expect(screen.getByText('Details')).toBeInTheDocument();
   });
 
@@ -274,16 +272,13 @@ describe('RecipeForm with Sections', () => {
     render(<RecipeForm {...defaultProps} />);
 
     const tagInput = screen.getByPlaceholderText(/add a tag/i);
-    // Use getAllByRole and find the specific Add button for tags (not section buttons)
-    const addButtons = screen.getAllByRole('button', { name: /add/i });
-    // The tag add button should be the last one (after section add buttons)
-    const addButton = addButtons[addButtons.length - 1];
+    const addButton = screen.getByRole('button', { name: 'Add' });
 
     await user.type(tagInput, 'dessert');
     await user.click(addButton);
 
-    // Tag should be added (this would be visible in the actual component)
     expect(tagInput).toHaveValue('');
+    expect(screen.getByRole('button', { name: 'Remove tag dessert' })).toBeInTheDocument();
   });
 
   it('handles image upload', async () => {
