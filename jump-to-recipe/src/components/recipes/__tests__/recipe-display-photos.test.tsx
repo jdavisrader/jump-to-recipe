@@ -92,7 +92,7 @@ describe('RecipeDisplay - Photo Integration', () => {
 
       // Should show loading skeleton
       await waitFor(() => {
-        expect(screen.getByText('Recipe Photos')).toBeInTheDocument();
+        expect(screen.getByText('Original recipe')).toBeInTheDocument();
       });
 
       const loadingSkeletons = document.querySelectorAll('.animate-pulse');

@@ -268,9 +268,9 @@ export function SectionHeader({
     <>
       <div
         className={cn(
-          'flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-600',
+          'flex items-center gap-3 p-3 bg-background rounded-lg border border-border',
           isDeleting && 'animate-pulse opacity-50',
-          'hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200',
+          'hover:bg-accent/40 transition-colors duration-200',
           hasError && 'border-red-500 dark:border-red-500 bg-red-50 dark:bg-red-950/20',
           className
         )}
@@ -308,7 +308,7 @@ export function SectionHeader({
             onClick={handleDeleteClick}
             disabled={isDeleting}
             className={cn(
-              "text-gray-400 hover:text-red-600 dark:hover:text-red-400 section-button",
+              "text-muted-foreground hover:text-destructive section-button",
               isDeleting && "animate-spin"
             )}
             title="Delete section"

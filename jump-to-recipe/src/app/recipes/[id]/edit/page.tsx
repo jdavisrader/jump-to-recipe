@@ -362,8 +362,9 @@ export default function EditRecipePage({ params }: EditRecipePageProps) {
           }}
           onSubmit={handleUpdateRecipe}
           isLoading={isLoading}
-          submitLabel="Update Recipe"
+          submitLabel="Save changes"
           recipeId={recipe.id}
+          onCancel={() => router.push(`/recipes/${id}`)}
           beforeSubmit={
             isAdmin && ownerInfo ? (
               <ErrorBoundary
@@ -387,22 +388,13 @@ export default function EditRecipePage({ params }: EditRecipePageProps) {
           }
         />
 
+        {/* Kept apart from Save; the confirmation modal guards the delete */}
         {canDelete && (
-          <div className="mt-8 pt-8 border-t">
-            <div className="flex flex-col gap-4">
-              <div>
-                <h2 className="text-lg font-semibold text-destructive">
-                  Danger Zone
-                </h2>
-                <p className="text-sm text-muted-foreground">
-                  Once you delete a recipe, there is no going back.
-                </p>
-              </div>
-              <DeleteRecipeSection
-                recipeId={recipe.id}
-                recipeTitle={recipe.title}
-              />
-            </div>
+          <div className="mt-10 flex justify-center">
+            <DeleteRecipeSection
+              recipeId={recipe.id}
+              recipeTitle={recipe.title}
+            />
           </div>
         )}
       </div>

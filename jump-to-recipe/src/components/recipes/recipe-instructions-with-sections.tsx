@@ -2,10 +2,11 @@
 
 import { useState } from 'react';
 import { useFieldArray, Control, FieldValues, UseFormWatch, FieldErrors, UseFormSetError, UseFormClearErrors } from 'react-hook-form';
-import { Plus, Minus } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 
 import { Button } from '@/components/ui/button';
+import { DeleteButton } from '@/components/ui/delete-button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -300,66 +301,36 @@ export function RecipeInstructionsWithSections<TFieldValues extends FieldValues,
   const renderInstructionItem = (instruction: Instruction, index: number, sectionId: string) => {
     const sectionIndex = instructionSections.findIndex((s: InstructionSection) => s.id === sectionId);
     const fieldBaseName = `instructionSections.${sectionIndex}.items.${index}`;
+    // Like flat mode, a recipe must keep at least one step
+    const isOnlyStep =
+      instructionSections.reduce(
+        (total: number, section: InstructionSection) => total + section.items.length,
+        0
+      ) === 1;
 
     return (
-      <div key={instruction.id} className="flex gap-2 items-start">
-        <div className="flex-1 space-y-2">
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-medium text-muted-foreground">
-              Step {instruction.step}
-            </span>
-            <FormField
-              control={control}
-              name={`${fieldBaseName}.duration`}
-              render={({ field }) => (
-                <FormItem className="flex-1">
-                  <FormControl>
-                    <Input
-                      type="number"
-                      placeholder="Duration (min)"
-                      className="w-32"
-                      {...field}
-                      onChange={(e) => {
-                        const value = e.target.value ? parseInt(e.target.value) : undefined;
-                        field.onChange(value);
-                        // Clear error if value becomes valid
-                        if ((value === undefined || value >= 0) && clearErrors) {
-                          clearErrors(`${fieldBaseName}.duration`);
-                        }
-                      }}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-
+      <div key={instruction.id} className="space-y-2">
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium text-muted-foreground">
+            Step {instruction.step}
+          </span>
           <FormField
             control={control}
-            name={`${fieldBaseName}.content`}
+            name={`${fieldBaseName}.duration`}
             render={({ field }) => (
-              <FormItem>
+              <FormItem className="flex-1">
                 <FormControl>
-                  <Textarea
-                    placeholder="Describe this step..."
+                  <Input
+                    type="number"
+                    placeholder="Duration (min)"
+                    className="w-32"
                     {...field}
-                    onBlur={(e) => {
-                      field.onBlur();
-                      // Clear error if field becomes valid
-                      if (e.target.value.trim() && clearErrors) {
-                        clearErrors(`${fieldBaseName}.content`);
-                      }
-                      // Trigger validation on blur
-                      if (onValidate) {
-                        onValidate();
-                      }
-                    }}
                     onChange={(e) => {
-                      field.onChange(e);
-                      // Trigger field change callback
-                      if (onFieldChange) {
-                        onFieldChange();
+                      const value = e.target.value ? parseInt(e.target.value) : undefined;
+                      field.onChange(value);
+                      // Clear error if value becomes valid
+                      if ((value === undefined || value >= 0) && clearErrors) {
+                        clearErrors(`${fieldBaseName}.duration`);
                       }
                     }}
                   />
@@ -368,17 +339,46 @@ export function RecipeInstructionsWithSections<TFieldValues extends FieldValues,
               </FormItem>
             )}
           />
+          <DeleteButton
+            onDelete={() => handleRemoveInstruction(sectionId, instruction.id)}
+            disabled={isOnlyStep || isLoading}
+            ariaLabel={`Delete step ${instruction.step}`}
+          />
         </div>
 
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={() => handleRemoveInstruction(sectionId, instruction.id)}
-          disabled={isLoading}
-        >
-          <Minus className="h-4 w-4" />
-        </Button>
+        <FormField
+          control={control}
+          name={`${fieldBaseName}.content`}
+          render={({ field }) => (
+            <FormItem>
+              <FormControl>
+                <Textarea
+                  placeholder="Describe this step..."
+                  {...field}
+                  onBlur={(e) => {
+                    field.onBlur();
+                    // Clear error if field becomes valid
+                    if (e.target.value.trim() && clearErrors) {
+                      clearErrors(`${fieldBaseName}.content`);
+                    }
+                    // Trigger validation on blur
+                    if (onValidate) {
+                      onValidate();
+                    }
+                  }}
+                  onChange={(e) => {
+                    field.onChange(e);
+                    // Trigger field change callback
+                    if (onFieldChange) {
+                      onFieldChange();
+                    }
+                  }}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
       </div>
     );
   };
@@ -386,62 +386,55 @@ export function RecipeInstructionsWithSections<TFieldValues extends FieldValues,
   const renderFlatInstructions = () => (
     <div className="space-y-4">
       {instructionFields.map((field, index) => (
-        <div key={field.id} className="flex gap-2 items-start">
-          <div className="flex-1 space-y-2">
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-muted-foreground">
-                Step {index + 1}
-              </span>
-              <FormField
-                control={control}
-                name={`instructions.${index}.duration`}
-                render={({ field }) => (
-                  <FormItem className="flex-1">
-                    <FormControl>
-                      <Input
-                        type="number"
-                        placeholder="Duration (min)"
-                        className="w-32"
-                        {...field}
-                        onChange={(e) =>
-                          field.onChange(
-                            e.target.value ? parseInt(e.target.value) : undefined
-                          )
-                        }
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
+        <div key={field.id} className="space-y-2">
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium text-muted-foreground">
+              Step {index + 1}
+            </span>
             <FormField
               control={control}
-              name={`instructions.${index}.content`}
+              name={`instructions.${index}.duration`}
               render={({ field }) => (
-                <FormItem>
+                <FormItem className="flex-1">
                   <FormControl>
-                    <Textarea
-                      placeholder="Describe this step..."
+                    <Input
+                      type="number"
+                      placeholder="Duration (min)"
+                      className="w-32"
                       {...field}
+                      onChange={(e) =>
+                        field.onChange(
+                          e.target.value ? parseInt(e.target.value) : undefined
+                        )
+                      }
                     />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
+            <DeleteButton
+              onDelete={() => removeInstruction(index)}
+              disabled={instructionFields.length === 1 || isLoading}
+              ariaLabel={`Delete step ${index + 1}`}
+            />
           </div>
 
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => removeInstruction(index)}
-            disabled={instructionFields.length === 1 || isLoading}
-          >
-            <Minus className="h-4 w-4" />
-          </Button>
+          <FormField
+            control={control}
+            name={`instructions.${index}.content`}
+            render={({ field }) => (
+              <FormItem>
+                <FormControl>
+                  <Textarea
+                    placeholder="Describe this step..."
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
         </div>
       ))}
 

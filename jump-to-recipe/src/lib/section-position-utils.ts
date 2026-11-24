@@ -34,9 +34,15 @@ type WithPosition = {
  */
 type SectionWithPosition<T extends WithPosition = WithPosition> = {
   id: string;
-  position: number;
+  position?: number;
+  // Recipe sections store their order in `order`; `position` is only set after reindexing
+  order?: number;
   items: T[];
 };
+
+function getSectionSortKey(section: SectionWithPosition): number | undefined {
+  return section.position ?? section.order;
+}
 
 interface PositionValidationResult {
   isValid: boolean;
@@ -63,16 +69,18 @@ interface PositionValidationResult {
  */
 export function reindexSectionPositions<T extends SectionWithPosition>(
   sections: T[]
-): T[] {
+): Array<T & { position: number }> {
   // Early return for empty arrays (Requirement 8.4)
   if (!sections || sections.length === 0) {
-    return sections;
+    return [];
   }
 
-  // Sort by current position, then by id for stability
+  // Sort by current position (falling back to order), then by id for stability
   const sorted = [...sections].sort((a, b) => {
-    if (a.position !== b.position) {
-      return a.position - b.position;
+    const aKey = getSectionSortKey(a);
+    const bKey = getSectionSortKey(b);
+    if (aKey !== undefined && bKey !== undefined && aKey !== bKey) {
+      return aKey - bKey;
     }
     return a.id.localeCompare(b.id);
   });
@@ -309,7 +317,9 @@ export function validateAndFixRecipePositions<T extends SectionWithPosition>(
   const allErrors: string[] = [];
 
   // Validate section positions
-  const sectionValidation = validatePositions(sections);
+  const sectionValidation = validatePositions(
+    sections.map((section) => ({ id: section.id, position: getSectionSortKey(section) ?? -1 }))
+  );
   if (!sectionValidation.isValid) {
     allErrors.push(...sectionValidation.errors);
   }

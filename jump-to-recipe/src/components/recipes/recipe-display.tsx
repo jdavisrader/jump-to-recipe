@@ -1,18 +1,12 @@
 "use client";
 
-import { Clock, Users, ChefHat, ExternalLink, Edit, Star, MoreVertical, Minus, Plus } from "lucide-react";
+import { Clock, Minus, Plus } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { 
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { RecipeImage } from "./recipe-image";
+import { RecipeHeroImage } from "./recipe-hero-image";
+import { RecipeStats } from "./recipe-stats";
 import { RecipeComments } from "./recipe-comments";
-import { AddToCookbookModal } from "./add-to-cookbook-modal";
+import { RecipeActions } from "./recipe-actions";
 import { RecipePhotosViewer } from "./recipe-photos-viewer";
 import { RecipeScaler } from "./recipe-scaler";
 import { CookModeToggle } from "./cook-mode-toggle";
@@ -35,9 +29,6 @@ export function RecipeDisplay({ recipe, onEdit, canEdit = false, showComments = 
   const [photos, setPhotos] = useState<RecipePhoto[]>([]);
   const [photosLoading, setPhotosLoading] = useState(true);
   const [scale, setScale] = useState(1);
-  const [showAddToCookbook, setShowAddToCookbook] = useState(false);
-  const totalTime = (recipe.prepTime || 0) + (recipe.cookTime || 0);
-  const displayedServings = Math.round((recipe.servings || 4) * scale);
   
   const isRecipeOwner = session?.user?.id === recipe.authorId;
 
@@ -65,114 +56,43 @@ export function RecipeDisplay({ recipe, onEdit, canEdit = false, showComments = 
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      {/* Recipe Image */}
-      {recipe.imageUrl && (
-        <div className="aspect-video w-full overflow-hidden rounded-lg">
-          <RecipeImage
-            src={recipe.imageUrl}
-            alt={recipe.title}
-            width={800}
-            height={450}
-            className="object-cover w-full h-full"
-            priority
-          />
-        </div>
-      )}
+      <RecipeHeroImage
+        imageUrl={recipe.imageUrl}
+        title={recipe.title}
+        canEdit={canEdit}
+        onEdit={onEdit}
+      />
 
       {/* Header */}
       <div className="border-b pb-6">
-        {/* Title with Star and Menu */}
-        <div className="flex justify-between items-start mb-2">
-          <h1 className="text-3xl font-bold tracking-tight flex-1">{recipe.title}</h1>
-          <div className="flex items-center gap-2 ml-4">
-            <Button variant="ghost" size="sm" className="p-2">
-              <Star className="h-5 w-5" />
-            </Button>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="p-2">
-                  <MoreVertical className="h-5 w-5" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => setShowAddToCookbook(true)}>
-                  <Star className="h-4 w-4 mr-2" />
-                  Add to Cookbook
-                </DropdownMenuItem>
-                {canEdit && (
-                  <DropdownMenuItem onClick={onEdit}>
-                    <Edit className="h-4 w-4 mr-2" />
-                    Edit Recipe
-                  </DropdownMenuItem>
-                )}
-                {recipe.sourceUrl && (
-                  <DropdownMenuItem asChild>
-                    <a href={recipe.sourceUrl} target="_blank" rel="noopener noreferrer">
-                      <ExternalLink className="h-4 w-4 mr-2" />
-                      View Original Recipe
-                    </a>
-                  </DropdownMenuItem>
-                )}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </div>
-        
+        <h1 className="text-3xl font-bold tracking-tight mb-2">{recipe.title}</h1>
+
         {/* Author */}
         {recipe.authorName && (
           <p className="text-muted-foreground mb-4">By {recipe.authorName}</p>
         )}
+
+        <div className="mb-6">
+          <RecipeActions
+            recipeId={recipe.id}
+            canEdit={canEdit}
+            onEdit={onEdit}
+            sourceUrl={recipe.sourceUrl}
+          />
+        </div>
         
         {/* Description */}
         {recipe.description && (
           <p className="text-lg text-foreground mb-6">{recipe.description}</p>
         )}
         
-        {/* Timing Information */}
-        <div className="grid grid-cols-4 gap-2 sm:gap-4 mb-6">
-          {/* Prep Time */}
-          <div className="text-center">
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1 mb-1">
-              <Clock className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span className="text-xs sm:text-sm font-medium">Prep Time</span>
-            </div>
-            <div className="text-sm sm:text-lg font-semibold">
-              {recipe.prepTime ? `${recipe.prepTime} min` : '—'}
-            </div>
-          </div>
-          
-          {/* Cook Time */}
-          <div className="text-center">
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1 mb-1">
-              <ChefHat className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span className="text-xs sm:text-sm font-medium">Cook Time</span>
-            </div>
-            <div className="text-sm sm:text-lg font-semibold">
-              {recipe.cookTime ? `${recipe.cookTime} min` : '—'}
-            </div>
-          </div>
-          
-          {/* Total Time */}
-          <div className="text-center">
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1 mb-1">
-              <Clock className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span className="text-xs sm:text-sm font-medium">Total Time</span>
-            </div>
-            <div className="text-sm sm:text-lg font-semibold">
-              {totalTime > 0 ? `${totalTime} min` : '—'}
-            </div>
-          </div>
-          
-          {/* Servings */}
-          <div className="text-center">
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1 mb-1">
-              <Users className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span className="text-xs sm:text-sm font-medium">Servings</span>
-            </div>
-            <div className="text-sm sm:text-lg font-semibold">{displayedServings}</div>
-          </div>
-        </div>
-        
+        <RecipeStats
+          prepTime={recipe.prepTime}
+          cookTime={recipe.cookTime}
+          servings={recipe.servings}
+          scale={scale}
+        />
+
         {/* Recipe Tags */}
         {recipe.tags && recipe.tags.length > 0 && (
           <div className="flex flex-wrap gap-2">
@@ -197,7 +117,7 @@ export function RecipeDisplay({ recipe, onEdit, canEdit = false, showComments = 
           <Card className="lg:sticky lg:top-6">
             <CardHeader>
               <div className="flex items-center justify-between gap-2">
-                <CardTitle>INGREDIENTS</CardTitle>
+                <CardTitle>Ingredients</CardTitle>
                 <RecipeScaler scale={scale} onChange={setScale} />
               </div>
             </CardHeader>
@@ -284,7 +204,7 @@ export function RecipeDisplay({ recipe, onEdit, canEdit = false, showComments = 
         <div className="lg:col-span-3">
           <Card>
             <CardHeader>
-              <CardTitle>INSTRUCTIONS</CardTitle>
+              <CardTitle>Instructions</CardTitle>
             </CardHeader>
             <CardContent>
               {recipe.instructionSections && recipe.instructionSections.length > 0 ? (
@@ -354,7 +274,7 @@ export function RecipeDisplay({ recipe, onEdit, canEdit = false, showComments = 
       {recipe.notes && (
         <Card>
           <CardHeader>
-            <CardTitle>NOTES</CardTitle>
+            <CardTitle>Notes</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-sm leading-relaxed whitespace-pre-wrap">
@@ -364,11 +284,11 @@ export function RecipeDisplay({ recipe, onEdit, canEdit = false, showComments = 
         </Card>
       )}
 
-      {/* Recipe Photos */}
+      {/* Original recipe photos */}
       {photosLoading ? (
         <Card>
           <CardHeader>
-            <CardTitle>Recipe Photos</CardTitle>
+            <CardTitle>Original recipe</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
@@ -381,7 +301,7 @@ export function RecipeDisplay({ recipe, onEdit, canEdit = false, showComments = 
       ) : photos.length > 0 ? (
         <Card>
           <CardHeader>
-            <CardTitle>Recipe Photos</CardTitle>
+            <CardTitle>Original recipe</CardTitle>
           </CardHeader>
           <CardContent>
             <RecipePhotosViewer photos={photos} />
@@ -391,24 +311,14 @@ export function RecipeDisplay({ recipe, onEdit, canEdit = false, showComments = 
 
       {/* Comments */}
       {showComments && (
-        <div>
-          <h2 className="text-xl font-semibold mb-4">COMMENTS</h2>
-          <RecipeComments
-            recipeId={recipe.id}
-            recipeAuthorId={recipe.authorId || ''}
-            commentsEnabled={commentsEnabled}
-            onCommentsEnabledChange={setCommentsEnabled}
-            isRecipeOwner={isRecipeOwner}
-          />
-        </div>
+        <RecipeComments
+          recipeId={recipe.id}
+          recipeAuthorId={recipe.authorId || ''}
+          commentsEnabled={commentsEnabled}
+          onCommentsEnabledChange={setCommentsEnabled}
+          isRecipeOwner={isRecipeOwner}
+        />
       )}
-      
-      {/* Add to Cookbook Modal */}
-      <AddToCookbookModal
-        recipeId={recipe.id}
-        isOpen={showAddToCookbook}
-        onClose={() => setShowAddToCookbook(false)}
-      />
     </div>
   );
 }

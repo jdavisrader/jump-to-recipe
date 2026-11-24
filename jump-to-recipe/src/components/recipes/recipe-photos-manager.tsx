@@ -3,7 +3,7 @@
 import { useState, useCallback } from "react";
 import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
 import Image from "next/image";
-import { Trash2, GripVertical, Upload, AlertCircle } from "lucide-react";
+import { Trash2, GripVertical, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ConfirmationModal } from "@/components/ui/confirmation-modal";
 import { RecipePhotosUpload } from "./recipe-photos-upload";
@@ -232,8 +232,6 @@ export function RecipePhotosManager({
       {/* Photo Grid */}
       {sortedPhotos.length > 0 && (
         <div className="space-y-4">
-          <h3 className="text-lg font-medium">Recipe Photos</h3>
-          
           {canEdit ? (
             <DragDropContext onDragEnd={handleDragEnd} onDragStart={handleDragStart}>
               <Droppable droppableId="photos" direction="horizontal">
@@ -331,19 +329,6 @@ export function RecipePhotosManager({
               ))}
             </div>
           )}
-        </div>
-      )}
-
-      {/* Empty State */}
-      {sortedPhotos.length === 0 && canEdit && (
-        <div className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-800/50">
-          <Upload className="h-12 w-12 text-gray-400 mb-4" />
-          <div className="text-gray-500 dark:text-gray-400 text-center">
-            <div className="text-lg font-medium mb-2">No photos yet</div>
-            <div className="text-sm">
-              Upload photos to showcase your recipe visually
-            </div>
-          </div>
         </div>
       )}
 

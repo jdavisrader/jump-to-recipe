@@ -166,8 +166,10 @@ describe('RecipeForm with Sections', () => {
     expect(screen.getByText('Basic Information')).toBeInTheDocument();
     expect(screen.getByTestId('ingredients-with-sections')).toBeInTheDocument();
     expect(screen.getByTestId('instructions-with-sections')).toBeInTheDocument();
-    expect(screen.getByText('Tags')).toBeInTheDocument();
-    expect(screen.getByText('Additional Information')).toBeInTheDocument();
+    expect(screen.getByText('Photos')).toBeInTheDocument();
+    // Card title plus the field's screen-reader label
+    expect(screen.getAllByText('Notes').length).toBeGreaterThan(0);
+    expect(screen.getByText('Details')).toBeInTheDocument();
   });
 
   it('initializes with default values including empty sections', () => {

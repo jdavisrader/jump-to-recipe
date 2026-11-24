@@ -289,6 +289,31 @@ describe('recipe-import-normalizer', () => {
   });
 
   describe('normalizeExistingRecipe', () => {
+    it('should order sections by their order value, not their array position', () => {
+      const existing = {
+        title: 'Existing Recipe',
+        ingredientSections: [
+          {
+            id: 'filling',
+            name: 'Filling',
+            order: 1,
+            items: [{ id: 'butter', name: 'Butter', amount: 1, unit: 'cup', position: 0 }],
+          },
+          {
+            id: 'dough',
+            name: 'Dough',
+            order: 0,
+            items: [{ id: 'flour', name: 'Flour', amount: 2, unit: 'cups', position: 0 }],
+          },
+        ],
+      };
+
+      const result = normalizeExistingRecipe(existing);
+
+      expect(result.ingredientSections.map((s: { name: string }) => s.name)).toEqual(['Dough', 'Filling']);
+      expect(result.ingredientSections.map((s: { order: number }) => s.order)).toEqual([0, 1]);
+    });
+
     it('should normalize existing recipe data (Req 11.1, 11.2, 11.3)', () => {
       const existing = {
         title: 'Existing Recipe',

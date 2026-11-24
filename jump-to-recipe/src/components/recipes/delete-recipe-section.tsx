@@ -102,11 +102,12 @@ export function DeleteRecipeSection({
   return (
     <>
       <Button
-        variant="destructive"
+        variant="ghost"
         onClick={() => setIsModalOpen(true)}
         aria-label={`Delete recipe: ${recipeTitle}`}
+        className="text-destructive hover:text-destructive hover:bg-destructive/10"
       >
-        Delete Recipe
+        Delete this recipe
       </Button>
 
       <ConfirmationModal

@@ -56,6 +56,19 @@ describe('section-position-utils', () => {
       expect(result[2].id).toBe('c');
     });
 
+    it('should sort by order when sections have no position', () => {
+      // Recipe sections store `order`, not `position`; ids are deliberately in reverse
+      const sections = [
+        { id: 'z-dough', order: 0, name: 'Dough', items: [] },
+        { id: 'a-filling', order: 1, name: 'Filling', items: [] },
+      ];
+
+      const result = reindexSectionPositions(sections);
+
+      expect(result.map((s) => s.name)).toEqual(['Dough', 'Filling']);
+      expect(result.map((s) => s.position)).toEqual([0, 1]);
+    });
+
     it('should preserve other properties', () => {
       const sections = [
         { id: 'a', position: 1, name: 'Test', items: [{ id: '1', position: 0 }, { id: '2', position: 1 }, { id: '3', position: 2 }] },

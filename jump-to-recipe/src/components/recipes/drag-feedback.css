@@ -22,6 +22,15 @@
   min-height: auto !important;
 }
 
+/**
+ * Close the gap left by an item moved to another list immediately.
+ * The library animates the placeholder's size for 0.2s after the drop,
+ * which read as the list still moving after letting go.
+ */
+[data-rfd-placeholder-context-id] {
+  transition: none !important;
+}
+
 /* ===== Dragging States ===== */
 
 /**

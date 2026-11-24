@@ -29,6 +29,8 @@ interface ImageUploadProps {
   onRemove?: () => void;
   disabled?: boolean;
   className?: string;
+  /** Shape of the uploaded-image preview; defaults to a square */
+  previewClassName?: string;
   placeholder?: string;
 }
 
@@ -39,6 +41,7 @@ export function ImageUpload({
   onRemove,
   disabled,
   className,
+  previewClassName = "aspect-square",
   placeholder = "Upload an image",
 }: ImageUploadProps) {
   const [isUploading, setIsUploading] = useState(false);
@@ -108,7 +111,7 @@ export function ImageUpload({
   if (value) {
     return (
       <div className={cn("relative group", className)}>
-        <div className="relative aspect-square w-full overflow-hidden rounded-lg border">
+        <div className={cn("relative w-full overflow-hidden rounded-lg border", previewClassName)}>
           <Image
             src={value}
             alt="Uploaded image"
@@ -121,7 +124,9 @@ export function ImageUpload({
               onClick={onRemove}
               variant="destructive"
               size="sm"
-              className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity"
+              aria-label="Remove image"
+              // Hover-to-reveal only where hover exists; touch screens always show it
+              className="absolute right-2 top-2 transition-opacity focus-visible:opacity-100 [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100"
             >
               <X className="h-4 w-4" />
             </Button>
@@ -135,8 +140,8 @@ export function ImageUpload({
     <div
       {...getRootProps()}
       className={cn(
-        "border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer transition-colors hover:border-gray-400",
-        isDragActive && "border-blue-400 bg-blue-50",
+        "border-2 border-dashed border-border rounded-lg p-6 text-center cursor-pointer transition-colors hover:border-muted-foreground",
+        isDragActive && "border-primary bg-accent/30",
         loading && "opacity-50 cursor-not-allowed",
         disabled && "cursor-not-allowed opacity-50",
         className
@@ -146,16 +151,16 @@ export function ImageUpload({
       <div className="flex flex-col items-center justify-center space-y-2">
         {loading ? (
           <>
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
-            <p className="text-sm text-gray-600">Uploading...</p>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-foreground" />
+            <p className="text-sm text-muted-foreground">Uploading...</p>
           </>
         ) : (
           <>
-            <Upload className="h-8 w-8 text-gray-400" />
-            <p className="text-sm text-gray-600">
+            <Upload className="h-8 w-8 text-muted-foreground" />
+            <p className="text-sm text-foreground">
               {isDragActive ? "Drop the image here" : placeholder}
             </p>
-            <p className="text-xs text-gray-400">
+            <p className="text-xs text-muted-foreground">
               PNG, JPG, GIF up to {MAX_SELECTABLE_SIZE_MB}MB
             </p>
           </>

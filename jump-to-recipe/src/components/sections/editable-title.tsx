@@ -134,7 +134,7 @@ export function EditableTitle({
       aria-invalid={ariaInvalid}
       aria-describedby={ariaDescribedby}
       className={cn(
-        'text-left hover:bg-gray-100 dark:hover:bg-gray-800 rounded px-1 py-0.5 section-button',
+        'text-left hover:bg-accent rounded px-1 py-0.5 section-button',
         'focus:outline-none focus:section-focus-ring',
         disabled && 'opacity-50 cursor-not-allowed hover:bg-transparent hover:scale-100',
         ariaInvalid && 'border border-red-500',

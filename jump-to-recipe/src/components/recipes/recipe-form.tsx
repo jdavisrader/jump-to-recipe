@@ -3,7 +3,7 @@
 import { useState, useCallback, useMemo } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Clock, Users, ChefHat, X, AlertCircle } from "lucide-react";
+import { Clock, Users, ChefHat, AlertCircle } from "lucide-react";
 import { v4 as uuidv4 } from "uuid";
 
 import { Button } from "@/components/ui/button";
@@ -33,19 +33,15 @@ import type { NewRecipeInput } from "@/types/recipe";
 import type { IngredientSection, InstructionSection } from "@/types/sections";
 import type { RecipePhoto } from "@/types/recipe-photos";
 
-// Extended RecipePhoto type for new recipe uploads
-interface TempRecipePhoto extends RecipePhoto {
-  _tempFile?: File;
-}
 import { RecipeImageUpload } from "@/components/recipes/recipe-image-upload";
 import { RecipeIngredientsWithSections } from "@/components/recipes/recipe-ingredients-with-sections";
 import { RecipeInstructionsWithSections } from "@/components/recipes/recipe-instructions-with-sections";
 import { EmptySectionWarningModal } from "@/components/recipes/empty-section-warning-modal";
 import { RecipePhotosManager } from "@/components/recipes/recipe-photos-manager";
-import { RecipePhotosUpload } from "@/components/recipes/recipe-photos-upload";
-import { useDropzone } from "react-dropzone";
-import { Upload } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { NewRecipePhotosUpload, type TempRecipePhoto } from "@/components/recipes/new-recipe-photos-upload";
+import { RecipePhotosCard } from "@/components/recipes/recipe-photos-card";
+import { FormActionBar } from "@/components/recipes/form-action-bar";
+import { ConfirmationModal } from "@/components/ui/confirmation-modal";
 
 // Extended input type to support sections and photos
 interface ExtendedRecipeInput extends NewRecipeInput {
@@ -98,6 +94,12 @@ interface RecipeFormProps {
    * Useful for adding custom actions or information at the bottom of the form.
    */
   beforeSubmit?: React.ReactNode;
+
+  /**
+   * Called when the user cancels. Shows a Cancel button; if the form has
+   * unsaved changes, the user is asked to confirm before this runs.
+   */
+  onCancel?: () => void;
 }
 
 /**
@@ -278,6 +280,7 @@ export function RecipeForm({
   submitLabel = "Save Recipe",
   recipeId,
   beforeSubmit,
+  onCancel,
 }: RecipeFormProps) {
   // Normalize initial data for backward compatibility (Requirement 11.1, 11.2, 11.3)
   // This silently fixes invalid data when editing existing recipes
@@ -330,6 +333,21 @@ export function RecipeForm({
   }>>([]);
   const [pendingSubmitData, setPendingSubmitData] = useState<any>(null);
   const [photos, setPhotos] = useState<TempRecipePhoto[]>(initialData?.photos || []);
+  const [showDiscardConfirm, setShowDiscardConfirm] = useState(false);
+
+  // dirtyFields, not isDirty: isDirty deep-compares against defaults with undefined
+  // values (prepTime, step duration...) and reports a fresh form as changed.
+  // Existing recipes save photo changes immediately; new-recipe photos wait for submit.
+  const hasFormChanges = Object.keys(form.formState.dirtyFields).length > 0;
+  const hasUnsavedChanges = hasFormChanges || (!recipeId && photos.length > 0);
+
+  const handleCancel = () => {
+    if (hasUnsavedChanges) {
+      setShowDiscardConfirm(true);
+    } else {
+      onCancel?.();
+    }
+  };
 
   // Initialize validation hook
   const { validate, getFieldError, isValid, errors, errorSummary } = useRecipeValidation();
@@ -720,6 +738,45 @@ export function RecipeForm({
           </CardContent>
         </Card>
 
+        {/* Photos */}
+        <RecipePhotosCard
+          cover={
+            <FormField
+              control={form.control}
+              name="imageUrl"
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <RecipeImageUpload
+                      value={field.value}
+                      onChange={field.onChange}
+                      onRemove={() => field.onChange("")}
+                      disabled={isLoading}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          }
+          originalPhotos={
+            recipeId ? (
+              <RecipePhotosManager
+                recipeId={recipeId}
+                photos={photos}
+                canEdit={true}
+                onPhotosChange={setPhotos}
+              />
+            ) : (
+              <NewRecipePhotosUpload
+                photos={photos}
+                onPhotosChange={setPhotos}
+                disabled={isLoading}
+              />
+            )
+          }
+        />
+
         {/* Ingredients with Sections */}
         <RecipeIngredientsWithSections
           control={form.control as any}
@@ -747,61 +804,18 @@ export function RecipeForm({
           onFieldChange={handleFieldChange}
         />
 
-        {/* Tags */}
+        {/* Notes */}
         <Card>
           <CardHeader>
-            <CardTitle>Tags</CardTitle>
+            <CardTitle>Notes</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex gap-2">
-              <Input
-                placeholder="Add a tag..."
-                value={tagInput}
-                onChange={(e) => setTagInput(e.target.value)}
-                onKeyPress={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    handleAddTag();
-                  }
-                }}
-              />
-              <Button type="button" onClick={handleAddTag}>
-                Add
-              </Button>
-            </div>
-
-            <div className="flex flex-wrap gap-2">
-              {(form.watch("tags") || []).map((tag) => (
-                <span
-                  key={tag}
-                  className="inline-flex items-center gap-1 px-2 py-1 bg-secondary text-secondary-foreground rounded-md text-sm"
-                >
-                  {tag}
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveTag(tag)}
-                    className="hover:text-destructive"
-                  >
-                    ×
-                  </button>
-                </span>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Additional Information */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Additional Information</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent>
             <FormField
               control={form.control}
               name="notes"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Notes</FormLabel>
+                  <FormLabel className="sr-only">Notes</FormLabel>
                   <FormControl>
                     <Textarea
                       placeholder="Any additional notes or tips..."
@@ -813,6 +827,55 @@ export function RecipeForm({
                 </FormItem>
               )}
             />
+          </CardContent>
+        </Card>
+
+        {/* Details */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Details</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <label htmlFor="recipe-tag-input" className="text-sm font-medium">
+                Tags
+              </label>
+              <div className="flex gap-2">
+                <Input
+                  id="recipe-tag-input"
+                  placeholder="Add a tag..."
+                  value={tagInput}
+                  onChange={(e) => setTagInput(e.target.value)}
+                  onKeyPress={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      handleAddTag();
+                    }
+                  }}
+                />
+                <Button type="button" onClick={handleAddTag}>
+                  Add
+                </Button>
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                {(form.watch("tags") || []).map((tag) => (
+                  <span
+                    key={tag}
+                    className="inline-flex items-center gap-1 px-2 py-1 bg-secondary text-secondary-foreground rounded-md text-sm"
+                  >
+                    {tag}
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveTag(tag)}
+                      className="hover:text-destructive"
+                    >
+                      ×
+                    </button>
+                  </span>
+                ))}
+              </div>
+            </div>
 
             <FormField
               control={form.control}
@@ -826,24 +889,6 @@ export function RecipeForm({
                       placeholder="https://example.com/recipe"
                       {...field}
                       value={field.value || ''}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="imageUrl"
-              render={({ field }) => (
-                <FormItem>
-                  <FormControl>
-                    <RecipeImageUpload
-                      value={field.value}
-                      onChange={field.onChange}
-                      onRemove={() => field.onChange("")}
-                      disabled={isLoading}
                     />
                   </FormControl>
                   <FormMessage />
@@ -875,50 +920,32 @@ export function RecipeForm({
           </CardContent>
         </Card>
 
-        {/* Original Recipe Photos */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Original Recipe Photos</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {recipeId ? (
-              <RecipePhotosManager
-                recipeId={recipeId}
-                photos={photos}
-                canEdit={true}
-                onPhotosChange={setPhotos}
-              />
-            ) : (
-              <NewRecipePhotosUpload
-                photos={photos}
-                onPhotosChange={setPhotos}
-                disabled={isLoading}
-              />
-            )}
-          </CardContent>
-        </Card>
-
         {/* Additional content before submit button */}
         {beforeSubmit}
 
-        {/* Submit Button with Validation State */}
-        <div className="relative">
-          <Button 
-            type="submit" 
-            disabled={isLoading || !isValid} 
-            className="w-full"
-            title={!isValid ? `Cannot save: ${errorSummary?.count || 0} validation ${errorSummary?.count === 1 ? 'error' : 'errors'}` : undefined}
-            onClick={() => console.log('Button clicked - isValid:', isValid, 'isLoading:', isLoading, 'disabled:', isLoading || !isValid)}
-          >
-            {isLoading ? "Saving..." : submitLabel}
-          </Button>
-          {!isValid && !isLoading && (
-            <p className="text-sm text-red-600 dark:text-red-400 mt-2 text-center">
-              Please fix validation errors before saving
-            </p>
-          )}
-        </div>
+        <FormActionBar
+          submitLabel={submitLabel}
+          isLoading={isLoading}
+          isValid={isValid}
+          errorCount={errorSummary?.count ?? 0}
+          onCancel={onCancel ? handleCancel : undefined}
+        />
       </form>
+
+      {/* Outside the <form>: the modal's buttons would otherwise submit it */}
+      <ConfirmationModal
+        isOpen={showDiscardConfirm}
+        onClose={() => setShowDiscardConfirm(false)}
+        onConfirm={() => {
+          setShowDiscardConfirm(false);
+          onCancel?.();
+        }}
+        title="Discard changes?"
+        description="Your changes to this recipe won't be saved."
+        confirmText="Discard"
+        cancelText="Keep editing"
+        variant="destructive"
+      />
 
       <EmptySectionWarningModal
         isOpen={showEmptySectionWarning}
@@ -928,199 +955,5 @@ export function RecipeForm({
         isLoading={isLoading}
       />
     </Form>
-  );
-}
-
-// Component for handling photo uploads for new recipes (before recipe is created)
-interface NewRecipePhotosUploadProps {
-  photos: TempRecipePhoto[];
-  onPhotosChange: (photos: TempRecipePhoto[]) => void;
-  disabled?: boolean;
-}
-
-function NewRecipePhotosUpload({ photos, onPhotosChange, disabled }: NewRecipePhotosUploadProps) {
-  const maxFiles = 10;
-  const maxFileSize = 10 * 1024 * 1024; // 10MB
-  const [error, setError] = useState<string | null>(null);
-
-  const onDrop = (acceptedFiles: File[], rejectedFiles: any[]) => {
-    if (disabled) return;
-
-    // Clear any previous errors
-    setError(null);
-
-    // Handle rejected files
-    if (rejectedFiles.length > 0) {
-      const errorMessages = rejectedFiles.map(({ file, errors }) => {
-        const errorMsg = errors.map((e: any) => {
-          if (e.code === 'file-too-large') {
-            return `${file.name} is too large (max 10MB)`;
-          }
-          if (e.code === 'file-invalid-type') {
-            return `${file.name} is not a supported image format`;
-          }
-          return e.message;
-        }).join(', ');
-        return errorMsg;
-      });
-      setError(errorMessages.join('; '));
-      return;
-    }
-
-    const totalPhotos = photos.length + acceptedFiles.length;
-    if (totalPhotos > maxFiles) {
-      setError(`You can only upload up to ${maxFiles} photos. You currently have ${photos.length} photos.`);
-      return;
-    }
-
-    // Create photo objects with preview URLs
-    const newPhotos: TempRecipePhoto[] = acceptedFiles.map((file, index) => ({
-      id: `temp-${Date.now()}-${index}`,
-      recipeId: "temp-new-recipe",
-      filePath: URL.createObjectURL(file), // Use object URL for preview
-      fileName: file.name,
-      fileSize: file.size,
-      mimeType: file.type,
-      position: photos.length + index,
-      deletedAt: null,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      // Store the actual file for later upload
-      _tempFile: file,
-    }));
-
-    onPhotosChange([...photos, ...newPhotos]);
-  };
-
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    onDrop,
-    accept: {
-      'image/*': ['.png', '.jpg', '.jpeg', '.gif', '.webp', '.heic']
-    },
-    maxSize: maxFileSize,
-    disabled,
-  });
-
-  const removePhoto = (photoId: string) => {
-    const photoToRemove = photos.find(p => p.id === photoId);
-    if (photoToRemove && photoToRemove.filePath.startsWith('blob:')) {
-      // Revoke the object URL to free memory
-      URL.revokeObjectURL(photoToRemove.filePath);
-    }
-    onPhotosChange(photos.filter(p => p.id !== photoId));
-  };
-
-  const clearAllPhotos = () => {
-    // Revoke all object URLs to free memory
-    photos.forEach(photo => {
-      if (photo.filePath.startsWith('blob:')) {
-        URL.revokeObjectURL(photo.filePath);
-      }
-    });
-    onPhotosChange([]);
-    setError(null);
-  };
-
-  return (
-    <div className="space-y-4">
-      <p className="text-sm text-muted-foreground">
-        Upload photos of the original recipe to help preserve the visual details and presentation.
-      </p>
-
-      {/* Error Message */}
-      {error && (
-        <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-          <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
-        </div>
-      )}
-      
-      {/* Upload Area */}
-      <div
-        {...getRootProps()}
-        className={cn(
-          "border-2 border-dashed border-gray-300 rounded-lg p-6 text-center transition-colors hover:border-gray-400",
-          isDragActive && "border-blue-400 bg-blue-50",
-          disabled && "opacity-50 cursor-not-allowed",
-          !disabled && "cursor-pointer"
-        )}
-      >
-        <input {...getInputProps()} />
-        <div className="flex flex-col items-center justify-center space-y-2">
-          <Upload className="h-8 w-8 text-gray-400" />
-          <p className="text-sm text-gray-600 dark:text-gray-300">
-            {isDragActive
-              ? "Drop the photos here..."
-              : "Drag & drop photos here, or click to select"}
-          </p>
-          <p className="text-xs text-gray-400">
-            JPEG, PNG, WEBP, HEIC up to 10MB each
-          </p>
-          <p className="text-xs text-gray-400">
-            {photos.length}/{maxFiles} photos
-          </p>
-        </div>
-      </div>
-
-      {/* Photo Preview Grid */}
-      {photos.length > 0 && (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h4 className="text-sm font-medium">Recipe Photos</h4>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={clearAllPhotos}
-            >
-              Clear All
-            </Button>
-          </div>
-          
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-            {photos.map((photo, index) => (
-              <div key={photo.id} className="relative group">
-                <div className="relative aspect-square overflow-hidden rounded-lg border-2 border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 transition-colors">
-                  <img
-                    src={photo.filePath}
-                    alt={photo.fileName}
-                    className="w-full h-full object-cover"
-                  />
-
-                  {/* Delete Button */}
-                  <Button
-                    type="button"
-                    onClick={() => removePhoto(photo.id)}
-                    variant="destructive"
-                    size="sm"
-                    className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8 p-0"
-                    aria-label={`Delete photo ${photo.fileName}`}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-
-                  {/* Position Indicator */}
-                  <div className="absolute bottom-2 left-2 px-2 py-1 bg-black/70 text-white text-xs rounded">
-                    {index + 1}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Empty State */}
-      {photos.length === 0 && (
-        <div className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-800/50">
-          <Upload className="h-12 w-12 text-gray-400 mb-4" />
-          <div className="text-gray-500 dark:text-gray-400 text-center">
-            <div className="text-lg font-medium mb-2">No photos yet</div>
-            <div className="text-sm">
-              Upload photos to showcase your recipe visually
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
   );
 }

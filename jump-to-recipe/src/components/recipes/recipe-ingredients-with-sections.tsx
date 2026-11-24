@@ -5,6 +5,7 @@ import { useFieldArray, Control, FieldValues, UseFormWatch, FieldErrors, UseForm
 import { Plus } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 import { DragDropContext, Droppable, Draggable, DropResult, DragStart } from '@hello-pangea/dnd';
+import { getDraggableStyle } from '@/lib/drag-drop-style';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -704,7 +705,8 @@ export function RecipeIngredientsWithSections<TFieldValues extends FieldValues, 
     return (
       <Draggable
         key={ingredient.id}
-        draggableId={`${sectionId}-${ingredient.id}`}
+        // Stable across sections so a cross-section move doesn't register as a new draggable
+        draggableId={ingredient.id}
         index={index}
         isDragDisabled={isLoading}
       >
@@ -719,7 +721,7 @@ export function RecipeIngredientsWithSections<TFieldValues extends FieldValues, 
                 ? 'opacity-60 bg-card shadow-2xl rounded-lg border-2 border-primary scale-105 z-50'
                 : 'bg-transparent'
             }`}
-            style={provided.draggableProps.style}
+            style={getDraggableStyle(provided.draggableProps.style, snapshot)}
           >
             {/* Drag Handle */}
             <div {...provided.dragHandleProps}>
@@ -878,10 +880,8 @@ export function RecipeIngredientsWithSections<TFieldValues extends FieldValues, 
             role="list"
             aria-label="Ingredient list - drag to reorder"
             aria-describedby="drag-instructions"
-            className={`space-y-4 transition-all duration-200 ${
-              snapshot.isDraggingOver
-                ? 'bg-accent/30 rounded-lg p-4 ring-2 ring-primary ring-offset-2'
-                : 'p-2'
+            className={`space-y-4 p-2 rounded-lg transition-colors ${
+              snapshot.isDraggingOver ? 'bg-accent/30 ring-2 ring-primary ring-offset-2' : ''
             } ${isTouchDevice ? 'touch-device' : ''}`}
           >
             {ingredientFields.map((field, index) => (
@@ -902,7 +902,7 @@ export function RecipeIngredientsWithSections<TFieldValues extends FieldValues, 
                         ? 'opacity-60 bg-card shadow-2xl rounded-lg border-2 border-primary scale-105 z-50'
                         : 'bg-transparent'
                     }`}
-                    style={provided.draggableProps.style}
+                    style={getDraggableStyle(provided.draggableProps.style, snapshot)}
                   >
                     {/* Drag Handle */}
                     <div {...provided.dragHandleProps}>
