@@ -81,6 +81,9 @@ interface RecipeFormProps {
    * unsaved changes, the user is asked to confirm before this runs.
    */
   onCancel?: () => void;
+
+  /** Label for the cancel button; defaults to "Cancel" */
+  cancelLabel?: string;
 }
 
 /**
@@ -262,6 +265,7 @@ export function RecipeForm({
   recipeId,
   beforeSubmit,
   onCancel,
+  cancelLabel,
 }: RecipeFormProps) {
   // Normalize initial data for backward compatibility (Requirement 11.1, 11.2, 11.3)
   // This silently fixes invalid data when editing existing recipes
@@ -594,6 +598,7 @@ export function RecipeForm({
 
         <FormActionBar
           submitLabel={submitLabel}
+          cancelLabel={cancelLabel}
           isLoading={isLoading}
           isValid={isValid}
           errorCount={errorSummary?.count ?? 0}

@@ -361,6 +361,7 @@ export default function EditRecipePage({ params }: EditRecipePageProps) {
           onSubmit={handleUpdateRecipe}
           isLoading={isLoading}
           submitLabel="Save changes"
+          cancelLabel="Discard changes"
           recipeId={recipe.id}
           onCancel={() => router.push(`/recipes/${id}`)}
           beforeSubmit={
@@ -386,9 +387,9 @@ export default function EditRecipePage({ params }: EditRecipePageProps) {
           }
         />
 
-        {/* Kept apart from Save; the confirmation modal guards the delete */}
+        {/* Below the form, apart from Save; the confirmation modal guards the delete */}
         {canDelete && (
-          <div className="mt-10 flex justify-center">
+          <div className="mt-10">
             <DeleteRecipeSection
               recipeId={recipe.id}
               recipeTitle={recipe.title}

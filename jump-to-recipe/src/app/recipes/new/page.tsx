@@ -118,7 +118,7 @@ export default function NewRecipePage() {
       <RecipeForm
         onSubmit={handleCreateRecipe}
         isLoading={isLoading}
-        submitLabel="Create Recipe"
+        submitLabel="Save recipe"
         onCancel={() => (window.history.length > 1 ? router.back() : router.push("/my-recipes"))}
       />
     </div>

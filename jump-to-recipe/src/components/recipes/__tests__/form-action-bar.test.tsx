@@ -15,6 +15,23 @@ describe('FormActionBar', () => {
     expect(onCancel).toHaveBeenCalledTimes(1);
   });
 
+  it('uses the create labels: Cancel and Save recipe', () => {
+    render(<FormActionBar {...baseProps} submitLabel="Save recipe" onCancel={jest.fn()} />);
+
+    expect(screen.getByRole('button', { name: 'Cancel' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Save recipe' })).toHaveAttribute('type', 'submit');
+    expect(screen.queryByRole('button', { name: /draft/i })).not.toBeInTheDocument();
+  });
+
+  it('uses the edit labels: Discard changes and Save changes', () => {
+    const onCancel = jest.fn();
+    render(<FormActionBar {...baseProps} cancelLabel="Discard changes" onCancel={onCancel} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Discard changes' }));
+    expect(onCancel).toHaveBeenCalledTimes(1);
+    expect(screen.getByRole('button', { name: 'Save changes' })).toBeEnabled();
+  });
+
   it('disables Save and says how many errors to fix when invalid', () => {
     render(<FormActionBar {...baseProps} isValid={false} errorCount={2} />);
 

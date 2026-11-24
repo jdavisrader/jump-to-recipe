@@ -101,14 +101,28 @@ export function DeleteRecipeSection({
 
   return (
     <>
-      <Button
-        variant="ghost"
-        onClick={() => setIsModalOpen(true)}
-        aria-label={`Delete recipe: ${recipeTitle}`}
-        className="text-destructive hover:text-destructive hover:bg-destructive/10"
+      <section
+        aria-labelledby="delete-recipe-heading"
+        className="flex flex-col gap-4 rounded-xl border border-destructive/40 bg-destructive/5 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6"
       >
-        Delete this recipe
-      </Button>
+        <div className="space-y-1">
+          <h2 id="delete-recipe-heading" className="text-lg font-semibold text-destructive">
+            Delete this recipe
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            It will be removed from your cookbook. This can&apos;t be undone.
+          </p>
+        </div>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => setIsModalOpen(true)}
+          aria-label={`Delete recipe: ${recipeTitle}`}
+          className="shrink-0 border-destructive/50 text-destructive hover:bg-destructive/10 hover:text-destructive"
+        >
+          Delete recipe
+        </Button>
+      </section>
 
       <ConfirmationModal
         isOpen={isModalOpen}
