@@ -55,7 +55,7 @@ export function RecipeHero({ recipe, canEdit, onEdit, children }: RecipeHeroProp
       </div>
 
       {hasPhotoColumn && (
-        <div className="order-first min-w-0 lg:order-none">
+        <div className="order-first min-w-0 lg:order-none print:hidden">
           <RecipeHeroImage
             imageUrl={recipe.imageUrl}
             title={recipe.title}

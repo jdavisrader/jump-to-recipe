@@ -67,17 +67,21 @@ export function RecipeDisplay({ recipe, onEdit, canEdit = false, showComments = 
         <RecipeActions recipeId={recipe.id} canEdit={canEdit} onEdit={onEdit} />
       </RecipeHero>
 
-      <CookModeToggle />
+      <div className="print:hidden">
+        <CookModeToggle />
+      </div>
 
       {/* Main Content: Ingredients (sticky) and Instructions */}
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
         {/* Ingredients - Sticky */}
         <div className="lg:col-span-2">
-          <Card className="lg:sticky lg:top-6">
+          <Card className="lg:sticky lg:top-6 print:border-0 print:shadow-none">
             <CardHeader>
               <div className="flex items-center justify-between gap-2">
                 <CardTitle>Ingredients</CardTitle>
-                <RecipeScaler scale={scale} onChange={setScale} />
+                <div className="print:hidden">
+                  <RecipeScaler scale={scale} onChange={setScale} />
+                </div>
               </div>
             </CardHeader>
             <CardContent>
@@ -161,7 +165,7 @@ export function RecipeDisplay({ recipe, onEdit, canEdit = false, showComments = 
 
         {/* Instructions */}
         <div className="lg:col-span-3">
-          <Card>
+          <Card className="print:border-0 print:shadow-none">
             <CardHeader>
               <CardTitle>Instructions</CardTitle>
             </CardHeader>
@@ -231,7 +235,7 @@ export function RecipeDisplay({ recipe, onEdit, canEdit = false, showComments = 
 
       {/* Notes */}
       {recipe.notes && (
-        <Card>
+        <Card className="print:border-0 print:shadow-none">
           <CardHeader>
             <CardTitle>Notes</CardTitle>
           </CardHeader>
@@ -244,40 +248,44 @@ export function RecipeDisplay({ recipe, onEdit, canEdit = false, showComments = 
       )}
 
       {/* Original recipe photos */}
-      {photosLoading ? (
-        <Card>
-          <CardHeader>
-            <CardTitle>Original recipe</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-              {Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="aspect-square bg-muted rounded-lg animate-pulse" />
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      ) : photos.length > 0 ? (
-        <Card>
-          <CardHeader>
-            <CardTitle>Original recipe</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <RecipePhotosViewer photos={photos} />
-          </CardContent>
-        </Card>
-      ) : null}
+      <div className="print:hidden">
+        {photosLoading ? (
+          <Card>
+            <CardHeader>
+              <CardTitle>Original recipe</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <div key={i} className="aspect-square bg-muted rounded-lg animate-pulse" />
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        ) : photos.length > 0 ? (
+          <Card>
+            <CardHeader>
+              <CardTitle>Original recipe</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <RecipePhotosViewer photos={photos} />
+            </CardContent>
+          </Card>
+        ) : null}
+      </div>
 
       {/* Comments */}
-      {showComments && (
-        <RecipeComments
-          recipeId={recipe.id}
-          recipeAuthorId={recipe.authorId || ''}
-          commentsEnabled={commentsEnabled}
-          onCommentsEnabledChange={setCommentsEnabled}
-          isRecipeOwner={isRecipeOwner}
-        />
-      )}
+      <div className="print:hidden">
+        {showComments && (
+          <RecipeComments
+            recipeId={recipe.id}
+            recipeAuthorId={recipe.authorId || ''}
+            commentsEnabled={commentsEnabled}
+            onCommentsEnabledChange={setCommentsEnabled}
+            isRecipeOwner={isRecipeOwner}
+          />
+        )}
+      </div>
     </div>
   );
 }
