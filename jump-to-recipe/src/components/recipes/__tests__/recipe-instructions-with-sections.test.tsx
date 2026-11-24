@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { useForm } from 'react-hook-form';
+import { useForm, FormProvider } from 'react-hook-form';
 
 import { RecipeInstructionsWithSections } from '../recipe-instructions-with-sections';
 
@@ -29,13 +29,15 @@ function TestWrapper({
   });
 
   return (
-    <RecipeInstructionsWithSections
-      control={form.control}
-      watch={form.watch}
-      errors={form.formState.errors}
-      setError={form.setError}
-      clearErrors={form.clearErrors}
-    />
+    <FormProvider {...form}>
+      <RecipeInstructionsWithSections
+        control={form.control}
+        watch={form.watch}
+        errors={form.formState.errors}
+        setError={form.setError}
+        clearErrors={form.clearErrors}
+      />
+    </FormProvider>
   );
 }
 
@@ -49,7 +51,7 @@ describe('RecipeInstructionsWithSections', () => {
     
     expect(screen.getByRole('heading', { name: 'Method' })).toBeInTheDocument();
     expect(screen.getByDisplayValue('Test instruction')).toBeInTheDocument();
-    expect(screen.getByText('Organize into Sections')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Add section' })).toBeInTheDocument();
     expect(screen.queryByTestId('section-manager')).not.toBeInTheDocument();
   });
 
@@ -71,25 +73,20 @@ describe('RecipeInstructionsWithSections', () => {
     expect(screen.getByTestId('sections-count')).toHaveTextContent('1');
   });
 
-  it('shows toggle button for switching modes', () => {
+  it('shows an Add section button under a flat list', () => {
     render(<TestWrapper />);
-    
-    expect(screen.getByText('Organize into Sections')).toBeInTheDocument();
+
+    expect(screen.getByRole('button', { name: 'Add section' })).toBeInTheDocument();
   });
 
-  it('shows different toggle text when sections exist', () => {
-    const sections = [
-      {
-        id: 'section-1',
-        name: 'Test Section',
-        order: 0,
-        items: []
-      }
-    ];
-    
-    render(<TestWrapper defaultSections={sections} />);
-    
-    expect(screen.getByText('Use Simple List')).toBeInTheDocument();
+  it('turns the flat list into two sections when Add section is clicked', async () => {
+    const user = userEvent.setup();
+    render(<TestWrapper />);
+
+    await user.click(screen.getByRole('button', { name: 'Add section' }));
+
+    expect(screen.getByTestId('section-manager')).toBeInTheDocument();
+    expect(screen.getByTestId('sections-count')).toHaveTextContent('2');
   });
 
   it('renders instruction form fields', () => {
@@ -170,7 +167,7 @@ describe('RecipeInstructionsWithSections', () => {
       />
     );
     
-    const toggleButton = screen.getByText('Organize into Sections');
+    const toggleButton = screen.getByRole('button', { name: 'Add section' });
     const removeButton = screen.getByRole('button', { name: /minus/i });
     const addButton = screen.getByText('Add step');
     
@@ -351,7 +348,7 @@ describe('RecipeInstructionsWithSections', () => {
       render(<TestWrapper />);
       
       const addButton = screen.getByText('Add step');
-      const toggleButton = screen.getByText('Organize into Sections');
+      const toggleButton = screen.getByRole('button', { name: 'Add section' });
       
       expect(addButton).toHaveAttribute('type', 'button');
       expect(toggleButton).toHaveAttribute('type', 'button');

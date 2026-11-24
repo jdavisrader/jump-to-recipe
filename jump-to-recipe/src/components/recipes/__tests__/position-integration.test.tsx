@@ -240,8 +240,8 @@ describe('Position Integration Tests', () => {
   // Test 2: Section Toggle Functionality
   // ==========================================================================
 
-  describe('Section Toggle Integration', () => {
-    it('should preserve position when toggling from flat to sections', async () => {
+  describe('Add Section Integration', () => {
+    it('should preserve position when adding a section to a flat list', async () => {
       const user = userEvent.setup();
       
       const flatIngredients: Ingredient[] = [
@@ -259,8 +259,8 @@ describe('Position Integration Tests', () => {
         />
       );
 
-      // Toggle to sections
-      const toggleButton = screen.getByText('Organize into Sections');
+      // Adding a section turns the flat list into the first section
+      const toggleButton = screen.getByRole('button', { name: 'Add section' });
       await user.click(toggleButton);
 
       await waitFor(() => {
@@ -276,104 +276,6 @@ describe('Position Integration Tests', () => {
         expect(section.items[0].name).toBe('First');
         expect(section.items[1].name).toBe('Second');
         expect(section.items[2].name).toBe('Third');
-      });
-    });
-
-    it('should recalculate positions when toggling from sections to flat', async () => {
-      const user = userEvent.setup();
-      
-      const sections: IngredientSection[] = [
-        {
-          id: 'section-1',
-          name: 'Dry Ingredients',
-          order: 0,
-          items: [
-            { id: '1', name: 'Flour', amount: 2, unit: 'cup', position: 0 },
-            { id: '2', name: 'Sugar', amount: 1, unit: 'cup', position: 1 },
-          ],
-        },
-        {
-          id: 'section-2',
-          name: 'Wet Ingredients',
-          order: 1,
-          items: [
-            { id: '3', name: 'Milk', amount: 1, unit: 'cup', position: 0 },
-            { id: '4', name: 'Eggs', amount: 2, unit: '', position: 1 },
-          ],
-        },
-      ];
-
-      let capturedFormData: any = null;
-      
-      render(
-        <IngredientsTestWrapper 
-          defaultSections={sections}
-          onFormChange={(data) => { capturedFormData = data; }}
-        />
-      );
-
-      // Toggle to flat list
-      const toggleButton = screen.getByText('Use Simple List');
-      await user.click(toggleButton);
-
-      await waitFor(() => {
-        expect(capturedFormData?.ingredients).toBeDefined();
-        
-        // Verify positions are recalculated to global scope
-        expect(capturedFormData.ingredients[0].position).toBe(0);
-        expect(capturedFormData.ingredients[1].position).toBe(1);
-        expect(capturedFormData.ingredients[2].position).toBe(2);
-        expect(capturedFormData.ingredients[3].position).toBe(3);
-        
-        // Verify order follows section order
-        expect(capturedFormData.ingredients[0].name).toBe('Flour');
-        expect(capturedFormData.ingredients[1].name).toBe('Sugar');
-        expect(capturedFormData.ingredients[2].name).toBe('Milk');
-        expect(capturedFormData.ingredients[3].name).toBe('Eggs');
-      });
-    });
-
-    it('should handle multiple toggle cycles', async () => {
-      const user = userEvent.setup();
-      
-      const originalIngredients: Ingredient[] = [
-        { id: '1', name: 'A', amount: 1, unit: 'cup', position: 0 },
-        { id: '2', name: 'B', amount: 2, unit: 'tbsp', position: 1 },
-      ];
-
-      let capturedFormData: any = null;
-      
-      render(
-        <IngredientsTestWrapper 
-          defaultIngredients={originalIngredients}
-          onFormChange={(data) => { capturedFormData = data; }}
-        />
-      );
-
-      // First toggle: flat -> sections
-      await user.click(screen.getByText('Organize into Sections'));
-      
-      await waitFor(() => {
-        expect(capturedFormData?.ingredientSections).toBeDefined();
-      });
-
-      // Second toggle: sections -> flat
-      await user.click(screen.getByText('Use Simple List'));
-      
-      await waitFor(() => {
-        expect(capturedFormData?.ingredients).toBeDefined();
-        expect(capturedFormData.ingredients[0].name).toBe('A');
-        expect(capturedFormData.ingredients[1].name).toBe('B');
-      });
-
-      // Third toggle: flat -> sections again
-      await user.click(screen.getByText('Organize into Sections'));
-      
-      await waitFor(() => {
-        expect(capturedFormData?.ingredientSections).toBeDefined();
-        const section = capturedFormData.ingredientSections[0];
-        expect(section.items[0].name).toBe('A');
-        expect(section.items[1].name).toBe('B');
       });
     });
   });
@@ -637,8 +539,8 @@ describe('Position Integration Tests', () => {
         />
       );
 
-      // Step 2: Toggle to sections
-      await user.click(screen.getByText('Organize into Sections'));
+      // Step 2: Add a section, which turns the flat list into the first section
+      await user.click(screen.getByRole('button', { name: 'Add section' }));
       
       await waitFor(() => {
         expect(capturedFormData?.ingredientSections).toBeDefined();

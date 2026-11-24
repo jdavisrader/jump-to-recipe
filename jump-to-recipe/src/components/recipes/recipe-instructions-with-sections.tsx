@@ -6,7 +6,7 @@ import { Clock, Plus } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 
 import { Button } from '@/components/ui/button';
-import { DeleteButton } from '@/components/ui/delete-button';
+import { RemoveRowButton } from './remove-row-button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { FormPanel } from '@/components/recipes/form-panel';
@@ -84,80 +84,25 @@ export function RecipeInstructionsWithSections<TFieldValues extends FieldValues,
   // Note: We don't sync flat instructions with sections automatically to prevent infinite loops
   // The form submission will handle converting sections to the final format
 
-  const handleToggleSections = () => {
-    if (!shouldUseSections) {
-      // Convert flat instructions to sections
-      if (instructions.length > 0) {
-        const defaultSection: InstructionSection = {
-          id: uuidv4(),
-          name: 'Instructions',
-          order: 0,
-          // Preserve order: map instructions with their current array index as position
-          items: instructions.map((instruction: Instruction, index: number) => ({
-            ...instruction,
-            position: index, // Explicitly assign position based on current order
-          })),
-        };
-        appendSection(defaultSection);
-      } else {
-        // Create an empty section if no instructions exist
-        const emptySection: InstructionSection = {
-          id: uuidv4(),
-          name: 'Instructions',
-          order: 0,
-          items: [],
-        };
-        appendSection(emptySection);
-      }
-      setUseSections(true);
-    } else {
-      // Convert sections back to flat instructions
-      // Preserve order: first by section order, then by instruction position within each section
-      
-      // Sort sections by their order property
-      const sortedSections = [...instructionSections].sort(
-        (a: InstructionSection, b: InstructionSection) => a.order - b.order
-      );
-      
-      // Flatten instructions while preserving order
-      const allInstructions = sortedSections.flatMap((section: InstructionSection) => {
-        // Sort items within each section by position (if available) or array index
-        const sortedItems = [...section.items].sort((a: any, b: any) => {
-          const posA = typeof a.position === 'number' ? a.position : section.items.indexOf(a);
-          const posB = typeof b.position === 'number' ? b.position : section.items.indexOf(b);
-          return posA - posB;
-        });
-        
-        // Keep all properties including position (Requirement 3.1, 3.2, 4.4)
-        return sortedItems;
-      });
-      
-      // Reindex positions for flat list (global scope) and renumber steps
-      const reindexedInstructions = allInstructions.map((item: any, index: number) => ({
-        ...item,
+  // A flat list becomes its first section, followed by a new empty one to fill in
+  const handleAddSection = () => {
+    const existingSection: InstructionSection = {
+      id: uuidv4(),
+      name: 'Instructions',
+      order: 0,
+      items: instructions.map((instruction: Instruction, index: number) => ({
+        ...instruction,
         position: index,
-        step: index + 1,
-      }));
-      
-      // Clear sections using replace method
-      replaceSections([]);
-      
-      // Replace flat instructions with all instructions from sections
-      if (reindexedInstructions.length > 0) {
-        replaceInstructions(reindexedInstructions);
-      } else {
-        // Ensure at least one empty instruction exists with position
-        replaceInstructions([{
-          id: uuidv4(),
-          step: 1,
-          content: '',
-          duration: undefined,
-          position: 0,
-        }]);
-      }
-      
-      setUseSections(false);
-    }
+      })),
+    };
+    const newSection: InstructionSection = {
+      id: uuidv4(),
+      name: 'Untitled Section',
+      order: 1,
+      items: [],
+    };
+    appendSection([existingSection, newSection]);
+    setUseSections(true);
   };
 
   const handleSectionsChange = (newSections: Section<Instruction>[]) => {
@@ -310,6 +255,44 @@ export function RecipeInstructionsWithSections<TFieldValues extends FieldValues,
 
     return (
       <StepLayout key={instruction.id} number={instruction.step}>
+        <div className="flex items-center justify-between gap-2">
+          <FormField
+            control={control}
+            name={`${fieldBaseName}.duration`}
+            render={({ field }) => (
+              <FormItem>
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Clock className="h-4 w-4" aria-hidden="true" />
+                  <FormControl>
+                    <Input
+                      type="number"
+                      min={0}
+                      placeholder="Duration (min)"
+                      aria-label={`Step ${instruction.step} duration in minutes`}
+                      className="h-8 w-36 text-sm"
+                      {...field}
+                      value={field.value ?? ''}
+                      onChange={(e) => {
+                        const value = e.target.value ? parseInt(e.target.value) : undefined;
+                        field.onChange(value);
+                        // Clear error if value becomes valid
+                        if ((value === undefined || value >= 0) && clearErrors) {
+                          clearErrors(`${fieldBaseName}.duration`);
+                        }
+                      }}
+                    />
+                  </FormControl>
+                </div>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <RemoveRowButton
+            onRemove={() => handleRemoveInstruction(sectionId, instruction.id)}
+            disabled={isOnlyStep || isLoading}
+            ariaLabel={`Delete step ${instruction.step}`}
+          />
+        </div>
         <FormField
           control={control}
           name={`${fieldBaseName}.content`}
@@ -344,43 +327,6 @@ export function RecipeInstructionsWithSections<TFieldValues extends FieldValues,
             </FormItem>
           )}
         />
-        <div className="flex items-center justify-between gap-2">
-          <FormField
-            control={control}
-            name={`${fieldBaseName}.duration`}
-            render={({ field }) => (
-              <FormItem>
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <Clock className="h-4 w-4" aria-hidden="true" />
-                  <FormControl>
-                    <Input
-                      type="number"
-                      min={0}
-                      placeholder="Duration (min)"
-                      aria-label={`Step ${instruction.step} duration in minutes`}
-                      className="h-8 w-36 text-sm"
-                      {...field}
-                      onChange={(e) => {
-                        const value = e.target.value ? parseInt(e.target.value) : undefined;
-                        field.onChange(value);
-                        // Clear error if value becomes valid
-                        if ((value === undefined || value >= 0) && clearErrors) {
-                          clearErrors(`${fieldBaseName}.duration`);
-                        }
-                      }}
-                    />
-                  </FormControl>
-                </div>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <DeleteButton
-            onDelete={() => handleRemoveInstruction(sectionId, instruction.id)}
-            disabled={isOnlyStep || isLoading}
-            ariaLabel={`Delete step ${instruction.step}`}
-          />
-        </div>
       </StepLayout>
     );
   };
@@ -389,22 +335,6 @@ export function RecipeInstructionsWithSections<TFieldValues extends FieldValues,
     <div className="space-y-4">
       {instructionFields.map((field, index) => (
         <StepLayout key={field.id} number={index + 1}>
-          <FormField
-            control={control}
-            name={`instructions.${index}.content`}
-            render={({ field }) => (
-              <FormItem>
-                <FormControl>
-                  <Textarea
-                    placeholder="Describe this step..."
-                    aria-label={`Step ${index + 1}`}
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
           <div className="flex items-center justify-between gap-2">
             <FormField
               control={control}
@@ -421,6 +351,7 @@ export function RecipeInstructionsWithSections<TFieldValues extends FieldValues,
                         aria-label={`Step ${index + 1} duration in minutes`}
                         className="h-8 w-36 text-sm"
                         {...field}
+                        value={field.value ?? ''}
                         onChange={(e) =>
                           field.onChange(
                             e.target.value ? parseInt(e.target.value) : undefined
@@ -433,18 +364,35 @@ export function RecipeInstructionsWithSections<TFieldValues extends FieldValues,
                 </FormItem>
               )}
             />
-            <DeleteButton
-              onDelete={() => removeInstruction(index)}
+            <RemoveRowButton
+              onRemove={() => removeInstruction(index)}
               disabled={instructionFields.length === 1 || isLoading}
               ariaLabel={`Delete step ${index + 1}`}
             />
           </div>
+          <FormField
+            control={control}
+            name={`instructions.${index}.content`}
+            render={({ field }) => (
+              <FormItem>
+                <FormControl>
+                  <Textarea
+                    placeholder="Describe this step..."
+                    aria-label={`Step ${index + 1}`}
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
         </StepLayout>
       ))}
 
       <Button
         type="button"
-        variant="outline"
+        variant="ghost"
+        className="min-h-[44px] font-semibold text-primary hover:text-primary"
         onClick={() => {
           // Calculate next position based on current instructions
           const nextPosition = instructionFields.length;
@@ -461,6 +409,17 @@ export function RecipeInstructionsWithSections<TFieldValues extends FieldValues,
         <Plus className="h-4 w-4 mr-2" />
         Add step
       </Button>
+
+      <Button
+        type="button"
+        variant="outline"
+        onClick={handleAddSection}
+        disabled={isLoading}
+        className="w-full border-dashed"
+      >
+        <Plus className="h-4 w-4 mr-2" />
+        Add section
+      </Button>
     </div>
   );
 
@@ -474,22 +433,13 @@ export function RecipeInstructionsWithSections<TFieldValues extends FieldValues,
 
   return (
     <FormPanel
-      title="Method"
+      title="Instructions"
       description="Split the steps into sections that read naturally while cooking."
       aside={
         <>
           <span className="text-sm text-muted-foreground tabular-nums" aria-live="polite">
             {runningTotal}
           </span>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={handleToggleSections}
-            disabled={isLoading}
-          >
-            {shouldUseSections ? 'Use Simple List' : 'Organize into Sections'}
-          </Button>
         </>
       }
     >
@@ -512,7 +462,7 @@ export function RecipeInstructionsWithSections<TFieldValues extends FieldValues,
               onRemoveItem={handleRemoveInstruction}
               renderItem={renderInstructionItem}
               itemType="instruction"
-              addSectionLabel="Add method section"
+              addSectionLabel="Add section"
               addItemLabel="Add step"
               isLoading={isLoading}
               validationErrors={validationErrors}
