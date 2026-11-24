@@ -40,6 +40,8 @@ import { EmptySectionWarningModal } from "@/components/recipes/empty-section-war
 import { RecipePhotosManager } from "@/components/recipes/recipe-photos-manager";
 import { NewRecipePhotosUpload, type TempRecipePhoto } from "@/components/recipes/new-recipe-photos-upload";
 import { RecipePhotosCard } from "@/components/recipes/recipe-photos-card";
+import { FormActionBar } from "@/components/recipes/form-action-bar";
+import { ConfirmationModal } from "@/components/ui/confirmation-modal";
 
 // Extended input type to support sections and photos
 interface ExtendedRecipeInput extends NewRecipeInput {
@@ -92,6 +94,12 @@ interface RecipeFormProps {
    * Useful for adding custom actions or information at the bottom of the form.
    */
   beforeSubmit?: React.ReactNode;
+
+  /**
+   * Called when the user cancels. Shows a Cancel button; if the form has
+   * unsaved changes, the user is asked to confirm before this runs.
+   */
+  onCancel?: () => void;
 }
 
 /**
@@ -272,6 +280,7 @@ export function RecipeForm({
   submitLabel = "Save Recipe",
   recipeId,
   beforeSubmit,
+  onCancel,
 }: RecipeFormProps) {
   // Normalize initial data for backward compatibility (Requirement 11.1, 11.2, 11.3)
   // This silently fixes invalid data when editing existing recipes
@@ -324,6 +333,21 @@ export function RecipeForm({
   }>>([]);
   const [pendingSubmitData, setPendingSubmitData] = useState<any>(null);
   const [photos, setPhotos] = useState<TempRecipePhoto[]>(initialData?.photos || []);
+  const [showDiscardConfirm, setShowDiscardConfirm] = useState(false);
+
+  // dirtyFields, not isDirty: isDirty deep-compares against defaults with undefined
+  // values (prepTime, step duration...) and reports a fresh form as changed.
+  // Existing recipes save photo changes immediately; new-recipe photos wait for submit.
+  const hasFormChanges = Object.keys(form.formState.dirtyFields).length > 0;
+  const hasUnsavedChanges = hasFormChanges || (!recipeId && photos.length > 0);
+
+  const handleCancel = () => {
+    if (hasUnsavedChanges) {
+      setShowDiscardConfirm(true);
+    } else {
+      onCancel?.();
+    }
+  };
 
   // Initialize validation hook
   const { validate, getFieldError, isValid, errors, errorSummary } = useRecipeValidation();
@@ -899,24 +923,29 @@ export function RecipeForm({
         {/* Additional content before submit button */}
         {beforeSubmit}
 
-        {/* Submit Button with Validation State */}
-        <div className="relative">
-          <Button 
-            type="submit" 
-            disabled={isLoading || !isValid} 
-            className="w-full"
-            title={!isValid ? `Cannot save: ${errorSummary?.count || 0} validation ${errorSummary?.count === 1 ? 'error' : 'errors'}` : undefined}
-            onClick={() => console.log('Button clicked - isValid:', isValid, 'isLoading:', isLoading, 'disabled:', isLoading || !isValid)}
-          >
-            {isLoading ? "Saving..." : submitLabel}
-          </Button>
-          {!isValid && !isLoading && (
-            <p className="text-sm text-red-600 dark:text-red-400 mt-2 text-center">
-              Please fix validation errors before saving
-            </p>
-          )}
-        </div>
+        <FormActionBar
+          submitLabel={submitLabel}
+          isLoading={isLoading}
+          isValid={isValid}
+          errorCount={errorSummary?.count ?? 0}
+          onCancel={onCancel ? handleCancel : undefined}
+        />
       </form>
+
+      {/* Outside the <form>: the modal's buttons would otherwise submit it */}
+      <ConfirmationModal
+        isOpen={showDiscardConfirm}
+        onClose={() => setShowDiscardConfirm(false)}
+        onConfirm={() => {
+          setShowDiscardConfirm(false);
+          onCancel?.();
+        }}
+        title="Discard changes?"
+        description="Your changes to this recipe won't be saved."
+        confirmText="Discard"
+        cancelText="Keep editing"
+        variant="destructive"
+      />
 
       <EmptySectionWarningModal
         isOpen={showEmptySectionWarning}

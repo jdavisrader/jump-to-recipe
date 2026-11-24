@@ -124,7 +124,9 @@ export function ImageUpload({
               onClick={onRemove}
               variant="destructive"
               size="sm"
-              className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity"
+              aria-label="Remove image"
+              // Hover-to-reveal only where hover exists; touch screens always show it
+              className="absolute right-2 top-2 transition-opacity focus-visible:opacity-100 [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100"
             >
               <X className="h-4 w-4" />
             </Button>
