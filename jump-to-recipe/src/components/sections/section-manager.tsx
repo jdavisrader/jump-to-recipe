@@ -339,8 +339,8 @@ export function SectionManager<T extends { id: string }>({
     <div className={cn('space-y-6', className)}>
       <div className="space-y-6">
         {sortedSections.length === 0 ? (
-          <div className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-800/50">
-            <div className="text-gray-500 dark:text-gray-400 text-center">
+          <div className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-border rounded-lg bg-muted/30">
+            <div className="text-muted-foreground text-center">
               <div className="text-lg font-medium mb-2">No sections yet</div>
               <div className="text-sm">
                 Create your first {itemType} section to organize your recipe
@@ -358,8 +358,8 @@ export function SectionManager<T extends { id: string }>({
               <div
                 key={section.id}
                 className={cn(
-                  // Base section container styling
-                  'bg-white dark:bg-gray-800 border rounded-xl shadow-sm',
+                  // Base section container styling (theme tokens; Tailwind's gray-800 reads blue in dark mode)
+                  'bg-muted/40 border rounded-xl shadow-sm',
                   // Smooth transitions for hover effects
                   'transition-[box-shadow,border-color,background-color] duration-200 ease-in-out',
                   // Spacing and layout
@@ -369,7 +369,7 @@ export function SectionManager<T extends { id: string }>({
                   // Validation error styling
                   hasValidationError
                     ? 'border-red-300 dark:border-red-700 bg-red-50/30 dark:bg-red-950/10'
-                    : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+                    : 'border-border hover:border-muted-foreground/40'
                 )}
                 role="group"
                 aria-labelledby={`section-${section.id}-title`}
