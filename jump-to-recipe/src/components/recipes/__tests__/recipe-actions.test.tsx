@@ -29,17 +29,4 @@ describe('RecipeActions', () => {
 
     expect(onEdit).toHaveBeenCalledTimes(1);
   });
-
-  it('links to the source in a new tab only when there is a source URL', () => {
-    const { rerender } = render(<RecipeActions recipeId="recipe-1" canEdit={false} />);
-    expect(screen.queryByRole('link', { name: /source/i })).not.toBeInTheDocument();
-
-    rerender(
-      <RecipeActions recipeId="recipe-1" canEdit={false} sourceUrl="https://example.com/recipe" />
-    );
-    const link = screen.getByRole('link', { name: /source/i });
-    expect(link).toHaveAttribute('href', 'https://example.com/recipe');
-    expect(link).toHaveAttribute('target', '_blank');
-    expect(link).toHaveAttribute('rel', 'noopener noreferrer');
-  });
 });

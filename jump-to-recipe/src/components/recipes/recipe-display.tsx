@@ -3,7 +3,7 @@
 import { Clock, Minus, Plus } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { RecipeHeroImage } from "./recipe-hero-image";
+import { RecipeHero } from "./recipe-hero";
 import { RecipeStats } from "./recipe-stats";
 import { RecipeComments } from "./recipe-comments";
 import { RecipeActions } from "./recipe-actions";
@@ -55,58 +55,16 @@ export function RecipeDisplay({ recipe, onEdit, canEdit = false, showComments = 
   }, [recipe.id]);
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
-      <RecipeHeroImage
-        imageUrl={recipe.imageUrl}
-        title={recipe.title}
-        canEdit={canEdit}
-        onEdit={onEdit}
-      />
-
-      {/* Header */}
-      <div className="border-b pb-6">
-        <h1 className="text-3xl font-bold tracking-tight mb-2">{recipe.title}</h1>
-
-        {/* Author */}
-        {recipe.authorName && (
-          <p className="text-muted-foreground mb-4">By {recipe.authorName}</p>
-        )}
-
-        <div className="mb-6">
-          <RecipeActions
-            recipeId={recipe.id}
-            canEdit={canEdit}
-            onEdit={onEdit}
-            sourceUrl={recipe.sourceUrl}
-          />
-        </div>
-        
-        {/* Description */}
-        {recipe.description && (
-          <p className="text-lg text-foreground mb-6">{recipe.description}</p>
-        )}
-        
+    <div className="max-w-6xl mx-auto space-y-8">
+      <RecipeHero recipe={recipe} canEdit={canEdit} onEdit={onEdit}>
         <RecipeStats
           prepTime={recipe.prepTime}
           cookTime={recipe.cookTime}
           servings={recipe.servings}
           scale={scale}
         />
-
-        {/* Recipe Tags */}
-        {recipe.tags && recipe.tags.length > 0 && (
-          <div className="flex flex-wrap gap-2">
-            {recipe.tags.map((tag) => (
-              <span
-                key={tag}
-                className="inline-flex items-center px-3 py-1 bg-secondary text-secondary-foreground rounded-full text-sm font-medium"
-              >
-                {tag}
-              </span>
-            ))}
-          </div>
-        )}
-      </div>
+        <RecipeActions recipeId={recipe.id} canEdit={canEdit} onEdit={onEdit} />
+      </RecipeHero>
 
       <CookModeToggle />
 
