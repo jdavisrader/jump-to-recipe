@@ -19,7 +19,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Jump to Recipe",
+  title: "Happeacook",
   description: "A modern platform for collecting, organizing, and sharing digital cookbooks",
 };
 

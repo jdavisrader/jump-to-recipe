@@ -1,6 +1,6 @@
 // Application constants
 
-export const APP_NAME = 'Jump to Recipe';
+export const APP_NAME = 'Happeacook';
 export const APP_DESCRIPTION = 'A modern platform for collecting, organizing, and sharing digital cookbooks';
 
 // Recipe difficulty levels
