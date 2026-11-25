@@ -11,7 +11,7 @@ import { ProfileSidebar } from "@/components/profile/profile-sidebar";
 import { ProfilePageWrapper } from "@/components/profile/profile-page-wrapper";
 
 export const metadata: Metadata = {
-  title: "Profile | Jump to Recipe",
+  title: "Profile | Happeacook",
   description: "Manage your account settings, update your profile information, and change your password.",
   robots: {
     index: false, // Profile pages should not be indexed by search engines

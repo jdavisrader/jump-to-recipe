@@ -97,7 +97,7 @@ export default function DemoPage() {
       <div className="text-center space-y-4">
         <h1 className="text-3xl font-bold">Recipe Management UI Demo</h1>
         <p className="text-muted-foreground">
-          This page demonstrates all the recipe management UI components built for Jump to Recipe.
+          This page demonstrates all the recipe management UI components built for Happeacook.
         </p>
         
         {/* Navigation */}

@@ -4,6 +4,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { AuthProvider } from "@/components/auth-provider";
 import { Navbar } from "@/components/navbar";
 import { Toaster } from "@/components/ui/toaster";
+import { SITE_URL } from "@/constants";
 import "./globals.css";
 import "./browser-compatibility.css";
 import "./accessibility.css";
@@ -19,7 +20,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Jump to Recipe",
+  // Lets link-preview images resolve to absolute URLs.
+  metadataBase: new URL(SITE_URL),
+  title: "Happeacook",
   description: "A modern platform for collecting, organizing, and sharing digital cookbooks",
 };
 

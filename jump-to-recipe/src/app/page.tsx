@@ -17,7 +17,7 @@ export default function Home() {
                   Your Recipes, Organized
                 </h1>
                 <p className="text-muted-foreground md:text-xl">
-                  Collect, organize, and share your favorite recipes with Jump to Recipe.
+                  Collect, organize, and share your favorite recipes with Happeacook.
                   Import from URLs, create digital cookbooks, and generate smart grocery lists.
                 </p>
               </div>
@@ -45,7 +45,7 @@ export default function Home() {
               <div className="inline-block rounded-lg bg-muted px-3 py-1 text-sm">Features</div>
               <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">Everything You Need</h2>
               <p className="max-w-[900px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-                Jump to Recipe provides all the tools you need to manage your recipes and meal planning in one place.
+                Happeacook provides all the tools you need to manage your recipes and meal planning in one place.
               </p>
             </div>
           </div>
@@ -109,7 +109,7 @@ export default function Home() {
             <div className="space-y-2">
               <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">Ready to Get Started?</h2>
               <p className="max-w-[900px] md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-                Join thousands of home cooks who are organizing their recipes with Jump to Recipe.
+                Join thousands of home cooks who are organizing their recipes with Happeacook.
               </p>
             </div>
             <CTAButtons
@@ -127,7 +127,7 @@ export default function Home() {
           <div className="flex flex-col items-center justify-center gap-4 md:flex-row md:justify-between">
             <div className="text-center md:text-left">
               <p className="text-sm text-muted-foreground">
-                © {new Date().getFullYear()} Jump to Recipe. All rights reserved.
+                © {new Date().getFullYear()} Happeacook. All rights reserved.
               </p>
             </div>
             <div className="flex gap-4">
