@@ -2,6 +2,7 @@
 
 export const APP_NAME = 'Happeacook';
 export const APP_DESCRIPTION = 'A modern platform for collecting, organizing, and sharing digital cookbooks';
+export const SITE_URL = 'https://www.happeacook.com';
 
 // Recipe difficulty levels
 export const DIFFICULTY_LEVELS = [
